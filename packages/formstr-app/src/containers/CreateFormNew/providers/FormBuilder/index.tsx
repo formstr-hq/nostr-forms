@@ -392,8 +392,8 @@ export default function FormBuilderProvider({
     await createForm(
       formToSave,
       relayUrls,
-      viewList,
-      editList,
+      viewList || new Set(),
+      editList || new Set(),
       formSettings.encryptForm,
       onRelayAccepted,
       secretKey,
@@ -524,10 +524,13 @@ export default function FormBuilderProvider({
       ...settingsFromFile,
       formId: form.id,
     }));
-    let newViewList = form.spec
+    // For encrypted forms, the "allowed" and "p" tags are stored in the outer event tags,
+    // not in the encrypted form spec. Use eventTags if provided and spec doesn't have these tags.
+    const tagsSource = form.eventTags || form.spec;
+    let newViewList = tagsSource
       .filter((f) => f[0] === "allowed")
       .map((t) => t[1]);
-    let allKeys = form.spec.filter((f) => f[0] === "p").map((t) => t[1]);
+    let allKeys = tagsSource.filter((f) => f[0] === "p").map((t) => t[1]);
     let newEditList: string[] = allKeys.filter((p) => !newViewList.includes(p));
     setViewList(new Set(newViewList));
     setEditList(new Set(newEditList));

@@ -65,6 +65,7 @@ function EditForm() {
       id: dTag,
       secret: secret,
       viewKey: viewKeyParams,
+      eventTags: formEvent.tags,
     });
     setInitialized(true);
   };

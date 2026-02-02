@@ -26,6 +26,7 @@ export interface FormInitData {
   id: string;
   secret?: string;
   viewKey?: string | null;
+  eventTags?: Tag[];
 }
 
 export interface SectionData {
