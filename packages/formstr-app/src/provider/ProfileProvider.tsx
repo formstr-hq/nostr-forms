@@ -30,7 +30,7 @@ export interface IProfile {
 }
 
 export const ProfileContext = createContext<ProfileContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
@@ -58,19 +58,32 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
     signerManager.registerLoginModal(() => {
       return new Promise<void>((resolve) => {
         setShowLoginModal(true);
-    
+
         // Pass a function to LoginModal to call on successful login
         const handleLoginSuccess = () => {
           setShowLoginModal(false);
           resolve(); // This finally unblocks getSigner
         };
-    
+
         setLoginHandler(() => handleLoginSuccess);
       });
     });
-    signerManager.onChange(async () => {
-      setPubkey(await (await signerManager.getSigner()).getPublicKey());
+    const unsubscribe = signerManager.onChange(async () => {
+      const signer = await signerManager.getSigner();
+      if (signer) {
+        try {
+          const pk = await signer.getPublicKey();
+          setPubkey(pk);
+        } catch {
+          setPubkey(undefined);
+        }
+      } else {
+        setPubkey(undefined);
+      }
     });
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

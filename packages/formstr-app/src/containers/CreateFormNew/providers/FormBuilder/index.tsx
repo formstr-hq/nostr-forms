@@ -389,7 +389,7 @@ export default function FormBuilderProvider({
       return;
     }
     const relayUrls = relayList.map((relay) => relay.url);
-    await createForm(
+    const artifacts = await createForm(
       formToSave,
       relayUrls,
       viewList || new Set(),
@@ -398,37 +398,28 @@ export default function FormBuilderProvider({
       onRelayAccepted,
       secretKey,
       viewKey,
-    ).then(
-      (artifacts: {
-        signingKey: Uint8Array;
-        viewKey?: Uint8Array;
-        acceptedRelays: string[];
-      }) => {
-        const { signingKey, viewKey: formViewKey, acceptedRelays } = artifacts;
-        navigate("/dashboard", {
-          state: {
-            pubKey: getPublicKey(signingKey),
-            formId: formSettings.formId,
-            secretKey: bytesToHex(signingKey),
-            viewKey: formSettings.viewKeyInUrl
-              ? formViewKey
-                ? bytesToHex(formViewKey)
-                : null
-              : null,
-            name: formName,
-            relays: relayUrls,
-            disablePreview: formSettings.disablePreview,
-          },
-        });
-      },
-      (error) => {
-        console.error("Error creating form:", error);
-        message.error(
-          "Error creating the form: " +
-            (error instanceof Error ? error.message : String(error)),
-        );
-      },
     );
+    const { signingKey, viewKey: formViewKey, acceptedRelays } = artifacts;
+
+    if (acceptedRelays.length === 0) {
+      throw new Error("No relays accepted the form. Please try again.");
+    }
+
+    navigate("/dashboard", {
+      state: {
+        pubKey: getPublicKey(signingKey),
+        formId: formSettings.formId,
+        secretKey: bytesToHex(signingKey),
+        viewKey: formSettings.viewKeyInUrl
+          ? formViewKey
+            ? bytesToHex(formViewKey)
+            : null
+          : null,
+        name: formName,
+        relays: acceptedRelays,
+        disablePreview: formSettings.disablePreview,
+      },
+    });
   };
 
   const saveDraft = () => {

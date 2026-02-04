@@ -196,7 +196,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} centered width={420}>
+    <Modal open={open} onCancel={onClose} footer={null} centered width={420} zIndex={1100}>
       <div style={{ textAlign: "center", marginBottom: 16 }}>
         <Title level={4}>Sign in to Formstr</Title>
         <Text type="secondary">Choose your preferred login method</Text>
