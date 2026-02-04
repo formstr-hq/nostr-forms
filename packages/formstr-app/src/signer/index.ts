@@ -31,9 +31,11 @@ class Signer {
     try {
       if (bunkerUri?.bunkerUri) {
         await this.loginWithNip46(bunkerUri.bunkerUri);
+        return;
       } else if (window.nostr && Object.keys(keys).length != 0) {
         console.log("Restoring loginWithNip07");
-        await this.loginWithNip07();
+        await this.loginWithNip07(keys.pubkey);
+        return;
       } else if (keys?.pubkey && keys?.secret) {
         console.log("Restoring guest");
         await this.loginWithGuestKey(keys.pubkey, keys.secret);
@@ -49,7 +51,7 @@ class Signer {
 
   async createGuestAccount(
     privkey: string,
-    userMetadata: { name?: string; picture?: string; about?: string }
+    userMetadata: { name?: string; picture?: string; about?: string },
   ) {
     this.signer = createLocalSigner(privkey);
 
@@ -60,12 +62,10 @@ class Signer {
     this.notify();
   }
 
-  async loginWithNip07() {
-    console.log("LOGGIN IN WITH NIP07");
+  async loginWithNip07(pubkey?: string) {
     if (!window.nostr) throw new Error("NIP-07 extension not found");
     this.signer = nip07Signer;
-    const pubkey = await window.nostr.getPublicKey();
-    setKeysInLocalStorage(pubkey);
+    setKeysInLocalStorage(pubkey ? pubkey : await this.signer.getPublicKey());
     this.notify();
     console.log("LOGGIN IN WITH NIP07 IS NOW COMPLETE");
   }
@@ -93,9 +93,9 @@ class Signer {
     if (this.signer) return this.signer;
 
     if (this.loginModalCallback) {
-      console.log("GOING TO CALL LOGINMODALCALLBACK")
+      console.log("GOING TO CALL LOGINMODALCALLBACK");
       await this.loginModalCallback();
-      console.log("AFTER CALLING loginModal Callback", this.signer)
+      console.log("AFTER CALLING loginModal Callback", this.signer);
       if (this.signer) return this.signer;
     }
 

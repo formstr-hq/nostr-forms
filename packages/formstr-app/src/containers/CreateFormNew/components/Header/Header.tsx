@@ -12,6 +12,7 @@ import { RelayPublishModal } from "../../../../components/RelayPublishModal/Rela
 export const CreateFormHeader: React.FC = () => {
   const [isPostPublishModalOpen, setIsPostPublishModalOpen] = useState(false);
   const [acceptedRelays, setAcceptedRelays] = useState<string[]>([]);
+  const [publishFailed, setPublishFailed] = useState(false);
 
   const { Header } = Layout;
   const { Text } = Typography;
@@ -51,6 +52,7 @@ export const CreateFormHeader: React.FC = () => {
 
     setIsPostPublishModalOpen(true);
     setAcceptedRelays([]);
+    setPublishFailed(false);
 
     try {
       await saveForm((url: string) => {
@@ -59,6 +61,7 @@ export const CreateFormHeader: React.FC = () => {
       });
     } catch (error) {
       console.error("Failed to publish the form", error);
+      setPublishFailed(true);
     }
   };
 
@@ -121,6 +124,11 @@ export const CreateFormHeader: React.FC = () => {
           relays={relayList.map((r) => r.url)}
           acceptedRelays={acceptedRelays}
           isOpen={isPostPublishModalOpen}
+          publishFailed={publishFailed}
+          onClose={() => {
+            setIsPostPublishModalOpen(false);
+            setPublishFailed(false);
+          }}
         />
       </Header>
     </StyleWrapper>

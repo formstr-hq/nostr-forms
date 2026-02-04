@@ -7,10 +7,12 @@ import { FormEventCard } from "./FormCards/FormEventCard";
 import DashboardStyleWrapper from "./index.style";
 import EmptyScreen from "../../components/EmptyScreen";
 import { useApplicationContext } from "../../hooks/useApplicationContext";
-import { getItem, LOCAL_STORAGE_KEYS } from "../../utils/localStorage";
 import { ILocalForm } from "../CreateFormNew/providers/FormBuilder/typeDefs";
-import { Dropdown, Menu, Typography, Button } from "antd";
-import { DownOutlined } from "@ant-design/icons";
+import { Dropdown, Menu, Typography, Button, Spin, Alert } from "antd";
+import { DownOutlined, ImportOutlined, LockOutlined } from "@ant-design/icons";
+import { nip19 } from "nostr-tools";
+import ImportFormModal from "../../components/ImportFormModal";
+import { useLocalForms } from "../../provider/LocalFormsProvider";
 import { MyForms } from "./FormCards/MyForms";
 import { Drafts } from "./FormCards/Drafts";
 import { LocalForms } from "./FormCards/LocalForms";
@@ -53,10 +55,16 @@ export const Dashboard = () => {
   const location = useLocation();
   const { pubkey } = useProfileContext();
   const [showFormDetails, setShowFormDetails] = useState<boolean>(!!state);
-  const [localForms, setLocalForms] = useState<ILocalForm[]>(
-    getItem(LOCAL_STORAGE_KEYS.LOCAL_FORMS) || [],
-  );
+  const {
+    localForms,
+    isLoading: isLoadingLocalForms,
+    isEncrypted,
+    encryptionMeta,
+    refreshForms,
+    deleteLocalForm,
+  } = useLocalForms();
   const [nostrForms, setNostrForms] = useState<Map<string, Event>>(new Map());
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const getCurrentFilterFromPath = (): FilterType => {
     const path = location.pathname;
@@ -122,6 +130,13 @@ export const Dashboard = () => {
 
   const renderForms = () => {
     if (filter === "local") {
+      if (isLoadingLocalForms) {
+        return (
+          <div style={{ textAlign: "center", padding: 40 }}>
+            <Spin size="large" />
+          </div>
+        );
+      }
       if (localForms.length == 0) {
         return (
           <EmptyScreen
@@ -136,9 +151,9 @@ export const Dashboard = () => {
       return (
         <LocalForms
           localForms={localForms}
-          onDeleted={(localForm: ILocalForm) =>
-            setLocalForms(localForms.filter((f) => f.key !== localForm.key))
-          }
+          onDeleted={(localForm: ILocalForm) => {
+            deleteLocalForm(localForm.key);
+          }}
         />
       );
     } else if (filter === "shared") {
@@ -220,7 +235,39 @@ export const Dashboard = () => {
               <DownOutlined style={{ marginLeft: "8px", fontSize: "12px" }} />
             </Button>
           </Dropdown>
+          <Button
+            icon={<ImportOutlined style={{ marginTop: -5 }} />}
+            onClick={() => setShowImportModal(true)}
+            style={{ marginLeft: 8 }}
+          >
+            Import
+          </Button>
         </div>
+        {filter === "local" && isEncrypted && !pubkey && (
+          <Alert
+            message="Encrypted forms on this device"
+            description={
+              encryptionMeta?.encryptedBy
+                ? `You have forms encrypted for ${(() => {
+                    try {
+                      const npub = nip19.npubEncode(encryptionMeta.encryptedBy);
+                      return npub.slice(0, 12) + "..." + npub.slice(-8);
+                    } catch {
+                      return (
+                        encryptionMeta.encryptedBy.slice(0, 8) +
+                        "..." +
+                        encryptionMeta.encryptedBy.slice(-8)
+                      );
+                    }
+                  })()}. Login with that key to access them.`
+                : "You have encrypted forms stored on this device. Login to access them."
+            }
+            type="info"
+            showIcon
+            icon={<LockOutlined />}
+            style={{ marginBottom: 16 }}
+          />
+        )}
         <div className="form-cards-container">{renderForms()}</div>
         <>
           {state && (
@@ -229,11 +276,18 @@ export const Dashboard = () => {
               {...state}
               onClose={() => {
                 setShowFormDetails(false);
-                setLocalForms(getItem(LOCAL_STORAGE_KEYS.LOCAL_FORMS) || []);
+                refreshForms();
               }}
             />
           )}
         </>
+        <ImportFormModal
+          open={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onImported={() => {
+            refreshForms();
+          }}
+        />
       </div>
     </DashboardStyleWrapper>
   );

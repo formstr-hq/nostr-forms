@@ -2,11 +2,19 @@ import { useEffect, useState } from "react";
 
 export const LOCAL_STORAGE_KEYS = {
   LOCAL_FORMS: "formstr:forms",
+  LOCAL_FORMS_ENCRYPTED: "formstr:forms-encrypted",
+  LOCAL_FORMS_META: "formstr:forms-meta",
   DRAFT_FORMS: "formstr:draftForms",
   SUBMISSIONS: "formstr:submissions",
   PROFILE: "formstr:profile",
   OLLAMA_CONFIG: "formstr:ollama_config",
 };
+
+export interface LocalFormsMeta {
+  encrypted: boolean;
+  encryptedBy?: string;
+  encryptedAt?: string;
+}
 
 export function getItem<T>(key: string, { parseAsJson = true } = {}): T | null {
   let value = localStorage.getItem(key);

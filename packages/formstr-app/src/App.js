@@ -5,6 +5,7 @@ import { ProfileProvider } from "./provider/ProfileProvider";
 import { ApplicationProvider } from "./provider/ApplicationProvider";
 import { TemplateProvider } from "./provider/TemplateProvider";
 import { MyFormsProvider } from "./provider/MyFormsProvider";
+import { LocalFormsProvider } from "./provider/LocalFormsProvider";
 
 function App() {
   return (
@@ -12,11 +13,13 @@ function App() {
       <div className="App">
         <ApplicationProvider>
           <ProfileProvider>
-            <MyFormsProvider>
-              <TemplateProvider>
-                <Routing />
-              </TemplateProvider>
-            </MyFormsProvider>
+            <LocalFormsProvider>
+              <MyFormsProvider>
+                <TemplateProvider>
+                  <Routing />
+                </TemplateProvider>
+              </MyFormsProvider>
+            </LocalFormsProvider>
           </ProfileProvider>
         </ApplicationProvider>
       </div>

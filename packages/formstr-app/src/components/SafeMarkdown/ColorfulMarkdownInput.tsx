@@ -22,26 +22,10 @@ export const ColorfulMarkdownTextarea: React.FC<Props> = ({
   disabled,
 }) => {
   const { formSettings } = useFormBuilderContext();
-  const [editableText, setEditableText] = React.useState<string>("");
-  const [globalColor, setGlobalColor] = React.useState<string | null>(
-    formSettings.globalColor ?? null,
-  );
-
-  React.useEffect(() => {
-    onChange(editableText);
-  }, [editableText]);
-
-  React.useEffect(() => {
-    setEditableText(value || "");
-  }, []);
-
-  React.useEffect(() => {
-    setGlobalColor(formSettings.globalColor || "black");
-  }, [formSettings.globalColor]);
+  const globalColor = formSettings.globalColor || "black";
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newText = e.target.value;
-    setEditableText(newText);
+    onChange(e.target.value);
   };
 
   return (
@@ -49,10 +33,9 @@ export const ColorfulMarkdownTextarea: React.FC<Props> = ({
       className={className}
       style={{ display: "flex", flexDirection: "column" }}
     >
-      {/* Text area */}
       <Input.TextArea
         value={value}
-        style={{ fontSize: fontSize, color: globalColor || "black" }}
+        style={{ fontSize: fontSize, color: globalColor }}
         onChange={handleTextChange}
         placeholder={placeholder}
         disabled={disabled}
