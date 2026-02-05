@@ -37,7 +37,10 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
   const [pubkey, setPubkey] = useState<string | undefined>(undefined);
   const [userRelays, setUserRelays] = useState<string[]>([]);
   const [showLooginModal, setShowLoginModal] = useState<boolean>(false);
-  const [loginHandler, setLoginHandler] = useState<(() => void) | null>(null);
+  const [loginHandler, setLoginHandler] = useState<{
+    onSuccess: () => void;
+    onCancel: () => void;
+  } | null>(null);
   const { poolRef } = useApplicationContext();
 
   const fetchUserRelays = async (pubkey: string) => {
@@ -56,7 +59,7 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
 
   useEffect(() => {
     signerManager.registerLoginModal(() => {
-      return new Promise<void>((resolve) => {
+      return new Promise<void>((resolve, reject) => {
         setShowLoginModal(true);
 
         // Pass a function to LoginModal to call on successful login
@@ -65,7 +68,16 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
           resolve(); // This finally unblocks getSigner
         };
 
-        setLoginHandler(() => handleLoginSuccess);
+        // Pass a function to handle modal close without login
+        const handleLoginCancel = () => {
+          setShowLoginModal(false);
+          reject(new Error("Login cancelled")); // Unblock getSigner with error
+        };
+
+        setLoginHandler(() => ({
+          onSuccess: handleLoginSuccess,
+          onCancel: handleLoginCancel,
+        }));
       });
     });
     const unsubscribe = signerManager.onChange(async () => {
@@ -131,11 +143,13 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
       </Modal> */}
       <LoginModal
         open={showLooginModal}
-        onClose={() => setShowLoginModal(false)}
+        onClose={() => {
+          loginHandler?.onCancel(); // reject the promise so getSigner doesn't hang
+          setLoginHandler(null);
+        }}
         onLogin={() => {
-          loginHandler?.(); // this resolves the promise in getSigner
-          setLoginHandler(null); // clean up
-          setShowLoginModal(false);
+          loginHandler?.onSuccess(); // this resolves the promise in getSigner
+          setLoginHandler(null);
         }}
       />
     </ProfileContext.Provider>

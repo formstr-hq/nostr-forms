@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
   ReactNode,
 } from "react";
 import { Event, SimplePool } from "nostr-tools";
@@ -22,7 +23,7 @@ type FormEventMetadata = {
 type MyFormsContextValue = {
   formEvents: Map<string, FormEventMetadata>;
   refreshing: boolean;
-  refreshForms: () => Promise<void>;
+  refreshForms: (force?: boolean) => Promise<void>;
   deleteForm: (formId: string, formPubkey: string) => Promise<void>;
   saveToMyForms: (
     formAuthorPub: string,
@@ -60,6 +61,8 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     new Map(),
   );
   const [refreshing, setRefreshing] = useState(false);
+  const isRefreshingRef = useRef(false);
+  const loadedForPubRef = useRef<string | null>(null);
 
   const fetchFormEvents = async (forms: Tag[], pool: SimplePool) => {
     const dTags = forms.map((f) => f[1].split(":")[1]);
@@ -152,7 +155,7 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
 
       await Promise.allSettled(pool.publish(targetRelays, event));
 
-      await refreshForms(); // 🔥 keep provider state in sync
+      await refreshForms(true); // 🔥 force refresh to sync state
       callback?.("saved");
     } catch (err) {
       console.error("saveToMyForms failed:", err);
@@ -162,9 +165,14 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const refreshForms = async () => {
+  const refreshForms = async (force = false) => {
     if (!userPub) return;
+    // Prevent duplicate concurrent refreshes
+    if (isRefreshingRef.current) return;
+    // Skip if already loaded for this user (unless forced)
+    if (!force && loadedForPubRef.current === userPub) return;
 
+    isRefreshingRef.current = true;
     setRefreshing(true);
     const pool = new SimplePool();
 
@@ -178,15 +186,19 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
 
       if (!list) {
         setFormEvents(new Map());
+        loadedForPubRef.current = userPub;
         return;
       }
 
       const decrypted = await signer.nip44Decrypt!(userPub, list.content);
 
       await fetchFormEvents(JSON.parse(decrypted), pool);
+      loadedForPubRef.current = userPub;
     } catch (err) {
       console.error("Error loading forms:", err);
+      // Don't mark as loaded on error - allow retry
     } finally {
+      isRefreshingRef.current = false;
       setRefreshing(false);
       pool.close(getDefaultRelays());
     }
@@ -228,7 +240,7 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
       });
 
       pool.publish(getDefaultRelays(), event);
-      await refreshForms();
+      await refreshForms(true); // Force refresh after delete
     } catch (err) {
       console.error("Error deleting form:", err);
     } finally {
@@ -237,8 +249,22 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Refresh when userPub changes
   useEffect(() => {
     refreshForms();
+  }, [userPub]);
+
+  // Also refresh when signer becomes available (handles race condition on startup)
+  useEffect(() => {
+    const unsubscribe = signerManager.onChange(() => {
+      // Signer state changed - refresh if we have a pubkey
+      if (userPub) {
+        refreshForms();
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
   }, [userPub]);
 
   return (
