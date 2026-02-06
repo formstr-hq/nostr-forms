@@ -22,7 +22,6 @@ import SafeMarkdown from "../../components/SafeMarkdown";
 import {
   AutoSaveIndicator,
   FormSettingsPopover,
-  DisableAutoSaveModal,
   SaveStatus,
 } from "./components";
 
@@ -79,7 +78,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   // Section state management
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
-  const [showDisableModal, setShowDisableModal] = useState(false);
+
 
   const sections = settings.sections || [];
   const enableSections = !!sections.length;
@@ -313,14 +312,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
       {!showStepper && renderFooterWithControls()}
 
-      <DisableAutoSaveModal
-        open={showDisableModal}
-        onConfirm={() => {
-          onToggleAutoSave?.();
-          setShowDisableModal(false);
-        }}
-        onCancel={() => setShowDisableModal(false)}
-      />
     </div>
   );
 
