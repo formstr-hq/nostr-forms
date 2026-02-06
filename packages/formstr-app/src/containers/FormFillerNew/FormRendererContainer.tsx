@@ -5,12 +5,24 @@ import { useProfileContext } from "../../hooks/useProfileContext";
 import { getAllowedUsers, getFormSpec } from "../../utils/formUtils";
 import { SubmitButton } from "./SubmitButton/submit";
 import { FormRenderer } from "./FormRenderer";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { getResponseRelays } from "../../utils/ResponseUtils";
 import { IFormSettings } from "../CreateFormNew/components/FormSettings/types";
-import { sendNRPCWebhook } from "../../nostr/common";
+import { LOCAL_STORAGE_KEYS, getItem, setItem } from "../../utils/localStorage";
 
 const { Text } = Typography;
+
+// Helper to get the draft storage key for a form
+const getDraftStorageKey = (formEvent: Event): string => {
+  const formId = formEvent.tags.find((t) => t[0] === "d")?.[1] || "unknown";
+  return `${LOCAL_STORAGE_KEYS.DRAFT_RESPONSES}:${formEvent.pubkey}:${formId}`;
+};
+
+// Type for stored draft
+interface DraftData {
+  values: Record<string, [string, string | undefined] | null>;
+  savedAt: number;
+}
 
 interface FormRendererContainerProps {
   formEvent: Event;
@@ -31,6 +43,84 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
   const [form] = Form.useForm();
   const [formTemplate, setFormTemplate] = useState<Tag[]>();
   const [settings, setSettings] = useState<IFormSettings>();
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
+    "idle",
+  );
+  const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(() => {
+    const saved = getItem<boolean>(LOCAL_STORAGE_KEYS.AUTO_SAVE_ENABLED);
+    return saved !== false; // Default to true if not set
+  });
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftStorageKey = getDraftStorageKey(formEvent);
+
+  const toggleAutoSave = useCallback(() => {
+    setAutoSaveEnabled((prev) => {
+      const newValue = !prev;
+      setItem(LOCAL_STORAGE_KEYS.AUTO_SAVE_ENABLED, newValue);
+      if (!newValue) {
+        // Clear draft when disabling
+        localStorage.removeItem(draftStorageKey);
+        setSaveStatus("idle");
+      }
+      return newValue;
+    });
+  }, [draftStorageKey]);
+
+  // Load draft from localStorage on mount (only if auto-save is enabled)
+  useEffect(() => {
+    if (!autoSaveEnabled) return;
+    const savedDraft = getItem<DraftData>(draftStorageKey);
+    if (savedDraft?.values) {
+      // Restore saved values to form
+      Object.entries(savedDraft.values).forEach(([fieldId, value]) => {
+        form.setFieldValue(fieldId, value);
+      });
+    }
+  }, [draftStorageKey, form, autoSaveEnabled]);
+
+  // Debounced save to localStorage
+  const saveDraft = useCallback(() => {
+    if (!autoSaveEnabled) return;
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    if (statusTimeoutRef.current) {
+      clearTimeout(statusTimeoutRef.current);
+    }
+
+    setSaveStatus("saving");
+
+    saveTimeoutRef.current = setTimeout(() => {
+      const values = form.getFieldsValue(true);
+      const draftData: DraftData = {
+        values,
+        savedAt: Date.now(),
+      };
+      setItem(draftStorageKey, draftData);
+      setSaveStatus("saved");
+
+      // Reset to idle after 2 seconds
+      statusTimeoutRef.current = setTimeout(() => {
+        setSaveStatus("idle");
+      }, 2000);
+    }, 500); // Debounce 500ms
+  }, [form, draftStorageKey, autoSaveEnabled]);
+
+  // Clear draft (to be called on successful submit)
+  const clearDraft = useCallback(() => {
+    localStorage.removeItem(draftStorageKey);
+    setSaveStatus("idle");
+  }, [draftStorageKey]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     const initialize = async () => {
@@ -39,7 +129,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         const settingsTag = formEvent.tags.find((tag) => tag[0] === "settings");
         if (settingsTag) {
           const parsedSettings = JSON.parse(
-            settingsTag[1] || "{}"
+            settingsTag[1] || "{}",
           ) as IFormSettings;
           setSettings(parsedSettings);
         }
@@ -50,11 +140,11 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         formEvent,
         userPubKey,
         () => {},
-        viewKey
+        viewKey,
       );
       if (formSpec) {
         const settings = JSON.parse(
-          formSpec.find((tag) => tag[0] === "settings")?.[1] || "{}"
+          formSpec.find((tag) => tag[0] === "settings")?.[1] || "{}",
         ) as IFormSettings;
         setSettings(settings);
         setFormTemplate(formSpec);
@@ -66,13 +156,15 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
   const handleInput = (
     questionId: string,
     answer: string,
-    message?: string
+    message?: string,
   ) => {
     if (!answer || answer === "") {
       form.setFieldValue(questionId, null);
-      return;
+    } else {
+      form.setFieldValue(questionId, [answer, message]);
     }
-    form.setFieldValue(questionId, [answer, message]);
+    // Save draft after each input change
+    saveDraft();
   };
 
   const onSubmit = async () => {
@@ -85,8 +177,10 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
           if (formResponses[fieldId])
             [answer, message] = formResponses[fieldId];
           return ["response", fieldId, answer, JSON.stringify({ message })];
-        }
+        },
       );
+      // Clear draft on successful submit
+      clearDraft();
       onSubmitClick(responses, formTemplate!);
     } catch (error) {
       console.error("Form validation failed:", error);
@@ -170,6 +264,9 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       hideTitleImage={hideTitleImage}
       hideDescription={hideDescription}
       formstrBranding={settings?.formstrBranding}
+      saveStatus={saveStatus}
+      autoSaveEnabled={autoSaveEnabled}
+      onToggleAutoSave={toggleAutoSave}
     />
   );
 };

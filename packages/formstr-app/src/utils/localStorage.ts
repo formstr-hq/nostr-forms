@@ -5,6 +5,8 @@ export const LOCAL_STORAGE_KEYS = {
   LOCAL_FORMS_ENCRYPTED: "formstr:forms-encrypted",
   LOCAL_FORMS_META: "formstr:forms-meta",
   DRAFT_FORMS: "formstr:draftForms",
+  DRAFT_RESPONSES: "formstr:draft-response",
+  AUTO_SAVE_ENABLED: "formstr:auto-save-enabled",
   SUBMISSIONS: "formstr:submissions",
   PROFILE: "formstr:profile",
   OLLAMA_CONFIG: "formstr:ollama_config",

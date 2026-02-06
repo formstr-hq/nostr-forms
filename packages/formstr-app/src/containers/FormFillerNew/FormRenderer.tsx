@@ -1,4 +1,12 @@
-import { Form, Typography, Steps, Button, Space, Progress, Card } from "antd";
+import {
+  Form,
+  Typography,
+  Steps,
+  Button,
+  Space,
+  Progress,
+  Card,
+} from "antd";
 import { useState } from "react";
 import { FormFields } from "./FormFields";
 import { Field, Tag } from "../../nostr/types";
@@ -11,6 +19,11 @@ import { isMobile } from "../../utils/utility";
 import { ReactComponent as CreatedUsingFormstr } from "../../Images/created-using-formstr.svg";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import SafeMarkdown from "../../components/SafeMarkdown";
+import {
+  AutoSaveIndicator,
+  FormSettingsPopover,
+  SaveStatus,
+} from "./components";
 
 const { Text, Title } = Typography;
 const { Step } = Steps;
@@ -26,6 +39,9 @@ interface FormRendererProps {
   initialValues?: Record<string, any>;
   isPreview?: boolean;
   formstrBranding?: boolean;
+  saveStatus?: SaveStatus;
+  autoSaveEnabled?: boolean;
+  onToggleAutoSave?: () => void;
 }
 
 // Content item can be either a section or individual questions
@@ -49,6 +65,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   initialValues,
   formstrBranding,
   isPreview = false,
+  saveStatus = "idle",
+  autoSaveEnabled = true,
+  onToggleAutoSave,
 }) => {
   const name = formTemplate.find((tag) => tag[0] === "name")?.[1] || "";
   const settings = JSON.parse(
@@ -59,6 +78,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   // Section state management
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+
 
   const sections = settings.sections || [];
   const enableSections = !!sections.length;
@@ -168,6 +188,33 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     }
   };
 
+  const renderAutoSaveControls = () => (
+    <>
+      <AutoSaveIndicator saveStatus={saveStatus} enabled={autoSaveEnabled} />
+      {onToggleAutoSave && (
+        <FormSettingsPopover
+          autoSaveEnabled={autoSaveEnabled}
+          onToggleAutoSave={onToggleAutoSave}
+        />
+      )}
+    </>
+  );
+
+  // Footer with auto-save controls
+  const renderFooterWithControls = () => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "flex-end",
+        gap: 12,
+      }}
+    >
+      {renderAutoSaveControls()}
+      {footer}
+    </div>
+  );
+
   const renderSteppedForm = () => (
     <div>
       {showStepper && (
@@ -260,16 +307,26 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
           </Button>
 
           {!isLastStep ? (
-            <Button type="primary" onClick={handleNext}>
-              Continue <RightOutlined />
-            </Button>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              {renderAutoSaveControls()}
+              <Button type="primary" onClick={handleNext}>
+                Continue <RightOutlined />
+              </Button>
+            </div>
           ) : (
-            footer
+            renderFooterWithControls()
           )}
         </Space>
       )}
 
-      {!showStepper && footer}
+      {!showStepper && renderFooterWithControls()}
+
     </div>
   );
 

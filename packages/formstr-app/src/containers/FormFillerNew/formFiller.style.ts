@@ -6,6 +6,7 @@ export default styled.div<{
   $titleImageUrl?: string;
 }>`
   .form-filler {
+    position: relative;
     background-color: transparent;
     padding-left: 32px;
     padding-right: 32px;
