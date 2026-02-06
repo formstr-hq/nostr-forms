@@ -188,6 +188,18 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     }
   };
 
+  const renderAutoSaveControls = () => (
+    <>
+      <AutoSaveIndicator saveStatus={saveStatus} enabled={autoSaveEnabled} />
+      {onToggleAutoSave && (
+        <FormSettingsPopover
+          autoSaveEnabled={autoSaveEnabled}
+          onToggleAutoSave={onToggleAutoSave}
+        />
+      )}
+    </>
+  );
+
   // Footer with auto-save controls
   const renderFooterWithControls = () => (
     <div
@@ -198,13 +210,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         gap: 12,
       }}
     >
-      <AutoSaveIndicator saveStatus={saveStatus} enabled={autoSaveEnabled} />
-      {onToggleAutoSave && (
-        <FormSettingsPopover
-          autoSaveEnabled={autoSaveEnabled}
-          onToggleAutoSave={onToggleAutoSave}
-        />
-      )}
+      {renderAutoSaveControls()}
       {footer}
     </div>
   );
@@ -301,9 +307,18 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
           </Button>
 
           {!isLastStep ? (
-            <Button type="primary" onClick={handleNext}>
-              Continue <RightOutlined />
-            </Button>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              {renderAutoSaveControls()}
+              <Button type="primary" onClick={handleNext}>
+                Continue <RightOutlined />
+              </Button>
+            </div>
           ) : (
             renderFooterWithControls()
           )}
