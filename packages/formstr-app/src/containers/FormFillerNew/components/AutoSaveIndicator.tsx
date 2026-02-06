@@ -18,8 +18,8 @@ export const AutoSaveIndicator: React.FC<AutoSaveIndicatorProps> = ({
   }
 
   return (
-    <Text type="secondary" style={{ fontSize: 12 }}>
-      {saveStatus === "saving" ? "Saving..." : "Saved"}
+    <Text type="secondary" style={{ fontSize: 12, marginTop: 5 }}>
+      {saveStatus === "saving" ? "Saving locally..." : "Saved"}
     </Text>
   );
 };
