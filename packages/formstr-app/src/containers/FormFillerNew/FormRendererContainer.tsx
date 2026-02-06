@@ -213,7 +213,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     footer = (
       <div style={{ textAlign: "center", padding: "20px" }}>
         <Text type="warning" style={{ fontSize: "16px" }}>
-          You do not have permission to view this form
+          You do not have permission participate in this form
         </Text>
       </div>
     );
