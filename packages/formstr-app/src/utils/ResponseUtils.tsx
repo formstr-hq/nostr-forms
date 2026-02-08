@@ -70,26 +70,24 @@ export const getResponseLabels = (
       try {
         const choices = JSON.parse(questionField[4] || "[]") as Tag[];
         const selectedChoiceIds = answerValue.split(";");
+        const metadata = JSON.parse(metadataString || "{}");
         const choiceLabels = choices
           .filter((choice) => selectedChoiceIds.includes(choice[0]))
-          .map((choice) => choice[1]);
+          .map((choice) => {
+            let label = choice[1];
+            if (metadata.message) {
+              try {
+                const isOther = JSON.parse(choice[2] || "{}")?.isOther === true;
+                if (isOther) {
+                  label += ` (${metadata.message})`;
+                }
+              } catch {}
+            }
+            return label;
+          });
 
         if (choiceLabels.length > 0) {
           responseLabel = choiceLabels.join(", ");
-        }
-
-        const metadata = JSON.parse(metadataString || "{}");
-        if (metadata.message) {
-          const otherChoice = choices.find((c) => {
-            try {
-              return JSON.parse(c[2] || "{}")?.isOther === true;
-            } catch {
-              return false;
-            }
-          });
-          if (otherChoice && selectedChoiceIds.includes(otherChoice[0])) {
-            responseLabel += ` (${metadata.message})`;
-          }
         }
       } catch (e) {
         console.warn("Error processing options for fieldId:", fieldId, e);

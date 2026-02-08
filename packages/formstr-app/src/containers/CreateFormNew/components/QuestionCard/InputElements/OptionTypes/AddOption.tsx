@@ -44,7 +44,7 @@ export const AddOption: React.FC<AddOptionProps> = ({
             type="dashed"
             disabled={disable}
             onClick={(e) => {
-              addOption([makeTag(6), "Option"], choices, callback);
+              addOption([makeTag(6), "Other", JSON.stringify({ isOther: true })], choices, callback);
             }}
           >
             add other

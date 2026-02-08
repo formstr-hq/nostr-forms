@@ -57,6 +57,14 @@ export const RadioButtonCreator: React.FC<RadioButtonCreatorProps> = ({
               className="choice-input"
               disabled={settings.isOther}
             />
+            {settings.isOther && (
+              <Input
+                placeholder="Respondent's custom answer..."
+                disabled
+                style={{ maxWidth: 200 }}
+                className="choice-input"
+              />
+            )}
             {choices.length >= 2 && (
               <CloseOutlined
                 onClick={(e) => {
