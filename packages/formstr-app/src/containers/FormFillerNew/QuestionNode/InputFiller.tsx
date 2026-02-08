@@ -36,7 +36,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
   };
 
   const handleValueChange = (value: string | null, message?: string) => {
-    if (!value) return;
+    if (value === null || value === undefined) return;
     onChange(value, message);
   };
 

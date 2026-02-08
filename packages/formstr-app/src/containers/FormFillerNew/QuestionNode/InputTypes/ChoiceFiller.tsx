@@ -1,4 +1,5 @@
 import {
+  Button,
   Checkbox,
   Input,
   Radio,
@@ -46,7 +47,24 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
   }
 
   function handleMessage(e: ChangeEvent<HTMLInputElement>) {
-    setOtherMessage(e.target.value);
+    const msg = e.target.value;
+    setOtherMessage(msg);
+    if (defaultValue) {
+      onChange(defaultValue, msg);
+    }
+  }
+
+  function isOtherSelected(choiceId: string) {
+    if (!defaultValue) return false;
+    if (answerType === AnswerTypes.checkboxes) {
+      return defaultValue.split(";").includes(choiceId);
+    }
+    return defaultValue === choiceId;
+  }
+
+  function handleClear() {
+    setOtherMessage("");
+    onChange("", "");
   }
 
   let ElementConfig:
@@ -92,8 +110,9 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
                 {config.isOther && (
                   <Input
                     placeholder="Add an optional message..."
-                    onInput={handleMessage}
-                    disabled={disabled}
+                    value={otherMessage}
+                    onChange={handleMessage}
+                    disabled={disabled || !isOtherSelected(choiceId)}
                     data-testid={`${testId}-other-input-${choiceId}`}
                   />
                 )}
@@ -102,6 +121,18 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
           })}
         </Space>
       </ElementConfig.Element.Group>
+      {defaultValue && !disabled && (
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Button
+            type="link"
+            size="small"
+            onClick={handleClear}
+            style={{ padding: "4px 0", fontSize: "12px" }}
+          >
+            Clear selection
+          </Button>
+        </div>
+      )}
     </ChoiceFillerStyle>
   );
 };

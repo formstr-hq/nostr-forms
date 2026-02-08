@@ -34,7 +34,13 @@ function CreateForm() {
         formTemplate={getFormSpec()}
         form={form}
         footer={null}
-        onInput={() => {}}
+        onInput={(questionId, answer, message) => {
+          if (!answer || answer === "") {
+            form.setFieldValue(questionId, null);
+          } else {
+            form.setFieldValue(questionId, [answer, message]);
+          }
+        }}
         formstrBranding={formSettings.formstrBranding}
         isPreview={true}
       />

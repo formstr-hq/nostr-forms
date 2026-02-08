@@ -56,6 +56,14 @@ export const CheckboxCreator: React.FC<CheckboxCreatorProps> = ({
               disabled={settings.isOther}
               value={label}
             />
+            {settings.isOther && (
+              <Input
+                placeholder="Respondent's custom answer..."
+                disabled
+                style={{ maxWidth: 200 }}
+                className="choice-input"
+              />
+            )}
             {choices.length >= 2 && (
               <CloseOutlined
                 onClick={(e) => {
