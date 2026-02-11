@@ -11,6 +11,10 @@ interface FormFieldsProps {
   values?: { [fieldId: string]: any };
   testId?: string;
   formSettings: IFormSettings;
+  formAuthorPubkey?: string;
+  formEditKey?: string;
+  responderSecretKey?: Uint8Array;
+  uploaderPubkey?: string;
 }
 
 export const FormFields: React.FC<FormFieldsProps> = ({
@@ -20,6 +24,10 @@ export const FormFields: React.FC<FormFieldsProps> = ({
   values = {},
   testId = "form-fields",
   formSettings,
+  formAuthorPubkey,
+  formEditKey,
+  responderSecretKey,
+  uploaderPubkey,
 }) => {
   return fields.map((field) => {
     let [_, fieldId, type, label, optionsString, config] = field;
@@ -59,6 +67,10 @@ export const FormFields: React.FC<FormFieldsProps> = ({
           testId={`${testId}:question-${fieldId}`}
           formSettings={formSettings}
           gridOptions={gridOptions}
+          formAuthorPubkey={formAuthorPubkey}
+          formEditKey={formEditKey}
+          responderSecretKey={responderSecretKey}
+          uploaderPubkey={uploaderPubkey}
         />
       </Form.Item>
     );

@@ -17,6 +17,9 @@ export interface IAnswerSettings {
     prefilledContent?: string;
     editableCreatedAt?: boolean;
   };
+  blossomServer?: string;
+  maxFileSize?: number;
+  allowedTypes?: string[];
   validationRules?: {
     [ValidationRuleTypes.range]?: RangeRule;
     [ValidationRuleTypes.max]?: MaxRule;

@@ -57,6 +57,7 @@ export enum AnswerTypes {
   datetime = "datetime",
   multipleChoiceGrid = "multipleChoiceGrid",
   checkboxGrid = "checkboxGrid",
+  fileUpload = "fileUpload",
 }
 
 export interface FormSpec {
@@ -130,6 +131,22 @@ export interface GridFieldSettings extends AnswerSettings {
   allowMultiplePerRow: boolean;
   required?: boolean;
   requiredRows?: string[]; // Specific rows that must be answered
+}
+
+export interface FileUploadSettings extends AnswerSettings {
+  renderElement: "fileUpload";
+  blossomServer: string;
+  maxFileSize?: number; // in MB
+  allowedTypes?: string[]; // MIME types
+}
+
+export interface FileUploadMetadata {
+  sha256: string;
+  filename: string;
+  size: number;
+  mimeType: string;
+  server: string;
+  uploadedAt: number;
 }
 
 export interface AnswerSettings {

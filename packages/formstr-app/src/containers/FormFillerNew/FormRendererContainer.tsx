@@ -1,5 +1,5 @@
 import { Button, Form, Typography } from "antd";
-import { Event } from "nostr-tools";
+import { Event, generateSecretKey, getPublicKey } from "nostr-tools";
 import { Response, Tag } from "../../nostr/types";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { getAllowedUsers, getFormSpec } from "../../utils/formUtils";
@@ -50,6 +50,8 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     const saved = getItem<boolean>(LOCAL_STORAGE_KEYS.AUTO_SAVE_ENABLED);
     return saved !== false; // Default to true if not set
   });
+  // Generate keypair once for this form session (used for anonymous submissions and file encryption)
+  const [responderSecretKey] = useState<Uint8Array>(() => generateSecretKey());
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftStorageKey = getDraftStorageKey(formEvent);
@@ -201,6 +203,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         relays={getResponseRelays(formEvent)}
         formEvent={formEvent}
         formTemplate={formTemplate!}
+        responderSecretKey={responderSecretKey}
       />
     );
   } else if (!userPubKey) {
@@ -227,6 +230,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         relays={getResponseRelays(formEvent)}
         formEvent={formEvent}
         formTemplate={formTemplate!}
+        responderSecretKey={responderSecretKey}
       />
     );
   }
@@ -267,6 +271,8 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       saveStatus={saveStatus}
       autoSaveEnabled={autoSaveEnabled}
       onToggleAutoSave={toggleAutoSave}
+      formAuthorPubkey={formEvent.pubkey}
+      responderSecretKey={responderSecretKey}
     />
   );
 };

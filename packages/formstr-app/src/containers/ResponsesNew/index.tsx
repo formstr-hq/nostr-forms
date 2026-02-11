@@ -486,6 +486,7 @@ export const Response = () => {
             processedInputs={selectedResponseInputsForModal}
             responseMetadataEvent={selectedEventForModal}
             formstrBranding={getformstrBranding(formSpec)}
+            editKey={editKey}
           />
         )}
     </div>
