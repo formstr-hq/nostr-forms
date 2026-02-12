@@ -12,13 +12,13 @@ const PUBLIC_RELAYS = [
   "wss://nos.lol",
 ];
 
-const DEFAULT_SERVERS = [
+export const DEFAULT_SERVERS = [
   "https://blossom.primal.net",
   "https://nostr.download",
   "https://blossom.oxtr.dev",
 ];
 
-interface ServerInfo {
+export interface ServerInfo {
   url: string;
   source: "default" | "relay" | "custom";
 }
@@ -155,9 +155,11 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
   ];
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }}>
-      <div className="property-setting">
-        <Text className="property-name">Blossom Server</Text>
+    <Space direction="vertical" style={{ width: "100%" }} size="middle">
+      <div>
+        <Text className="property-name" style={{ display: "block", marginBottom: 8 }}>
+          Blossom Server
+        </Text>
         <Select
           style={{ width: "100%" }}
           value={blossomServer}
@@ -199,15 +201,13 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
         </Select>
       </div>
 
-      <div className="property-setting">
-        <Button
-          onClick={handleTestConnection}
-          loading={testingConnection}
-          style={{ width: "100%" }}
-        >
-          Test Connection
-        </Button>
-      </div>
+      <Button
+        onClick={handleTestConnection}
+        loading={testingConnection}
+        style={{ width: "100%" }}
+      >
+        Test Connection
+      </Button>
 
       <div className="property-setting">
         <Text className="property-name">Max File Size (MB)</Text>
@@ -216,12 +216,13 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
           max={100}
           value={maxFileSize}
           onChange={(v) => updateSetting("maxFileSize", v || 10)}
-          style={{ width: "100%" }}
         />
       </div>
 
-      <div className="property-setting">
-        <Text className="property-name">Allowed File Types (optional)</Text>
+      <div>
+        <Text className="property-name" style={{ display: "block", marginBottom: 8 }}>
+          Allowed File Types (optional)
+        </Text>
         <Select
           mode="multiple"
           style={{ width: "100%" }}
@@ -237,11 +238,9 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
         </Select>
       </div>
 
-      <div className="property-setting">
-        <Text type="secondary" style={{ fontSize: "12px" }}>
-          Files will be encrypted with NIP-44 before upload
-        </Text>
-      </div>
+      <Text type="secondary" style={{ fontSize: "12px", display: "block" }}>
+        Files will be encrypted with NIP-44 before upload
+      </Text>
     </Space>
   );
 };

@@ -70,7 +70,7 @@ const Inputs: React.FC<InputsProps> = ({
       case AnswerTypes.datetime:
         return <DatePicker disabled={true} placeholder="Pick Date & Time" />;
       case AnswerTypes.fileUpload:
-        return <FileUploadBuilder answerSettings={answerSettings} />;
+        return <FileUploadBuilder answerSettings={answerSettings} handleAnswerSettings={answerSettingsHandler} />;
       case AnswerTypes.multipleChoiceGrid:
       case AnswerTypes.checkboxGrid: {
         const gridOptions = options as unknown as GridOptions;
