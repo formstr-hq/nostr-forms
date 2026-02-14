@@ -12,12 +12,18 @@ import {
   ValidationRuleTypes,
 } from "../../../nostr/types";
 
+// The value from antd form for these inputs seems to be an array of values
+type FormValue = string[] | number[] | undefined | null;
+
 function NumRange(rule: RangeRule): Rule {
   return {
-    validator: (_: unknown, value: unknown) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.min && !rule.max) return Promise.resolve();
+
       const val = (value as number[])[0];
+      if (typeof val !== 'number') return Promise.resolve();
+
       if (rule.min && val < rule.min) {
         return Promise.reject(`Please enter number more than ${rule.min}`);
       }
@@ -31,10 +37,13 @@ function NumRange(rule: RangeRule): Rule {
 
 function MinLength(rule: MinRule): Rule {
   return {
-    validator: (_: unknown, value: unknown) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.min) return Promise.resolve();
+
       const val = (value as string[])[0];
+      if (typeof val !== 'string') return Promise.resolve();
+
       if (val.length < rule.min) {
         return Promise.reject(`Please enter more than ${rule.min} chars`);
       }
@@ -45,10 +54,13 @@ function MinLength(rule: MinRule): Rule {
 
 function MaxLength(rule: MaxRule): Rule {
   return {
-    validator: (_: unknown, value: unknown) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.max) return Promise.resolve();
+
       const val = (value as string[])[0];
+      if (typeof val !== 'string') return Promise.resolve();
+
       if (val.length > rule.max) {
         return Promise.reject(`Please enter less than ${rule.max} chars`);
       }
@@ -59,10 +71,13 @@ function MaxLength(rule: MaxRule): Rule {
 
 function Regex(rule: RegexRule): Rule {
   return {
-    validator: (_: unknown, value: unknown) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.pattern) return Promise.resolve();
+
       const val = (value as string[])[0];
+      if (typeof val !== 'string') return Promise.resolve();
+
       if (!new RegExp(rule.pattern).test(val)) {
         return Promise.reject(
           rule.errorMessage || `Did not match the pattern: ${rule.pattern}`,
@@ -75,8 +90,8 @@ function Regex(rule: RegexRule): Rule {
 
 function Match(rule: MatchRule, answerType?: AnswerTypes): Rule {
   return {
-    validator: (_: unknown, value: unknown) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.answer) return Promise.resolve();
 
       const userValue = (value as string[])[0];
@@ -86,6 +101,8 @@ function Match(rule: MatchRule, answerType?: AnswerTypes): Rule {
         answerType === AnswerTypes.multipleChoiceGrid ||
         answerType === AnswerTypes.checkboxGrid
       ) {
+        if (typeof userValue !== 'string') return Promise.resolve();
+
         try {
           const userResponse = JSON.parse(userValue) as GridResponse;
           const correctResponse = JSON.parse(
@@ -128,7 +145,14 @@ function Match(rule: MatchRule, answerType?: AnswerTypes): Rule {
       }
 
       // Simple comparison for non-grid questions
+      // rule.answer can be number/string/boolean. userValue is string/number from array.
       if (userValue === rule.answer) {
+        return Promise.resolve();
+      }
+
+      // Attempt loose comparison if strict failed (e.g. "5" == 5)
+      // eslint-disable-next-line eqeqeq
+      if (userValue == rule.answer) {
         return Promise.resolve();
       }
 
@@ -161,11 +185,14 @@ function createRule(
 
 function GridValidator(gridOptions: GridOptions): Rule {
   return {
-    validator: (_: unknown, value: unknown) => {
-      if (!value || !(value as string[])[0]) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
+
+      const val = (value as string[])[0];
+      if (typeof val !== 'string') return Promise.resolve();
 
       try {
-        const responses = JSON.parse((value as string[])[0]) as GridResponse;
+        const responses = JSON.parse(val) as GridResponse;
 
         // Check if all rows are answered
         for (const [rowId, rowLabel] of gridOptions.rows) {
