@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Descriptions, Typography, Button, Space, Form } from "antd";
-import { Event, nip19 } from "nostr-tools";
+import { Event, nip19, getPublicKey } from "nostr-tools";
+import { hexToBytes } from "nostr-tools/utils";
 import { Tag } from "../../../nostr/types";
 import {
   getResponseLabels,
@@ -22,6 +23,7 @@ interface ResponseDetailModalProps {
   processedInputs: Tag[];
   responseMetadataEvent: Event | null;
   formstrBranding?: boolean;
+  editKey?: string | null;
 }
 export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
   isVisible,
@@ -30,6 +32,7 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
   processedInputs,
   responseMetadataEvent,
   formstrBranding,
+  editKey,
 }) => {
   const [metaData, setMetaData] = useState<{
     author?: string;
@@ -109,6 +112,9 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
           disabled={true}
           initialValues={buildInitialValues(processedInputs)}
           formstrBranding={formstrBranding}
+          formAuthorPubkey={editKey ? getPublicKey(hexToBytes(editKey)) : undefined}
+          formEditKey={editKey || undefined}
+          uploaderPubkey={responseMetadataEvent?.pubkey}
         />
       ) : (
         <Typography.Text>

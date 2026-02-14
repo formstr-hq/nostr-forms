@@ -8,6 +8,7 @@ import { RightAnswer } from "./RightAnswer";
 import { IAnswerSettings } from "./types";
 import { AnswerTypes, Field } from "../../../../nostr/types";
 import { SignatureSettings } from "./settings/SignatureSettings";
+import { FileUploadSettings } from "./settings/FileUploadSettings";
 
 const { Text } = Typography;
 
@@ -52,6 +53,13 @@ function AnswerSettings() {
       case AnswerTypes.signature:
         return (
           <SignatureSettings
+            answerSettings={answerSettings}
+            handleAnswerSettings={handleAnswerSettings}
+          />
+        );
+      case AnswerTypes.fileUpload:
+        return (
+          <FileUploadSettings
             answerSettings={answerSettings}
             handleAnswerSettings={handleAnswerSettings}
           />

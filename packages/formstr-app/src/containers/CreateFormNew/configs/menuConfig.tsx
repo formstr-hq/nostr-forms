@@ -19,6 +19,7 @@ import {
   EditOutlined,
   FieldTimeOutlined,
   MailOutlined,
+  CloudUploadOutlined,
 } from "@ant-design/icons";
 
 export const BASIC_MENU = [
@@ -123,6 +124,17 @@ export const INPUTS_MENU = [
       signature: {
         prefilledContent: "I confirm  that all the data filled is true",
       },
+    },
+  },
+  {
+    key: INPUTS_TYPES.FILE_UPLOAD,
+    label: "File upload",
+    icon: <CloudUploadOutlined style={{ color: "#FF6B6B" }} />,
+    primitive: "file",
+    answerSettings: {
+      renderElement: AnswerTypes.fileUpload,
+      blossomServer: "https://nostr.download",
+      maxFileSize: 10, // 10MB default
     },
   },
   {

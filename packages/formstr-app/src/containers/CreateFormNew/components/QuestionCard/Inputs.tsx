@@ -7,6 +7,7 @@ import { Choice } from "./InputElements/OptionTypes/types";
 import { AnswerSettings, AnswerTypes, GridOptions } from "../../../../nostr/types";
 import SignatureInput from "./InputElements/Signature";
 import { GridCreator } from "./InputElements/GridCreator";
+import FileUploadBuilder from "./InputElements/FileUploadBuilder";
 
 interface InputsProps {
   inputType: string;
@@ -68,6 +69,8 @@ const Inputs: React.FC<InputsProps> = ({
         return <SignatureInput answerSettings={answerSettings} />;
       case AnswerTypes.datetime:
         return <DatePicker disabled={true} placeholder="Pick Date & Time" />;
+      case AnswerTypes.fileUpload:
+        return <FileUploadBuilder answerSettings={answerSettings} handleAnswerSettings={answerSettingsHandler} />;
       case AnswerTypes.multipleChoiceGrid:
       case AnswerTypes.checkboxGrid: {
         const gridOptions = options as unknown as GridOptions;

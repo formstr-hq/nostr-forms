@@ -42,6 +42,10 @@ interface FormRendererProps {
   saveStatus?: SaveStatus;
   autoSaveEnabled?: boolean;
   onToggleAutoSave?: () => void;
+  formAuthorPubkey?: string;
+  formEditKey?: string;
+  responderSecretKey?: Uint8Array;
+  uploaderPubkey?: string; // For decryption when viewing responses
 }
 
 // Content item can be either a section or individual questions
@@ -68,6 +72,10 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   saveStatus = "idle",
   autoSaveEnabled = true,
   onToggleAutoSave,
+  formAuthorPubkey,
+  formEditKey,
+  responderSecretKey,
+  uploaderPubkey,
 }) => {
   const name = formTemplate.find((tag) => tag[0] === "name")?.[1] || "";
   const settings = JSON.parse(
@@ -286,6 +294,10 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             disabled={disabled}
             values={initialValues}
             formSettings={settings}
+            formAuthorPubkey={formAuthorPubkey}
+            formEditKey={formEditKey}
+            responderSecretKey={responderSecretKey}
+            uploaderPubkey={uploaderPubkey}
           />
         </>
       )}

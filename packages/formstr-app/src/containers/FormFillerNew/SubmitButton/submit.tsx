@@ -20,6 +20,7 @@ interface SubmitButtonProps {
   disabledMessage?: string;
   relays: string[];
   formTemplate: Tag[];
+  responderSecretKey?: Uint8Array; // Use this for anonymous submissions, undefined for non-anonymous
 }
 
 export const SubmitButton: React.FC<SubmitButtonProps> = ({
@@ -32,6 +33,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   disabledMessage = "disabled",
   relays,
   formTemplate,
+  responderSecretKey,
 }) => {
   const { pubkey: userPubKey, requestPubkey } = useProfileContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,7 +78,8 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
 
     const pubKey = formEvent.pubkey;
     const responses = buildResponses(form);
-    const anonUser = anonymous ? generateSecretKey() : null;
+    // Use the responderSecretKey passed from FormRendererContainer (same key used for file encryption)
+    const anonUser = anonymous ? responderSecretKey : null;
 
     setIsSubmitting(true);
     await sendResponses(
@@ -103,8 +106,8 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       if (errors.length > 0) return;
       setIsValidating(true);
       const responses = buildResponses(form);
-      const anonUser = generateSecretKey(); // validation always done anonymously
-      const nrpcResponse = await fireWebhook(formTemplate, responses, anonUser);
+      // Use responderSecretKey for validation too
+      const nrpcResponse = await fireWebhook(formTemplate, responses, responderSecretKey);
       setIsValidating(false);
 
       if (!nrpcResponse) {
@@ -153,7 +156,8 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
         setIsDisabled(true);
 
         const responses = buildResponses(form);
-        const anonUser = anonymous ? generateSecretKey() : null;
+        // Use the responderSecretKey for anonymous (same as file encryption)
+        const anonUser = anonymous ? responderSecretKey : null;
 
         if (requireWebhookPass) {
           // When webhook is required, we already validated before

@@ -18,6 +18,10 @@ interface QuestionProps {
   testId: string;
   formSettings: IFormSettings;
   gridOptions?: GridOptions | null;
+  formAuthorPubkey?: string;
+  formEditKey?: string;
+  responderSecretKey?: Uint8Array;
+  uploaderPubkey?: string;
 }
 
 export const QuestionNode: React.FC<QuestionProps> = ({
@@ -32,6 +36,10 @@ export const QuestionNode: React.FC<QuestionProps> = ({
   testId,
   formSettings,
   gridOptions,
+  formAuthorPubkey,
+  formEditKey,
+  responderSecretKey,
+  uploaderPubkey,
 }) => {
   const answerHandler = (questionId: string) => {
     return (answer: string, message?: string) => {
@@ -65,6 +73,10 @@ export const QuestionNode: React.FC<QuestionProps> = ({
         defaultValue={value ? value[0] : undefined}
         testId={`${testId}:input`}
         gridOptions={gridOptions}
+        formAuthorPubkey={formAuthorPubkey}
+        formEditKey={formEditKey}
+        responderSecretKey={responderSecretKey}
+        uploaderPubkey={uploaderPubkey}
       />
     </Card>
   );

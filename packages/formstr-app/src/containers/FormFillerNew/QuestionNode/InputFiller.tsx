@@ -8,6 +8,7 @@ import { TimeFiller } from "./InputTypes/TimeFiller";
 import { SignatureFiller } from "./InputTypes/SignatureFiller";
 import { DateTimeFiller } from "./InputTypes/DateTimeFiller";
 import { GridFiller } from "./InputTypes/GridFiller";
+import { FileUploadFiller } from "./InputTypes/FileUploadFiller";
 import { AnswerTypes, GridOptions, Option } from "../../../nostr/types";
 
 interface InputFillerProps {
@@ -18,6 +19,10 @@ interface InputFillerProps {
   disabled?: boolean;
   testId?: string;
   gridOptions?: GridOptions | null;
+  formAuthorPubkey?: string;
+  formEditKey?: string;
+  responderSecretKey?: Uint8Array;
+  uploaderPubkey?: string;
 }
 
 export const InputFiller: React.FC<InputFillerProps> = ({
@@ -28,6 +33,10 @@ export const InputFiller: React.FC<InputFillerProps> = ({
   disabled = false,
   testId = "input-filler",
   gridOptions,
+  formAuthorPubkey,
+  formEditKey,
+  responderSecretKey,
+  uploaderPubkey,
 }) => {
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -122,6 +131,20 @@ export const InputFiller: React.FC<InputFillerProps> = ({
           fieldConfig={fieldConfig}
           onChange={onChange}
           disabled={disabled}
+        />
+      ),
+      [AnswerTypes.fileUpload]: !responderSecretKey && !disabled ? (
+        <div>Error: responderSecretKey required for file uploads</div>
+      ) : (
+        <FileUploadFiller
+          defaultValue={defaultValue as string}
+          fieldConfig={fieldConfig}
+          onChange={onChange}
+          disabled={disabled}
+          formAuthorPubkey={formAuthorPubkey}
+          formEditKey={formEditKey}
+          responderSecretKey={responderSecretKey!}
+          uploaderPubkey={uploaderPubkey}
         />
       ),
       [AnswerTypes.datetime]: (
