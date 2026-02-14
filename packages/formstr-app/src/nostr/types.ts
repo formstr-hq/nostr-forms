@@ -147,6 +147,7 @@ export interface FileUploadMetadata {
   mimeType: string;
   server: string;
   uploadedAt: number;
+  uploaderPubkey: string; // The pubkey used to encrypt the file
 }
 
 export interface AnswerSettings {

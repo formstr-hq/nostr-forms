@@ -13,7 +13,6 @@ const PUBLIC_RELAYS = [
 ];
 
 export const DEFAULT_SERVERS = [
-  "https://blossom.primal.net",
   "https://nostr.download",
   "https://blossom.oxtr.dev",
 ];
@@ -118,16 +117,22 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
   const handleTestConnection = async () => {
     setTestingConnection(true);
     try {
-      const response = await fetch(`${blossomServer}/`, {
-        method: "HEAD",
+      // Test the actual upload endpoint that will be used
+      const response = await fetch(`${blossomServer}/upload`, {
+        method: "OPTIONS", // Check CORS preflight
       });
-      if (response.ok) {
-        message.success("Connection successful!");
+      if (response.ok || response.status === 204) {
+        message.success("Upload endpoint accessible!");
       } else {
-        message.error("Server responded but may not be a valid Blossom server");
+        message.warning(`Server responded with status ${response.status}. Upload may not work.`);
       }
-    } catch (e) {
-      message.error("Failed to connect. This may be a CORS issue or the server is unreachable.");
+    } catch (e: any) {
+      console.error("Connection test failed:", e);
+      if (e instanceof TypeError || e.message?.includes("Failed to fetch")) {
+        message.error("CORS error: This server blocks uploads from this origin. Choose a different server.");
+      } else {
+        message.error("Failed to connect. Server may be unreachable.");
+      }
     } finally {
       setTestingConnection(false);
     }

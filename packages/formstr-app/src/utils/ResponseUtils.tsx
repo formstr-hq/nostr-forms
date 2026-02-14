@@ -138,6 +138,18 @@ export const getResponseLabels = (
         responseLabel = `${formatted} (${timezone})`;
       }
     }
+
+    if (questionField[2] === "file" && answerValue) {
+      try {
+        const metadata = JSON.parse(answerValue);
+        if (metadata && metadata.filename) {
+          const sizeInMB = (metadata.size / (1024 * 1024)).toFixed(2);
+          responseLabel = `📎 ${metadata.filename} (${sizeInMB} MB)`;
+        }
+      } catch (e) {
+        console.warn("Error parsing file metadata:", e);
+      }
+    }
   }
   return { questionLabel, responseLabel, fieldId };
 };

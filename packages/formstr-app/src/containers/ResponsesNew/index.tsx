@@ -3,7 +3,7 @@ import { Event, getPublicKey, nip19 } from "nostr-tools";
 import { useParams, useSearchParams } from "react-router-dom";
 import { fetchFormResponses } from "../../nostr/responses";
 import SummaryStyle from "./summary.style";
-import { Button, Card, Divider, Table, Typography, Spin } from "antd";
+import { Button, Card, Divider, Table, Typography, Spin, message } from "antd";
 import ResponseWrapper from "./Responses.style";
 import { isMobile } from "../../utils/utility";
 import { useProfileContext } from "../../hooks/useProfileContext";
@@ -15,7 +15,7 @@ import {
   getFormSpec as getFormSpecFromEventUtil,
   getformstrBranding,
 } from "../../utils/formUtils";
-import { Field, Tag } from "../../nostr/types";
+import { Field, Tag, FileUploadMetadata } from "../../nostr/types";
 import { useApplicationContext } from "../../hooks/useApplicationContext";
 import { ResponseDetailModal } from "./components/ResponseDetailModal";
 import {
@@ -28,8 +28,9 @@ import { ResponseHeader } from "./components/ResponseHeader";
 import { AddressPointer } from "nostr-tools/nip19";
 import { SubCloser } from "nostr-tools/abstract-pool";
 import SafeMarkdown from "../../components/SafeMarkdown";
-import { ExportOutlined } from "@ant-design/icons";
+import { ExportOutlined, DownloadOutlined } from "@ant-design/icons";
 import { decodeNKeys } from "../../utils/nkeys";
+import { downloadEncryptedFile } from "../../utils/fileDownload";
 
 const { Text } = Typography;
 
@@ -198,6 +199,37 @@ export const Response = () => {
     setIsModalOpen(true);
   };
 
+  const handleFileDownload = async (metadataJson: string) => {
+    console.log("handleFileDownload called with:", { metadataJson, editKey });
+
+    if (!editKey) {
+      message.error("Cannot download: Form edit key not available");
+      return;
+    }
+
+    try {
+      const metadata: FileUploadMetadata = JSON.parse(metadataJson);
+      console.log("Parsed metadata:", metadata);
+      console.log("metadata.uploaderPubkey:", metadata.uploaderPubkey);
+
+      if (!metadata.uploaderPubkey) {
+        message.error("This file was uploaded with an older version. Please re-upload the file to download it.");
+        return;
+      }
+
+      console.log("Attempting download with uploaderPubkey:", metadata.uploaderPubkey);
+
+      await downloadEncryptedFile({
+        metadata,
+        formEditKey: editKey,
+        uploaderPubkey: metadata.uploaderPubkey, // Use pubkey from metadata, not response event
+      });
+    } catch (error: any) {
+      console.error("handleFileDownload error:", error);
+      message.error(`Download failed: ${error.message || "Unknown error"}`);
+    }
+  };
+
   const getData = (useLabels: boolean = false) => {
     let answers: Array<{
       [key: string]: string;
@@ -224,7 +256,7 @@ export const Response = () => {
         [key: string]: string;
       } = {
         key: responseEvent.pubkey,
-        createdAt: new Date(responseEvent.created_at * 1000).toDateString(),
+        createdAt: new Date(responseEvent.created_at * 1000).toLocaleString(),
         authorPubkey: nip19.npubEncode(responseEvent.pubkey),
         responsesCount: pubkeyResponses.length.toString(),
       };
@@ -235,7 +267,15 @@ export const Response = () => {
           formSpec
         );
         const displayKey = useLabels ? questionLabel : fieldId;
-        answerObject[displayKey] = responseLabel;
+
+        // For file fields, store raw value (JSON metadata) instead of formatted label
+        // The table's custom render will format it and add download button
+        const questionField = formSpec.find(
+          (tag): tag is Field => tag[0] === "field" && tag[1] === fieldId
+        );
+        const isFileField = questionField && questionField[2] === "file";
+
+        answerObject[displayKey] = isFileField ? input[2] : responseLabel;
       });
       answers.push(answerObject);
     });
@@ -327,8 +367,14 @@ export const Response = () => {
       formSpec?.filter((field) => field[0] === "field") || ([] as Field[]);
 
     fieldsFromSpec.forEach((field) => {
-      let [_, fieldId, __, label] = field;
-      columns.push({
+      let [_, fieldId, fieldType, label] = field;
+      const column: {
+        key: string;
+        title: string | JSX.Element;
+        dataIndex: string;
+        width?: number;
+        render?: (data: string, record: any) => JSX.Element;
+      } = {
         key: fieldId,
         title: label ? (
           <SafeMarkdown components={{ p: "span" }}>{label as any}</SafeMarkdown>
@@ -337,7 +383,36 @@ export const Response = () => {
         ),
         dataIndex: fieldId,
         width: 150,
-      });
+      };
+
+      // Add custom render for file upload fields
+      if (fieldType === "file") {
+        column.render = (data: string, record: any) => {
+          if (!data) return <span>-</span>;
+          try {
+            const metadata: FileUploadMetadata = JSON.parse(data);
+            const sizeInMB = (metadata.size / (1024 * 1024)).toFixed(2);
+            return (
+              <div
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span>📎 {metadata.filename} ({sizeInMB} MB)</span>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<DownloadOutlined />}
+                  onClick={() => handleFileDownload(data)}
+                />
+              </div>
+            );
+          } catch (e) {
+            return <span>{data}</span>;
+          }
+        };
+      }
+
+      columns.push(column);
       uniqueQuestionIdsInResponses.delete(fieldId);
     });
     const extraFieldIdsFromResponses = Array.from(uniqueQuestionIdsInResponses);

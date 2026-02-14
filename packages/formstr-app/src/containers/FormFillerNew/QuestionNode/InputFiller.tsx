@@ -133,7 +133,9 @@ export const InputFiller: React.FC<InputFillerProps> = ({
           disabled={disabled}
         />
       ),
-      [AnswerTypes.fileUpload]: (
+      [AnswerTypes.fileUpload]: !responderSecretKey && !disabled ? (
+        <div>Error: responderSecretKey required for file uploads</div>
+      ) : (
         <FileUploadFiller
           defaultValue={defaultValue as string}
           fieldConfig={fieldConfig}
@@ -141,7 +143,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
           disabled={disabled}
           formAuthorPubkey={formAuthorPubkey}
           formEditKey={formEditKey}
-          responderSecretKey={responderSecretKey}
+          responderSecretKey={responderSecretKey!}
           uploaderPubkey={uploaderPubkey}
         />
       ),

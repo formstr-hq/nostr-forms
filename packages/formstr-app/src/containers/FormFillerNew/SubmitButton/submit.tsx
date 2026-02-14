@@ -20,7 +20,7 @@ interface SubmitButtonProps {
   disabledMessage?: string;
   relays: string[];
   formTemplate: Tag[];
-  responderSecretKey: Uint8Array; // Use this for anonymous submissions
+  responderSecretKey?: Uint8Array; // Use this for anonymous submissions, undefined for non-anonymous
 }
 
 export const SubmitButton: React.FC<SubmitButtonProps> = ({

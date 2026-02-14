@@ -82,64 +82,76 @@ async function nip44DecryptLarge(ciphertext: string, conversationKey: Uint8Array
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
-  // Decode from base64
-  const payload = base64ToUint8Array(ciphertext);
+  try {
+    console.log("nip44DecryptLarge: Starting decryption, ciphertext length:", ciphertext.length);
 
-  // Parse: version (1 byte) + nonce (32 bytes) + ciphertext
-  const version = payload[0];
-  if (version !== 2) {
-    throw new Error(`Unsupported NIP-44 version: ${version}`);
+    // Decode from base64
+    const payload = base64ToUint8Array(ciphertext);
+    console.log("nip44DecryptLarge: Decoded payload length:", payload.length);
+
+    // Parse: version (1 byte) + nonce (32 bytes) + ciphertext
+    const version = payload[0];
+    console.log("nip44DecryptLarge: Version:", version);
+    if (version !== 2) {
+      throw new Error(`Unsupported NIP-44 version: ${version}`);
+    }
+
+    const nonce = payload.slice(1, 33);
+    const ciphertextBytes = payload.slice(33);
+    console.log("nip44DecryptLarge: Ciphertext bytes length:", ciphertextBytes.length);
+
+    // Derive encryption key from conversation key and nonce using HKDF
+    const salt = nonce;
+    const info = encoder.encode("nip44-v2");
+
+    const baseKey = await crypto.subtle.importKey(
+      "raw",
+      conversationKey,
+      "HKDF",
+      false,
+      ["deriveBits"]
+    );
+
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: "HKDF",
+        hash: "SHA-256",
+        salt: salt,
+        info: info,
+      },
+      baseKey,
+      44 * 8
+    );
+
+    const derived = new Uint8Array(derivedBits);
+    const chachaKey = derived.slice(0, 32);
+    const chachaNonce = derived.slice(32, 44);
+
+    // Decrypt with AES-GCM
+    const aesKey = await crypto.subtle.importKey(
+      "raw",
+      chachaKey,
+      "AES-GCM",
+      false,
+      ["decrypt"]
+    );
+
+    console.log("nip44DecryptLarge: About to decrypt with AES-GCM");
+    const plaintext = await crypto.subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv: chachaNonce,
+      },
+      aesKey,
+      ciphertextBytes
+    );
+
+    console.log("nip44DecryptLarge: Decryption successful");
+    return decoder.decode(plaintext);
+  } catch (error) {
+    console.error("nip44DecryptLarge error:", error);
+    throw error;
   }
-
-  const nonce = payload.slice(1, 33);
-  const ciphertextBytes = payload.slice(33);
-
-  // Derive encryption key from conversation key and nonce using HKDF
-  const salt = nonce;
-  const info = encoder.encode("nip44-v2");
-
-  const baseKey = await crypto.subtle.importKey(
-    "raw",
-    conversationKey,
-    "HKDF",
-    false,
-    ["deriveBits"]
-  );
-
-  const derivedBits = await crypto.subtle.deriveBits(
-    {
-      name: "HKDF",
-      hash: "SHA-256",
-      salt: salt,
-      info: info,
-    },
-    baseKey,
-    44 * 8
-  );
-
-  const derived = new Uint8Array(derivedBits);
-  const chachaKey = derived.slice(0, 32);
-  const chachaNonce = derived.slice(32, 44);
-
-  // Decrypt with AES-GCM
-  const aesKey = await crypto.subtle.importKey(
-    "raw",
-    chachaKey,
-    "AES-GCM",
-    false,
-    ["decrypt"]
-  );
-
-  const plaintext = await crypto.subtle.decrypt(
-    {
-      name: "AES-GCM",
-      iv: chachaNonce,
-    },
-    aesKey,
-    ciphertextBytes
-  );
-
-  return decoder.decode(plaintext);
 }
 
 /**
@@ -181,13 +193,22 @@ export async function encryptFileToAuthor(
   let uploaderPubkey: string;
   const plaintextBase64 = uint8ArrayToBase64(fileBytes);
 
+  console.log("encryptFileToAuthor called with:", {
+    formAuthorPubkey,
+    hasResponderSecretKey: !!responderSecretKey,
+  });
+
   // If responderSecretKey provided (anonymous submission)
   if (responderSecretKey) {
     uploaderPubkey = getPublicKey(responderSecretKey);
+    console.log("Using responderSecretKey, uploaderPubkey:", uploaderPubkey);
+
     const conversationKey = nip44.v2.utils.getConversationKey(
       responderSecretKey,
       formAuthorPubkey
     );
+    console.log("Encryption conversationKey:", conversationKey);
+
     // Use our custom implementation that handles large payloads
     const ciphertext = await nip44EncryptLarge(plaintextBase64, conversationKey);
     return { ciphertext, uploaderPubkey };
@@ -207,20 +228,89 @@ export async function encryptFileToAuthor(
 
 /**
  * Decrypt file using form's edit key and uploader's public key
+ * (Used by form author to decrypt files uploaded by responders)
  */
 export async function decryptFileFromUploader(
   ciphertext: string,
   formEditKey: string,
   uploaderPubkey: string
 ): Promise<Uint8Array> {
-  // Create conversation key between form's edit key and uploader's pubkey
+  console.log("decryptFileFromUploader called with:", {
+    formEditKey: formEditKey.substring(0, 10) + "...",
+    formEditKeyFull: formEditKey,
+    uploaderPubkey: uploaderPubkey.substring(0, 10) + "...",
+    uploaderPubkeyFull: uploaderPubkey,
+    ciphertextLength: ciphertext.length,
+  });
+
+  try {
+    // Create conversation key between form's edit key and uploader's pubkey
+    const formEditKeyBytes = hexToBytes(formEditKey);
+    console.log("formEditKeyBytes:", formEditKeyBytes);
+
+    const conversationKey = nip44.v2.utils.getConversationKey(
+      formEditKeyBytes,
+      uploaderPubkey
+    );
+
+    console.log("Conversation key created:", conversationKey);
+
+    // Decrypt using our custom implementation that handles large payloads
+    const plaintextBase64 = await nip44DecryptLarge(ciphertext, conversationKey);
+
+    if (!plaintextBase64) {
+      throw new Error("Decryption failed");
+    }
+
+    console.log("Decryption successful, plaintextBase64 length:", plaintextBase64.length);
+    return base64ToUint8Array(plaintextBase64);
+  } catch (error) {
+    console.error("decryptFileFromUploader error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Decrypt file as the uploader using secret key
+ * (Used by the person who uploaded the file to download their own file)
+ */
+export async function decryptFileAsUploader(
+  ciphertext: string,
+  uploaderSecretKey: Uint8Array,
+  formAuthorPubkey: string
+): Promise<Uint8Array> {
+  // Create conversation key between uploader's secret key and form author's pubkey
   const conversationKey = nip44.v2.utils.getConversationKey(
-    hexToBytes(formEditKey),
-    uploaderPubkey
+    uploaderSecretKey,
+    formAuthorPubkey
   );
 
   // Decrypt using our custom implementation that handles large payloads
   const plaintextBase64 = await nip44DecryptLarge(ciphertext, conversationKey);
+
+  if (!plaintextBase64) {
+    throw new Error("Decryption failed");
+  }
+
+  return base64ToUint8Array(plaintextBase64);
+}
+
+/**
+ * Decrypt file as the uploader using their signer
+ * (Used when the uploader used their Nostr signer to upload)
+ */
+export async function decryptFileWithSigner(
+  ciphertext: string,
+  formAuthorPubkey: string
+): Promise<Uint8Array> {
+  const signer = await signerManager.getSigner();
+
+  if (!signer.nip44Decrypt) {
+    throw new Error("Signer does not support NIP-44 decryption");
+  }
+
+  // Signer handles decryption
+  const plaintextBase64 = await signer.nip44Decrypt(formAuthorPubkey, ciphertext);
 
   if (!plaintextBase64) {
     throw new Error("Decryption failed");

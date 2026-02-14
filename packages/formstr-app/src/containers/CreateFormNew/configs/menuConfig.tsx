@@ -133,7 +133,7 @@ export const INPUTS_MENU = [
     primitive: "file",
     answerSettings: {
       renderElement: AnswerTypes.fileUpload,
-      blossomServer: "https://blossom.primal.net",
+      blossomServer: "https://nostr.download",
       maxFileSize: 10, // 10MB default
     },
   },

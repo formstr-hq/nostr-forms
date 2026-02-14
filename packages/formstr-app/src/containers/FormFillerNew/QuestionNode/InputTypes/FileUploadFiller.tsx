@@ -1,5 +1,5 @@
-import { Upload, Button, Typography, message, Progress, Space } from "antd";
-import { UploadOutlined, CheckCircleOutlined, InboxOutlined, DownloadOutlined } from "@ant-design/icons";
+import { Upload, Button, Typography, message, Steps, Space } from "antd";
+import { UploadOutlined, CheckCircleOutlined, InboxOutlined, DownloadOutlined, FileOutlined, LockOutlined, SafetyCertificateOutlined, CloudUploadOutlined, CloudDownloadOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { IAnswerSettings } from "../../../CreateFormNew/components/AnswerSettings/types";
 import { Field, FileUploadMetadata } from "../../../../nostr/types";
@@ -8,6 +8,7 @@ import { createAuthEvent } from "../../../../utils/blossomAuth";
 import { encryptFileToAuthor, decryptFileFromUploader } from "../../../../utils/blossomCrypto";
 import type { RcFile } from "antd/es/upload/interface";
 import { hexToBytes } from "nostr-tools/utils";
+import { DEFAULT_SERVERS } from "../../../CreateFormNew/components/AnswerSettings/settings/FileUploadSettings";
 
 const { Text, Paragraph } = Typography;
 const { Dragger } = Upload;
@@ -20,7 +21,7 @@ interface FileUploadFillerProps {
   defaultValue?: string;
   formAuthorPubkey?: string;
   formEditKey?: string;
-  responderSecretKey?: Uint8Array;
+  responderSecretKey: Uint8Array; // Required - always used for file encryption (signers can't handle large files)
   uploaderPubkey?: string; // For decryption when viewing responses
 }
 
@@ -34,7 +35,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   responderSecretKey,
   uploaderPubkey,
 }) => {
-  const blossomServer: string = fieldConfig.blossomServer || "https://blossom.primal.net";
+  const blossomServer: string = fieldConfig.blossomServer || DEFAULT_SERVERS[0];
   const maxFileSize: number = (fieldConfig.maxFileSize || 10) * 1024 * 1024; // Convert MB to bytes
   const allowedTypes: string[] = fieldConfig.allowedTypes || [];
 
@@ -57,7 +58,23 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   );
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const uploadSteps = [
+    { title: "Reading file", icon: <FileOutlined /> },
+    { title: "Encrypting", icon: <LockOutlined /> },
+    { title: "Preparing upload", icon: <SafetyCertificateOutlined /> },
+    { title: "Uploading", icon: <CloudUploadOutlined /> },
+    { title: "Complete", icon: <CheckCircleOutlined /> },
+  ];
+
+  const downloadSteps = [
+    { title: "Authenticating", icon: <SafetyCertificateOutlined /> },
+    { title: "Downloading", icon: <CloudDownloadOutlined /> },
+    { title: "Decrypting", icon: <LockOutlined /> },
+    { title: "Saving file", icon: <FileOutlined /> },
+    { title: "Complete", icon: <CheckCircleOutlined /> },
+  ];
 
   useEffect(() => {
     const parsed = parseExistingMetadata(defaultValue);
@@ -100,47 +117,41 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
     }
 
     setUploading(true);
-    setUploadProgress(0);
+    setCurrentStep(0);
 
     try {
       if (!formAuthorPubkey) {
         throw new Error("Form author public key not available");
       }
-      if (!responderSecretKey) {
-        throw new Error("Responder secret key not available");
-      }
 
-      // Step 1: Read file as Uint8Array
+      // Step 0: Read file as Uint8Array
       const fileBytes = new Uint8Array(await file.arrayBuffer());
-      setUploadProgress(20);
+      setCurrentStep(1);
 
-      // Step 2: Encrypt file TO form author using responder's key
-      const { ciphertext } = await encryptFileToAuthor(
+      // Step 1: Encrypt file TO form author
+      // Always uses responderSecretKey (signers can't handle large files)
+      const { ciphertext, uploaderPubkey } = await encryptFileToAuthor(
         fileBytes,
         formAuthorPubkey,
         responderSecretKey
       );
-      setUploadProgress(40);
+      setCurrentStep(2);
 
-      // Step 3: Convert encrypted ciphertext to bytes for upload
+      // Step 2: Convert encrypted ciphertext to bytes for upload & create auth
       const encryptedBytes = new TextEncoder().encode(ciphertext);
-      setUploadProgress(50);
-
-      // Step 4: Create auth event for upload (use responderSecretKey for anonymous)
       const sha256Hash = await calculateSHA256(encryptedBytes);
       const authHeader = await createAuthEvent("upload", sha256Hash, 60, responderSecretKey);
-      setUploadProgress(60);
+      setCurrentStep(3);
 
-      // Step 5: Upload to Blossom server
+      // Step 3: Upload to Blossom server
       const client = new BlossomClient(blossomServer);
       const uploadResponse = await client.upload(encryptedBytes, authHeader);
-      setUploadProgress(80);
 
-      // Step 6: Parse upload response to get actual sha256
+      // Parse upload response to get actual sha256
       const uploadData = JSON.parse(uploadResponse);
       const actualSha256 = uploadData.sha256;
 
-      // Step 7: Create metadata using actual sha256 from server
+      // Create metadata using actual sha256 from server
       const metadata: FileUploadMetadata = {
         sha256: actualSha256,
         filename: file.name,
@@ -148,12 +159,13 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
         mimeType: file.type,
         server: blossomServer,
         uploadedAt: Math.floor(Date.now() / 1000),
+        uploaderPubkey, // Store the pubkey used for encryption
       };
 
       const metadataString = JSON.stringify(metadata);
       setUploadedMetadata(metadata);
       onChange(metadataString, file.name);
-      setUploadProgress(100);
+      setCurrentStep(4);
 
       message.success("File uploaded successfully!");
     } catch (error: any) {
@@ -165,7 +177,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       }
     } finally {
       setUploading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
+      setTimeout(() => setCurrentStep(0), 1000);
     }
 
     return false; // Prevent default upload behavior
@@ -189,38 +201,37 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
     }
 
     setDownloading(true);
-    setUploadProgress(0);
+    setCurrentStep(0);
 
     try {
-      // Step 1: Create auth event for download (use formEditKey)
+      // Step 0: Create auth event for download (use formEditKey)
       const formEditKeyBytes = hexToBytes(formEditKey);
       const authHeader = await createAuthEvent("get", uploadedMetadata.sha256, 60, formEditKeyBytes);
-      setUploadProgress(20);
+      setCurrentStep(1);
 
-      // Step 2: Download from Blossom server
+      // Step 1: Download from Blossom server
       const client = new BlossomClient(uploadedMetadata.server);
       const encryptedBytes = await client.download(uploadedMetadata.sha256, authHeader);
-      setUploadProgress(50);
+      setCurrentStep(2);
 
       console.log('Downloaded bytes length:', encryptedBytes.length);
       console.log('Downloaded bytes preview:', encryptedBytes.slice(0, 20));
 
-      // Step 3: Convert bytes to ciphertext string
+      // Step 2: Convert bytes to ciphertext string & decrypt
       const ciphertext = new TextDecoder().decode(encryptedBytes);
-      setUploadProgress(60);
 
       console.log('Ciphertext length:', ciphertext.length);
       console.log('Ciphertext preview:', ciphertext.substring(0, 50));
 
-      // Step 4: Decrypt file using form editKey + uploader's pubkey (from response event)
+      // Decrypt file using form editKey + uploader's pubkey (from response event)
       const decryptedBytes = await decryptFileFromUploader(
         ciphertext,
         formEditKey,
         uploaderPubkey
       );
-      setUploadProgress(80);
+      setCurrentStep(3);
 
-      // Step 5: Trigger browser download with original filename
+      // Step 3: Trigger browser download with original filename
       const blob = new Blob([decryptedBytes], { type: uploadedMetadata.mimeType });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -230,7 +241,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      setUploadProgress(100);
+      setCurrentStep(4);
 
       message.success("File downloaded successfully!");
     } catch (error: any) {
@@ -242,7 +253,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       }
     } finally {
       setDownloading(false);
-      setTimeout(() => setUploadProgress(0), 1000);
+      setTimeout(() => setCurrentStep(0), 1000);
     }
   };
 
@@ -285,8 +296,14 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
 
       {(uploading || downloading) && (
         <Space direction="vertical" style={{ width: "100%" }}>
-          <Text>{uploading ? "Uploading file..." : "Downloading file..."}</Text>
-          <Progress percent={uploadProgress} status="active" />
+          <Text strong style={{ marginBottom: 16, display: "block" }}>
+            {uploading ? "Uploading file..." : "Downloading file..."}
+          </Text>
+          <Steps
+            current={currentStep}
+            size="small"
+            items={uploading ? uploadSteps : downloadSteps}
+          />
         </Space>
       )}
 
