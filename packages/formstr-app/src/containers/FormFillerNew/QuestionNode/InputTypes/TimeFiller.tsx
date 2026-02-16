@@ -1,7 +1,7 @@
 import { TimePicker } from "antd";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { useEffect, useState } from "react";
+import React from "react";
 
 dayjs.extend(customParseFormat);
 
@@ -9,7 +9,7 @@ interface TimeFillerProps {
   defaultValue?: string;
   onChange: (answer: string, message?: string) => void;
   disabled?: boolean;
-  testId? : string;
+  testId?: string;
 }
 
 export const TimeFiller: React.FC<TimeFillerProps> = ({
@@ -18,31 +18,24 @@ export const TimeFiller: React.FC<TimeFillerProps> = ({
   disabled = false,
   testId = "time-filler",
 }) => {
-  const [value, setValue] = useState<dayjs.Dayjs | null>(
-    defaultValue ? dayjs(defaultValue, "h:mm A") : null
-  );
-
-  useEffect(() => {
-    setValue(defaultValue ? dayjs(defaultValue, "h:mm A") : null);
-  }, [defaultValue]);
-
-  useEffect(() => {
-    if (value) {
-      onChange(value.format("h:mm A"), "");
-    }
-  }, [value, onChange]);
+  const format = "h:mm A";
+  const value = defaultValue ? dayjs(defaultValue, format) : null;
 
   return (
-    <>
-      <TimePicker
+    <TimePicker
       use12Hours
-      format="h:mm A"
+      format={format}
       value={value}
-      onSelect={(val) => setValue(val)}
+      onChange={(val) => {
+        if (val) {
+          onChange(val.format(format), "");
+        } else {
+          onChange("");
+        }
+      }}
       allowClear={false}
       disabled={disabled}
       data-testid={`${testId}:picker`}
     />
-    </>
   );
 };
