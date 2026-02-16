@@ -46,6 +46,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
     "idle",
   );
+  const [isFetchingKeys, setIsFetchingKeys] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(() => {
     const saved = getItem<boolean>(LOCAL_STORAGE_KEYS.AUTO_SAVE_ENABLED);
     return saved !== false; // Default to true if not set
@@ -126,6 +127,40 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     };
   }, []);
 
+  // Handle fetching keys - can be called for login or for already-logged-in users
+  const handleFetchKeys = async (pubkey: string) => {
+    try {
+      setIsFetchingKeys(true);
+
+      // Fetch keys with the active signer
+      const formSpec = await getFormSpec(
+        formEvent,
+        pubkey,
+        () => {},
+        null,
+      );
+
+      if (formSpec) {
+        const settings = JSON.parse(
+          formSpec.find((tag) => tag[0] === "settings")?.[1] || "{}",
+        ) as IFormSettings;
+        setSettings(settings);
+        setFormTemplate(formSpec);
+      }
+    } catch (error) {
+      console.error("Failed to fetch form keys:", error);
+    } finally {
+      setIsFetchingKeys(false);
+    }
+  };
+
+  // Handle login and fetch keys - only called when user explicitly clicks login
+  const handleLoginAndFetchKeys = async () => {
+    const pubkey = await requestPubkey();
+    if (!pubkey) return;
+    await handleFetchKeys(pubkey);
+  };
+
   useEffect(() => {
     const initialize = async () => {
       if (formEvent.content === "") {
@@ -140,19 +175,30 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         return;
       }
 
-      const formSpec = await getFormSpec(
-        formEvent,
-        userPubKey,
-        () => {},
-        viewKey,
-      );
-      if (formSpec) {
-        const settings = JSON.parse(
-          formSpec.find((tag) => tag[0] === "settings")?.[1] || "{}",
-        ) as IFormSettings;
-        setSettings(settings);
-        setFormTemplate(formSpec);
+      // If viewKey is provided, decrypt immediately without requiring login
+      if (viewKey) {
+        const formSpec = await getFormSpec(
+          formEvent,
+          undefined, // Don't pass userPubKey to avoid triggering fetchKeys
+          () => {},
+          viewKey,
+        );
+        if (formSpec) {
+          const settings = JSON.parse(
+            formSpec.find((tag) => tag[0] === "settings")?.[1] || "{}",
+          ) as IFormSettings;
+          setSettings(settings);
+          setFormTemplate(formSpec);
+        }
+        return;
       }
+
+      // If user is already logged in, fetch keys automatically
+      if (userPubKey) {
+        await handleFetchKeys(userPubKey);
+      }
+      // If no viewKey and no userPubKey, leave formTemplate undefined
+      // which will show the login UI
     };
     initialize();
   }, []);
@@ -250,10 +296,12 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         }}
       >
         <Typography.Text style={{ fontSize: "16px" }}>
-          This form is encrypted and requires access keys to view
+          {isFetchingKeys
+            ? "Fetching keys to decrypt form..."
+            : "This form is encrypted and requires access keys to view"}
         </Typography.Text>
-        {!userPubKey && (
-          <Button type="primary" onClick={requestPubkey}>
+        {!userPubKey && !isFetchingKeys && (
+          <Button type="primary" onClick={handleLoginAndFetchKeys}>
             Login to Access Form
           </Button>
         )}
