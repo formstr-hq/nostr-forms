@@ -1,5 +1,5 @@
-import { Upload, Button, Typography, message, Steps, Space } from "antd";
-import { UploadOutlined, CheckCircleOutlined, InboxOutlined, DownloadOutlined, FileOutlined, LockOutlined, SafetyCertificateOutlined, CloudUploadOutlined, CloudDownloadOutlined } from "@ant-design/icons";
+import { Upload, Button, Typography, message, Steps, Space, Popconfirm } from "antd";
+import { UploadOutlined, CheckCircleOutlined, InboxOutlined, DownloadOutlined, FileOutlined, LockOutlined, SafetyCertificateOutlined, CloudUploadOutlined, CloudDownloadOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { IAnswerSettings } from "../../../CreateFormNew/components/AnswerSettings/types";
 import { Field, FileUploadMetadata } from "../../../../nostr/types";
@@ -58,6 +58,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   );
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
   const uploadSteps = [
@@ -267,6 +268,34 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
     return new Date(timestamp * 1000).toLocaleString();
   };
 
+  const handleClearUpload = async () => {
+    if (!uploadedMetadata) return;
+
+    setDeleting(true);
+    try {
+      // Create auth event for deletion
+      const authHeader = await createAuthEvent("delete", uploadedMetadata.sha256, 60, responderSecretKey);
+
+      // Delete from Blossom server
+      const client = new BlossomClient(uploadedMetadata.server);
+      await client.delete(uploadedMetadata.sha256, authHeader);
+
+      // Clear local state
+      setUploadedMetadata(null);
+      onChange("", ""); // Clear the form field value
+      message.success("File deleted successfully");
+    } catch (error: any) {
+      console.error("Delete failed:", error);
+      if (error.isCorsError) {
+        message.error("CORS error: The server may not allow deletions from this origin");
+      } else {
+        message.error(`Delete failed: ${error.message || "Unknown error"}`);
+      }
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const hasUploadedFile = !!uploadedMetadata;
 
   return (
@@ -299,6 +328,17 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
           <Text strong style={{ marginBottom: 16, display: "block" }}>
             {uploading ? "Uploading file..." : "Downloading file..."}
           </Text>
+          <style>
+            {`
+              @keyframes calmBlink {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.4; }
+              }
+              .ant-steps-item-process .ant-steps-item-icon {
+                animation: calmBlink 2s ease-in-out infinite;
+              }
+            `}
+          </style>
           <Steps
             current={currentStep}
             size="small"
@@ -363,14 +403,34 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
             </div>
 
             <div style={{ paddingLeft: 28, marginTop: 12 }}>
-              <Button
-                type="primary"
-                icon={<DownloadOutlined />}
-                onClick={handleDownload}
-                loading={downloading}
-              >
-                Download File
-              </Button>
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<DownloadOutlined />}
+                  onClick={handleDownload}
+                  loading={downloading}
+                  disabled={deleting}
+                >
+                  Download File
+                </Button>
+                <Popconfirm
+                  title="Clear upload"
+                  description="Are you sure you want to clear this upload? The file will be permanently deleted from the server."
+                  onConfirm={handleClearUpload}
+                  okText="Yes, delete"
+                  cancelText="Cancel"
+                  disabled={disabled || deleting}
+                >
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    disabled={disabled || deleting}
+                    loading={deleting}
+                  >
+                    Clear upload
+                  </Button>
+                </Popconfirm>
+              </Space>
             </div>
           </Space>
         </div>
