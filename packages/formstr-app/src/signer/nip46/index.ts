@@ -11,6 +11,7 @@ import { NIP05_REGEX } from "nostr-tools/nip05";
 import { SimplePool } from "nostr-tools";
 import { Handlerinformation, NostrConnect } from "nostr-tools/kinds";
 import { Signer } from "nostr-tools/signer";
+import { pool } from "../../pool";
 
 var _fetch: any;
 
@@ -230,7 +231,7 @@ export class BunkerSigner implements Signer {
    */
   private constructor(clientSecretKey: Uint8Array, params: BunkerSignerParams) {
     this.params = params;
-    this.pool = params.pool || new SimplePool();
+    this.pool = params.pool || pool;
     this.secretKey = clientSecretKey;
     this.isOpen = false;
     this.idPrefix = Math.random().toString(36).substring(7);

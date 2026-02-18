@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Upload, Typography, Space, Select, Input, Button } from "antd";
 import { InboxOutlined } from "@ant-design/icons";
 import { IAnswerSettings } from "../../AnswerSettings/types";
-import { SimplePool } from "nostr-tools";
 import { DEFAULT_SERVERS, ServerInfo } from "../../AnswerSettings/settings/FileUploadSettings";
+import { pool } from "../../../../../pool";
 
 const { Text } = Typography;
 const { Dragger } = Upload;
@@ -36,8 +36,6 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
   const allowedTypes: string[] = answerSettings.allowedTypes || [];
 
   useEffect(() => {
-    const pool = new SimplePool();
-
     const queryServers = async () => {
       try {
         const events = await pool.querySync(PUBLIC_RELAYS, {
@@ -72,7 +70,6 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
         console.error("Failed to query relay servers:", e);
       } finally {
         setLoading(false);
-        pool.close(PUBLIC_RELAYS);
       }
     };
 

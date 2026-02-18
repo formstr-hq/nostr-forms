@@ -17,6 +17,7 @@ import { signerManager } from "../signer";
 import { encodeNKeys } from "./nkeys";
 import { getDefaultRelays } from "../nostr/common";
 import { Tag } from "../nostr/types";
+import { pool } from "../pool";
 
 export const createFormSpecFromTemplate = (
   template: FormTemplate,
@@ -37,7 +38,6 @@ export const fetchKeys = async (
   userPub: string,
 ) => {
   const signer = await signerManager.getSigner();
-  const pool = new SimplePool();
   const defaultRelays = getDefaultRelays();
   const aliasPubKey = bytesToHex(
     sha256(`${30168}:${formAuthor}:${formId}:${userPub}`),
@@ -48,7 +48,6 @@ export const fetchKeys = async (
   };
 
   const accessKeyEvents = await pool.querySync(defaultRelays, giftWrapsFilter);
-  pool.close(defaultRelays);
   let keys: Tag[] | undefined;
   await Promise.allSettled(
     accessKeyEvents.map(async (keyEvent: Event) => {

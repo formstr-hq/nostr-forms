@@ -1,5 +1,6 @@
-import React, { createContext, FC, ReactNode, useRef, useState } from "react";
+import React, { createContext, FC, ReactNode, useRef } from "react";
 import { SimplePool } from "nostr-tools";
+import { pool } from "../pool";
 
 interface ApplicationProviderProps {
   children?: ReactNode;
@@ -16,13 +17,13 @@ export const ApplicationContext = createContext<
 export const ApplicationProvider: FC<ApplicationProviderProps> = ({
   children,
 }) => {
-  const poolRef = useRef(new SimplePool());
+  const poolRef = useRef(pool);
   const contextValue: ApplicationContextType = {
     poolRef,
   };
 
   return (
-    <ApplicationContext.Provider value={ contextValue }>
+    <ApplicationContext.Provider value={contextValue}>
       {children}
     </ApplicationContext.Provider>
   );
