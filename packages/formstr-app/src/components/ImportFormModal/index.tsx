@@ -4,7 +4,6 @@ import { ImportOutlined, LinkOutlined } from "@ant-design/icons";
 import { Event } from "nostr-tools";
 import { parseFormUrl, ParsedFormUrl } from "../../utils/formUrlParser";
 import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
-import { useApplicationContext } from "../../hooks/useApplicationContext";
 import { ILocalForm } from "../../containers/CreateFormNew/providers/FormBuilder/typeDefs";
 import { useLocalForms } from "../../provider/LocalFormsProvider";
 
@@ -32,7 +31,6 @@ const ImportFormModal: React.FC<ImportFormModalProps> = ({
   const [preview, setPreview] = useState<FormPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { poolRef } = useApplicationContext();
   const { localForms, saveLocalForm } = useLocalForms();
 
   const resetState = () => {
@@ -94,7 +92,6 @@ const ImportFormModal: React.FC<ImportFormModalProps> = ({
         fetchFormTemplate(
           parsed.pubkey,
           parsed.formId,
-          poolRef.current,
           (event: Event) => {
             if (!resolved) {
               resolved = true;

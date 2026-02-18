@@ -7,7 +7,6 @@ import { useProfileContext } from "../../hooks/useProfileContext";
 import { LoadingOutlined } from "@ant-design/icons";
 import { sendNotification } from "../../nostr/common";
 import { FormRendererContainer } from "./FormRendererContainer";
-import { useApplicationContext } from "../../hooks/useApplicationContext";
 import { ThankYouScreen } from "./ThankYouScreen";
 import { ROUTES } from "../../constants/routes";
 import { appConfig } from "../../config";
@@ -37,7 +36,6 @@ export const CustomUrlForm: React.FC<CustomUrlFormProps> = ({ formSpec }) => {
 
   const navigate = useNavigate();
   const { pubkey: userPubKey, requestPubkey } = useProfileContext();
-  const { poolRef } = useApplicationContext();
 
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formEvent, setFormEvent] = useState<Event | undefined>();
@@ -62,7 +60,6 @@ export const CustomUrlForm: React.FC<CustomUrlFormProps> = ({ formSpec }) => {
       fetchFormTemplate(
         metadata.pubkey,
         metadata.identifier,
-        poolRef.current,
         (event: Event) => {
           setFormEvent(event);
         },

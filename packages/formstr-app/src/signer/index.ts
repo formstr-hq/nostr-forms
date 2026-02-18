@@ -89,6 +89,10 @@ class Signer {
     this.notify();
   }
 
+  getSignerIfAvailable(): NostrSigner | null {
+    return this.signer;
+  }
+
   async getSigner(): Promise<NostrSigner> {
     if (this.signer) return this.signer;
 

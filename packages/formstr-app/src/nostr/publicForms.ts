@@ -1,14 +1,14 @@
-import { Event, SimplePool } from "nostr-tools";
+import { Event } from "nostr-tools";
+import { pool } from "../pool";
 
-export const getPublicForms = async (
+export const getPublicForms = (
   relays: string[],
   callback: (event: Event) => void
 ) => {
-  let pool = new SimplePool();
   let filter = {
     kinds: [30168],
     limit: 50,
-    "#t": ["public"]
+    "#t": ["public"],
   };
   pool.subscribeMany(relays, [filter], {
     onevent: (e: Event) => {

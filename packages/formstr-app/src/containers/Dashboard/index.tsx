@@ -6,7 +6,7 @@ import { useProfileContext } from "../../hooks/useProfileContext";
 import { FormEventCard } from "./FormCards/FormEventCard";
 import DashboardStyleWrapper from "./index.style";
 import EmptyScreen from "../../components/EmptyScreen";
-import { useApplicationContext } from "../../hooks/useApplicationContext";
+import { pool } from "../../pool";
 import { ILocalForm } from "../CreateFormNew/providers/FormBuilder/typeDefs";
 import { Dropdown, Menu, Typography, Button, Spin, Alert } from "antd";
 import { DownOutlined, ImportOutlined, LockOutlined } from "@ant-design/icons";
@@ -73,8 +73,6 @@ export const Dashboard = () => {
 
   const [filter, setFilter] = useState<FilterType>(getCurrentFilterFromPath());
 
-  const { poolRef } = useApplicationContext();
-
   const subCloserRef = useRef<SubCloser | null>(null);
 
   useEffect(() => {
@@ -97,7 +95,7 @@ export const Dashboard = () => {
       "#p": [pubkey],
     };
 
-    subCloserRef.current = poolRef.current.subscribeMany(
+    subCloserRef.current = pool.subscribeMany(
       defaultRelays,
       [queryFilter],
       {

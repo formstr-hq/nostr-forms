@@ -6,11 +6,12 @@ import {
   useRef,
   ReactNode,
 } from "react";
-import { Event, SimplePool } from "nostr-tools";
+import { Event } from "nostr-tools";
 import { useProfileContext } from "../hooks/useProfileContext";
 import { KINDS, Tag } from "../nostr/types";
 import { getDefaultRelays } from "../nostr/common";
 import { signerManager } from "../signer";
+import { pool } from "../pool";
 
 /* ----------------------------- Types ----------------------------- */
 
@@ -64,7 +65,7 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
   const isRefreshingRef = useRef(false);
   const loadedForPubRef = useRef<string | null>(null);
 
-  const fetchFormEvents = async (forms: Tag[], pool: SimplePool) => {
+  const fetchFormEvents = async (forms: Tag[]) => {
     const dTags = forms.map((f) => f[1].split(":")[1]);
     const pubkeys = forms.map((f) => f[1].split(":")[0]);
 
@@ -112,7 +113,6 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     if (!userPub) return;
 
     callback?.("saving");
-    const pool = new SimplePool();
     const targetRelays = relays.length ? relays : getDefaultRelays();
 
     try {
@@ -160,8 +160,6 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error("saveToMyForms failed:", err);
       callback?.(null);
-    } finally {
-      pool.close(targetRelays);
     }
   };
 
@@ -174,7 +172,6 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
 
     isRefreshingRef.current = true;
     setRefreshing(true);
-    const pool = new SimplePool();
 
     try {
       const signer = await signerManager.getSigner();
@@ -192,7 +189,7 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
 
       const decrypted = await signer.nip44Decrypt!(userPub, list.content);
 
-      await fetchFormEvents(JSON.parse(decrypted), pool);
+      await fetchFormEvents(JSON.parse(decrypted));
       loadedForPubRef.current = userPub;
     } catch (err) {
       console.error("Error loading forms:", err);
@@ -200,7 +197,6 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       isRefreshingRef.current = false;
       setRefreshing(false);
-      pool.close(getDefaultRelays());
     }
   };
 
@@ -208,7 +204,6 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     if (!userPub) return;
 
     setRefreshing(true);
-    const pool = new SimplePool();
 
     try {
       const signer = await signerManager.getSigner();
@@ -245,7 +240,6 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error deleting form:", err);
     } finally {
       setRefreshing(false);
-      pool.close(getDefaultRelays());
     }
   };
 

@@ -17,7 +17,7 @@ import {
   CopyOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { useApplicationContext } from "../../../../../hooks/useApplicationContext";
+import { pool } from "../../../../../pool";
 import { getDefaultRelays } from "../../../../../nostr/common";
 
 interface NpubListProps {
@@ -37,11 +37,9 @@ const NpubListItem: FC<{
   onRemove: (pubkey: string) => void;
 }> = ({ pubkey, onRemove }) => {
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
-  const { poolRef } = useApplicationContext();
 
   useEffect(() => {
     const getProfile = async () => {
-      const pool = poolRef.current;
       const relays = getDefaultRelays();
       try {
         const profileEvent = await pool.get(relays, {
@@ -60,7 +58,7 @@ const NpubListItem: FC<{
     if (pubkey) {
       getProfile();
     }
-  }, [pubkey, poolRef]);
+  }, [pubkey]);
 
   const npub = nip19.npubEncode(pubkey);
   const shortNpub = `${npub.substring(0, 10)}...${npub.substring(

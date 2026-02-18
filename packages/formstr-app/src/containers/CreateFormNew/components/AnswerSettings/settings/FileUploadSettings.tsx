@@ -1,7 +1,7 @@
 import { Input, InputNumber, Select, Typography, Space, Button, message } from "antd";
 import React, { useState, useEffect } from "react";
 import { IAnswerSettings } from "../types";
-import { SimplePool } from "nostr-tools";
+import { pool } from "../../../../../pool";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -44,8 +44,6 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
   const allowedTypes: string[] = answerSettings.allowedTypes || [];
 
   useEffect(() => {
-    const pool = new SimplePool();
-
     const queryServers = async () => {
       try {
         const events = await pool.querySync(PUBLIC_RELAYS, {
@@ -82,7 +80,6 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
         console.error("Failed to query relay servers:", e);
       } finally {
         setLoading(false);
-        pool.close(PUBLIC_RELAYS);
       }
     };
 

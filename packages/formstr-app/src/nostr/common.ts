@@ -2,6 +2,7 @@ import {
   Event,
   EventTemplate,
   Filter,
+  VerifiedEvent,
   finalizeEvent,
   generateSecretKey,
   getEventHash,
@@ -100,16 +101,34 @@ export const customPublish = (
     let relay: AbstractRelay | null = null;
     try {
       relay = await ensureRelay(url, { connectionTimeout: 5000 });
-      return await Promise.race<string>([
-        relay.publish(event).then((reason) => {
-          // console.log("accepted relays", url);
-          onAcceptedRelays?.(url);
-          return reason;
-        }),
-        new Promise<string>((_, reject) =>
-          setTimeout(() => reject("timeout"), 5000),
-        ),
-      ]);
+
+      const tryPublish = () =>
+        Promise.race<string>([
+          relay!.publish(event),
+          new Promise<string>((_, reject) =>
+            setTimeout(() => reject("timeout"), 5000),
+          ),
+        ]);
+
+      try {
+        const reason = await tryPublish();
+        onAcceptedRelays?.(url);
+        return reason;
+      } catch (err: any) {
+        const msg: string = err?.message ?? String(err);
+        const isAuthError =
+          msg.startsWith("auth-required:") || msg.includes("unauthorized");
+        if (!isAuthError) throw err;
+
+        // Relay rejected — wait briefly for the AUTH challenge frame to arrive.
+        await new Promise((r) => setTimeout(r, 200));
+        const signer = await signerManager.getSigner();
+        await relay.auth((ev) => signer.signEvent(ev) as Promise<VerifiedEvent>);
+
+        const reason = await tryPublish();
+        onAcceptedRelays?.(url);
+        return reason;
+      }
     } finally {
       if (relay) {
         try {

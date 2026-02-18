@@ -3,7 +3,7 @@ import FormBuilder from "../CreateFormNew/FormBuilder";
 import useFormBuilderContext from "../CreateFormNew/hooks/useFormBuilderContext";
 import { useEffect, useState } from "react";
 import { HEADER_MENU_KEYS } from "../CreateFormNew/components/Header/config";
-import { getPublicKey, nip19, SimplePool } from "nostr-tools";
+import { getPublicKey, nip19 } from "nostr-tools";
 import { hexToBytes } from "@noble/hashes/utils";
 import { Spin, Typography } from "antd";
 import { getFormSpec as formSpecFromEvent } from "../../utils/formUtils";
@@ -13,6 +13,7 @@ import { AddressPointer } from "nostr-tools/nip19";
 import { FormRenderer } from "../FormFillerNew/FormRenderer";
 import { decodeNKeys } from "../../utils/nkeys";
 import { getDefaultRelays } from "../../nostr/common";
+import { pool } from "../../pool";
 
 function EditForm() {
   const { naddr } = useParams();
@@ -49,7 +50,6 @@ function EditForm() {
       "#d": [dTag],
       kinds: [30168],
     };
-    let pool = new SimplePool();
     let formEvent = await pool.get(
       Array.from(new Set([...(relays || []), ...getDefaultRelays()]) || []),
       filter,

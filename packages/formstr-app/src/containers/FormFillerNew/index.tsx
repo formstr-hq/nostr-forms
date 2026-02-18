@@ -8,7 +8,6 @@ import { AddressPointer } from "nostr-tools/nip19";
 import { LoadingOutlined } from "@ant-design/icons";
 import { sendNotification } from "../../nostr/common";
 import { FormRendererContainer } from "./FormRendererContainer";
-import { useApplicationContext } from "../../hooks/useApplicationContext";
 import { ThankYouScreen } from "./ThankYouScreen";
 import { ROUTES } from "../../constants/routes";
 
@@ -81,7 +80,6 @@ export const FormFiller: React.FC<FormFillerProps> = ({
   const hideDescription = searchParams.get("hideDescription") === "true";
   const navigate = useNavigate();
 
-  const { poolRef } = useApplicationContext();
 
   if (!formId && !formSpec) {
     return null;
@@ -95,7 +93,6 @@ export const FormFiller: React.FC<FormFillerProps> = ({
     const form = await fetchFormTemplate(
       formAuthor,
       formId,
-      poolRef.current,
       (event: Event) => {
         setFormEvent(event);
       },
