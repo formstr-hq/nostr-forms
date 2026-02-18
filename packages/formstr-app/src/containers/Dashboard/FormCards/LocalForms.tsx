@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ILocalForm } from "../../CreateFormNew/providers/FormBuilder/typeDefs";
 import { LocalFormCard } from "./LocalFormCard";
-import { useApplicationContext } from "../../../hooks/useApplicationContext";
+import { pool } from "../../../pool";
 import { getDefaultRelays } from "../../../nostr/common";
 import { Event } from "nostr-tools";
 import { FormEventCard } from "./FormEventCard";
@@ -16,7 +16,6 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
   localForms,
   onDeleted,
 }) => {
-  const { poolRef } = useApplicationContext();
   const [eventMap, setEventMap] = useState<Map<string, Event>>(new Map());
   const onFormEvent = (event: Event) => {
     const dTag = event.tags.filter((t) => t[0] === "d")[0]?.[1];
@@ -38,7 +37,7 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
         "#d": dTags,
         authors: pubkeys,
       };
-      closer = poolRef.current.subscribeMany(getDefaultRelays(), [filter], {
+      closer = pool.subscribeMany(getDefaultRelays(), [filter], {
         onevent: onFormEvent,
       });
     };

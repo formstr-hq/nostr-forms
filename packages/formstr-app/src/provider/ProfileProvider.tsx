@@ -9,7 +9,7 @@ import React, {
 import { LOCAL_STORAGE_KEYS, getItem, setItem } from "../utils/localStorage";
 import { Modal } from "antd";
 import { Filter } from "nostr-tools";
-import { useApplicationContext } from "../hooks/useApplicationContext";
+import { pool } from "../pool";
 import { getDefaultRelays } from "../nostr/common";
 import { signerManager } from "../signer";
 import LoginModal from "../components/LoginModal";
@@ -41,15 +41,12 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
     onSuccess: () => void;
     onCancel: () => void;
   } | null>(null);
-  const { poolRef } = useApplicationContext();
-
   const fetchUserRelays = async (pubkey: string) => {
-    if (!poolRef) return;
     let filter: Filter = {
       kinds: [10002],
       authors: [pubkey],
     };
-    let relayEvent = await poolRef.current.get(getDefaultRelays(), filter);
+    let relayEvent = await pool.get(getDefaultRelays(), filter);
     if (!relayEvent) return;
     let relayUrls = relayEvent.tags
       .filter((t) => t[0] === "r")
@@ -106,7 +103,7 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
     } else {
       console.log("Couldn't find npub");
     }
-  }, [poolRef]);
+  }, []);
 
   const logout = () => {
     setItem(LOCAL_STORAGE_KEYS.PROFILE, null);

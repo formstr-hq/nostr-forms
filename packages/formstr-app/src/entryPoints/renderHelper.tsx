@@ -2,7 +2,6 @@ import ReactDOM from "react-dom/client";
 import React from "react";
 import { ConfigProvider } from "antd";
 import { HashRouter } from "react-router-dom";
-import { ApplicationProvider } from "../provider/ApplicationProvider";
 import { ProfileProvider } from "../provider/ProfileProvider";
 
 let numTries = 0;
@@ -31,11 +30,9 @@ const tryAndRender = ({ Component }: { Component: React.FC }) => {
         }}
       >
         <HashRouter>
-          <ApplicationProvider>
-            <ProfileProvider>
-              <Component />
-            </ProfileProvider>
-          </ApplicationProvider>
+          <ProfileProvider>
+            <Component />
+          </ProfileProvider>
         </HashRouter>
       </ConfigProvider>
     </React.StrictMode>,
