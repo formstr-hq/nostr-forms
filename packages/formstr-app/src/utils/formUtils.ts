@@ -4,7 +4,6 @@ import {
   nip44,
   Event,
   UnsignedEvent,
-  SimplePool,
   nip19,
   getPublicKey,
 } from "nostr-tools";
@@ -212,21 +211,15 @@ export const constructNewResponseUrl = (
   return `${baseUrl}${responsePart}`;
 };
 
-export const getFormData = async (naddr: string, poolRef: SimplePool) => {
+export const getFormData = async (naddr: string) => {
   const decodedData = nip19.decode(naddr).data as AddressPointer;
   const pubKey = decodedData?.pubkey;
   const formId = decodedData?.identifier;
   const relays = decodedData?.relays;
   return new Promise((resolve) => {
-    fetchFormTemplate(
-      pubKey,
-      formId,
-      poolRef,
-      (event: Event) => {
-        resolve(event);
-      },
-      relays,
-    );
+    fetchFormTemplate(pubKey, formId, (event: Event) => {
+      resolve(event);
+    }, relays);
   });
 };
 

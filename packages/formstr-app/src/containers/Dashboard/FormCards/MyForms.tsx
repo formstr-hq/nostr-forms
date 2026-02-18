@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useProfileContext } from "../../../hooks/useProfileContext";
-import { Event, SimplePool } from "nostr-tools";
+import { Event } from "nostr-tools";
 import { getDefaultRelays } from "../../../nostr/common";
 import { Tag } from "../../../nostr/types";
 import { FormEventCard } from "./FormEventCard";

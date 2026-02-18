@@ -1,4 +1,4 @@
-import { SimplePool, UnsignedEvent } from "nostr-tools";
+import { UnsignedEvent } from "nostr-tools";
 import {
   getItem,
   LOCAL_STORAGE_KEYS,

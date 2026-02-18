@@ -16,7 +16,6 @@ import {
   getformstrBranding,
 } from "../../utils/formUtils";
 import { Field, Tag, FileUploadMetadata } from "../../nostr/types";
-import { useApplicationContext } from "../../hooks/useApplicationContext";
 import { ResponseDetailModal } from "./components/ResponseDetailModal";
 import {
   getResponseRelays,
@@ -75,7 +74,6 @@ export const Response = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isChatVisible, setIsChatVisible] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
-  let { poolRef } = useApplicationContext();
   const [isFormSpecLoading, setIsFormSpecLoading] = useState(true);
 
   useEffect(() => {
@@ -96,7 +94,6 @@ export const Response = () => {
   const initialize = async () => {
     if (!formId) return;
     if (!(pubkey || secretKey)) return;
-    if (!poolRef?.current) return;
     setIsFormSpecLoading(true);
 
     if (secretKey) {
@@ -108,7 +105,6 @@ export const Response = () => {
     fetchFormTemplate(
       pubkey!,
       formId,
-      poolRef.current,
       async (event: Event) => {
         setFormEvent(event);
         if (!secretKey) {
@@ -133,7 +129,7 @@ export const Response = () => {
   };
 
   useEffect(() => {
-    if (!(pubkey || secretKey) || !formId || !poolRef?.current) {
+    if (!(pubkey || secretKey) || !formId) {
       if (responseCloser) {
         responseCloser.close();
         setResponsesCloser(null);
@@ -152,7 +148,7 @@ export const Response = () => {
     };
   }, [pubkey, formId, secretKey, userPubkey, viewKeyParams]);
   useEffect(() => {
-    if (!formEvent || !formId || !poolRef.current) {
+    if (!formEvent || !formId) {
       return;
     }
     let allowedPubkeys;
@@ -162,7 +158,6 @@ export const Response = () => {
     const newCloser = fetchFormResponses(
       formEvent.pubkey,
       formId,
-      poolRef.current,
       handleResponseEvent,
       allowedPubkeys,
       formRelays
@@ -172,7 +167,7 @@ export const Response = () => {
     return () => {
       newCloser.close();
     };
-  }, [formEvent, formId, poolRef.current]);
+  }, [formEvent, formId]);
 
   const getResponderCount = () => {
     if (!responses) return 0;

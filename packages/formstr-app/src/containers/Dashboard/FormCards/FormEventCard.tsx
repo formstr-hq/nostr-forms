@@ -23,7 +23,6 @@ import {
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { constructDraftUrl } from "./Drafts";
-import { useApplicationContext } from "../../../hooks/useApplicationContext";
 import { FormDetails } from "../../CreateFormNew/components/FormDetails";
 import SafeMarkdown from "../../../components/SafeMarkdown";
 import { IFormSettings } from "../../CreateFormNew/components/FormSettings/types";
@@ -46,7 +45,6 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
   shortLink,
 }) => {
   const navigate = useNavigate();
-  const { poolRef } = useApplicationContext();
   const publicForm = event.content === "";
   const [tags, setTags] = useState<Tag[]>([]);
   const [showFormDetails, setShowFormDetails] = useState(false);
@@ -84,7 +82,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
       formId,
       relays.length ? relays : ["wss://relay.damus.io"],
     );
-    const formData = JSON.stringify(await getFormData(naddr, poolRef.current));
+    const formData = JSON.stringify(await getFormData(naddr));
     const formFillerUI = (await (await fetch("/api/form-filler-ui")).text())
       ?.replace("@naddr", naddr)
       .replace("@viewKey", viewKey || "")
