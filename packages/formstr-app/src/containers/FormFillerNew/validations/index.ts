@@ -12,17 +12,22 @@ import {
   ValidationRuleTypes,
 } from "../../../nostr/types";
 
-//TODO: Find a method better than "any" with overloads for dynamic types
-function NumRange(rule: any): Rule;
+// The value from antd form for these inputs seems to be an array of values
+type FormValue = string[] | number[] | undefined | null;
+
 function NumRange(rule: RangeRule): Rule {
   return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.min && !rule.max) return Promise.resolve();
-      if (rule.min && value[0] < rule.min) {
+
+      const val = (value as number[])[0];
+      if (typeof val !== 'number') return Promise.resolve();
+
+      if (rule.min && val < rule.min) {
         return Promise.reject(`Please enter number more than ${rule.min}`);
       }
-      if (rule.max && value[0] > rule.max) {
+      if (rule.max && val > rule.max) {
         return Promise.reject(`Please enter number less than ${rule.max}`);
       }
       return Promise.resolve();
@@ -30,13 +35,16 @@ function NumRange(rule: RangeRule): Rule {
   };
 }
 
-function MinLength(rule: any): Rule;
 function MinLength(rule: MinRule): Rule {
   return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.min) return Promise.resolve();
-      if (value[0].length < rule.min) {
+
+      const val = (value as string[])[0];
+      if (typeof val !== 'string') return Promise.resolve();
+
+      if (val.length < rule.min) {
         return Promise.reject(`Please enter more than ${rule.min} chars`);
       }
       return Promise.resolve();
@@ -44,13 +52,16 @@ function MinLength(rule: MinRule): Rule {
   };
 }
 
-function MaxLength(rule: any): Rule;
 function MaxLength(rule: MaxRule): Rule {
   return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.max) return Promise.resolve();
-      if (value[0].length > rule.max) {
+
+      const val = (value as string[])[0];
+      if (typeof val !== 'string') return Promise.resolve();
+
+      if (val.length > rule.max) {
         return Promise.reject(`Please enter less than ${rule.max} chars`);
       }
       return Promise.resolve();
@@ -58,13 +69,16 @@ function MaxLength(rule: MaxRule): Rule {
   };
 }
 
-function Regex(rule: any): Rule;
 function Regex(rule: RegexRule): Rule {
   return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.pattern) return Promise.resolve();
-      if (!new RegExp(rule.pattern).test(value[0])) {
+
+      const val = (value as string[])[0];
+      if (typeof val !== 'string') return Promise.resolve();
+
+      if (!new RegExp(rule.pattern).test(val)) {
         return Promise.reject(
           rule.errorMessage || `Did not match the pattern: ${rule.pattern}`,
         );
@@ -74,25 +88,26 @@ function Regex(rule: RegexRule): Rule {
   };
 }
 
-function Match(rule: any, answerType?: AnswerTypes): Rule;
 function Match(rule: MatchRule, answerType?: AnswerTypes): Rule {
   return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
       if (!rule.answer) return Promise.resolve();
 
-      const userValue = value[0];
+      const userValue = (value as string[])[0];
 
       // Handle grid questions - compare GridResponse objects
       if (
         answerType === AnswerTypes.multipleChoiceGrid ||
         answerType === AnswerTypes.checkboxGrid
       ) {
+        if (typeof userValue !== 'string') return Promise.resolve();
+
         try {
-          const userResponse: GridResponse = JSON.parse(userValue);
-          const correctResponse: GridResponse = JSON.parse(
+          const userResponse = JSON.parse(userValue) as GridResponse;
+          const correctResponse = JSON.parse(
             rule.answer as string,
-          );
+          ) as GridResponse;
 
           // Check if all rows match
           for (const [rowId, correctColumnIds] of Object.entries(
@@ -130,7 +145,14 @@ function Match(rule: MatchRule, answerType?: AnswerTypes): Rule {
       }
 
       // Simple comparison for non-grid questions
+      // rule.answer can be number/string/boolean. userValue is string/number from array.
       if (userValue === rule.answer) {
+        return Promise.resolve();
+      }
+
+      // Attempt loose comparison if strict failed (e.g. "5" == 5)
+      // eslint-disable-next-line eqeqeq
+      if (userValue == rule.answer) {
         return Promise.resolve();
       }
 
@@ -139,32 +161,38 @@ function Match(rule: MatchRule, answerType?: AnswerTypes): Rule {
   };
 }
 
-const RuleValidatorMap = {
-  [ValidationRuleTypes.range]: NumRange,
-  [ValidationRuleTypes.max]: MaxLength,
-  [ValidationRuleTypes.min]: MinLength,
-  [ValidationRuleTypes.regex]: Regex,
-  [ValidationRuleTypes.match]: Match,
-};
-
 function createRule(
   ruleType: ValidationRuleTypes,
   validationRules: AnswerSettings["validationRules"],
 ): Rule {
   if (!validationRules) return {};
-  const ruleCreator = RuleValidatorMap[ruleType];
-  const rule = validationRules[ruleType];
-  if (!rule) return {};
-  return ruleCreator(rule);
+
+  switch (ruleType) {
+    case ValidationRuleTypes.range:
+      return validationRules.range ? NumRange(validationRules.range) : {};
+    case ValidationRuleTypes.max:
+      return validationRules.max ? MaxLength(validationRules.max) : {};
+    case ValidationRuleTypes.min:
+      return validationRules.min ? MinLength(validationRules.min) : {};
+    case ValidationRuleTypes.regex:
+      return validationRules.regex ? Regex(validationRules.regex) : {};
+    case ValidationRuleTypes.match:
+      return validationRules.match ? Match(validationRules.match) : {};
+    default:
+      return {};
+  }
 }
 
 function GridValidator(gridOptions: GridOptions): Rule {
   return {
-    validator: (_: any, value: any) => {
-      if (!value || !value[0]) return Promise.resolve();
+    validator: (_: unknown, value: FormValue) => {
+      if (!value || value.length === 0) return Promise.resolve();
+
+      const val = (value as string[])[0];
+      if (typeof val !== 'string') return Promise.resolve();
 
       try {
-        const responses: GridResponse = JSON.parse(value[0]);
+        const responses = JSON.parse(val) as GridResponse;
 
         // Check if all rows are answered
         for (const [rowId, rowLabel] of gridOptions.rows) {
@@ -188,7 +216,7 @@ export const getValidationRules = (
   answerSettings: AnswerSettings,
   gridOptions?: GridOptions,
 ) => {
-  let rules: Rule[] = [];
+  const rules: Rule[] = [];
 
   // Special handling for grid questions
   if (
@@ -200,9 +228,9 @@ export const getValidationRules = (
     return rules;
   }
 
-  let validationRules = answerSettings.validationRules;
+  const validationRules = answerSettings.validationRules;
   if (!validationRules) return rules;
-  let ruleTypes = Object.keys(validationRules) as ValidationRuleTypes[];
+  const ruleTypes = Object.keys(validationRules) as ValidationRuleTypes[];
   ruleTypes.forEach((ruleType) => {
     if (validationRules && validationRules[ruleType]) {
       rules.push(createRule(ruleType, validationRules));
