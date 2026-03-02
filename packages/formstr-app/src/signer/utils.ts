@@ -4,6 +4,7 @@ import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
 const LOCAL_APP_SECRET_KEY = "formstr:client-secret";
 const LOCAL_BUNKER_URI = "formstr:bunkerUri";
 const LOCAL_STORAGE_KEYS = "formstr:keys";
+const LOCAL_NCRYPTSEC = "formstr:ncryptsec";
 
 type BunkerUri = { bunkerUri: string };
 
@@ -49,3 +50,12 @@ export const removeBunkerUriFromLocalStorage = () => {
 export const removeAppSecretFromLocalStorage = () => {
   localStorage.removeItem(LOCAL_APP_SECRET_KEY);
 };
+
+export const getNcryptsecFromLocalStorage = (): string | null =>
+  localStorage.getItem(LOCAL_NCRYPTSEC);
+
+export const setNcryptsecInLocalStorage = (ncryptsec: string) =>
+  localStorage.setItem(LOCAL_NCRYPTSEC, ncryptsec);
+
+export const removeNcryptsecFromLocalStorage = () =>
+  localStorage.removeItem(LOCAL_NCRYPTSEC);

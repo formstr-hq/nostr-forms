@@ -165,9 +165,8 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshForms = async (force = false) => {
     if (!userPub) return;
-    // Prevent duplicate concurrent refreshes
-    if (isRefreshingRef.current) return;
-    // Skip if already loaded for this user (unless forced)
+    // Non-forced calls bail if a refresh is already running or data is fresh
+    if (!force && isRefreshingRef.current) return;
     if (!force && loadedForPubRef.current === userPub) return;
 
     isRefreshingRef.current = true;

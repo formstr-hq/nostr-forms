@@ -514,6 +514,21 @@ export async function fetchNRPCMethods(relays: string[], serverPubkey: string) {
   );
   return extractMethods(resp);
 }
+export async function publishKind0(
+  signer: import("../signer/types").NostrSigner,
+  metadata: { name?: string; username?: string; about?: string; picture?: string },
+  relays: string[] = defaultRelays,
+): Promise<void> {
+  const baseEvent: EventTemplate = {
+    kind: 0,
+    content: JSON.stringify(metadata),
+    tags: [],
+    created_at: Math.floor(Date.now() / 1000),
+  };
+  const signedEvent = await signer.signEvent(baseEvent);
+  await Promise.allSettled(customPublish(relays, signedEvent));
+}
+
 export async function fetchKind0Events(
   relayUrls: string[],
   tag: string,
