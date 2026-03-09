@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { Modal, Button, Typography, Space, Input, Tabs, message } from "antd";
-import { KeyOutlined, LinkOutlined, UserOutlined } from "@ant-design/icons";
+import { Modal, Button, Typography, Space, Input, Tabs, message, Alert, Divider } from "antd";
+import { KeyOutlined, LinkOutlined, LockOutlined } from "@ant-design/icons";
 import QRCode from "qrcode.react";
 import { signerManager } from "../../signer";
-import { getAppSecretKeyFromLocalStorage } from "../../signer/utils";
+import { getAppSecretKeyFromLocalStorage, getNcryptsecFromLocalStorage, removeNcryptsecFromLocalStorage } from "../../signer/utils";
 import { getPublicKey } from "nostr-tools";
 import { createNostrConnectURI } from "../../signer/nip46";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
 
 // Reusable login option button
@@ -135,6 +135,216 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
   );
 };
 
+// Ncryptsec (encrypted key) Section
+interface NcryptsecSectionProps {
+  onSuccess: () => void;
+}
+const NcryptsecSection: React.FC<NcryptsecSectionProps> = ({ onSuccess }) => {
+  const [ncryptsec, setNcryptsec] = useState(() => getNcryptsecFromLocalStorage() ?? "");
+  const [storedNcryptsec, setStoredNcryptsec] = useState(() => !!getNcryptsecFromLocalStorage());
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!ncryptsec.trim() || !password) {
+      message.error("Please enter your encrypted key and password.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await signerManager.loginWithNcryptsec(ncryptsec.trim(), password);
+      message.success("Logged in successfully.");
+      onSuccess();
+    } catch {
+      message.error("Invalid key or wrong password.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForget = () => {
+    Modal.confirm({
+      title: "Forget saved key?",
+      content:
+        "This will remove your encrypted key from this device. You will need to paste it manually next time you sign in. Make sure you have it backed up before continuing.",
+      okText: "Forget key",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk() {
+        removeNcryptsecFromLocalStorage();
+        setNcryptsec("");
+        setStoredNcryptsec(false);
+      },
+    });
+  };
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <Space direction="vertical" style={{ width: "100%" }}>
+        <Input
+          placeholder="ncryptsec1..."
+          value={ncryptsec}
+          onChange={(e) => setNcryptsec(e.target.value)}
+        />
+        {storedNcryptsec && (
+          <Text
+            type="secondary"
+            style={{ fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
+            onClick={handleForget}
+          >
+            Forget saved key
+          </Text>
+        )}
+        <Input.Password
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onPressEnter={handleLogin}
+        />
+        <Button type="primary" block loading={loading} onClick={handleLogin}>
+          Sign In
+        </Button>
+      </Space>
+    </div>
+  );
+};
+
+// Sign-Up Section
+interface SignUpSectionProps {
+  onLogin: () => void;
+}
+
+const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
+  const [step, setStep] = useState<"form" | "backup">("form");
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [about, setAbout] = useState("");
+  const [picture, setPicture] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [ncryptsec, setNcryptsec] = useState("");
+
+  const handleCreate = async () => {
+    if (!password) {
+      message.error("Password is required.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      message.error("Passwords do not match.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await signerManager.signUpWithPassword(password, {
+        name: name.trim(),
+        username: username.trim() || undefined,
+        about: about.trim() || undefined,
+        picture: picture.trim() || undefined,
+      });
+      setNcryptsec(result);
+      setStep("backup");
+    } catch (err) {
+      console.error(err);
+      message.error("Account creation failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === "backup") {
+    return (
+      <Space direction="vertical" style={{ width: "100%" }}>
+        <Alert
+          type="warning"
+          showIcon
+          message={
+            <Text strong>
+              Save this encrypted key. It's the only way to recover your account.
+            </Text>
+          }
+        />
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          Your encrypted private key (ncryptsec):
+        </Text>
+        <Paragraph
+          copyable
+          style={{
+            background: "#f5f5f5",
+            padding: 8,
+            borderRadius: 4,
+            wordBreak: "break-all",
+            fontSize: 12,
+          }}
+        >
+          {ncryptsec}
+        </Paragraph>
+        <Button type="primary" block onClick={onLogin}>
+          I've saved my key
+        </Button>
+      </Space>
+    );
+  }
+
+  return (
+    <Space direction="vertical" style={{ width: "100%" }}>
+      <Alert
+        type="info"
+        showIcon
+        message={
+          <Text style={{ fontSize: 12 }}>
+            This information will be public on the Nostr network — share only
+            as much as you're comfortable with.
+          </Text>
+        }
+        style={{ marginBottom: 4 }}
+      />
+      <Input
+        placeholder="Name (optional)"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <Input
+        placeholder="Username (optional)"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+      />
+      <Input.TextArea
+        placeholder="About (optional)"
+        value={about}
+        onChange={(e) => setAbout(e.target.value)}
+        rows={2}
+      />
+      <Input
+        placeholder="Picture URL (optional)"
+        value={picture}
+        onChange={(e) => setPicture(e.target.value)}
+      />
+
+      <Divider style={{ margin: "8px 0" }} />
+
+      <Text type="secondary" style={{ fontSize: 12 }}>
+        Your Nostr key will be encrypted with this password. Choose it carefully
+        — there's no way to recover your account without it.
+      </Text>
+      <Input.Password
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <Input.Password
+        placeholder="Confirm password"
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+      />
+
+      <Button type="primary" block loading={loading} onClick={handleCreate}>
+        Create Account
+      </Button>
+    </Space>
+  );
+};
+
 // Footer info component
 const FooterInfo: React.FC = () => {
   const [isFAQModalVisible, setIsFAQModalVisible] = useState(false);
@@ -173,6 +383,7 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
   const [showNip46, setShowNip46] = useState(false);
+  const [showNcryptsec, setShowNcryptsec] = useState(() => !!getNcryptsecFromLocalStorage());
 
   const [loadingNip07, setLoadingNip07] = useState(false);
 
@@ -196,28 +407,40 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} centered width={420} zIndex={1100}>
+    <Modal open={open} onCancel={onClose} footer={null} centered width={420} zIndex={1100} destroyOnClose>
       <div style={{ textAlign: "center", marginBottom: 16 }}>
-        <Title level={4}>Sign in to Formstr</Title>
-        <Text type="secondary">Choose your preferred login method</Text>
+        <Title level={4}>Welcome to Formstr</Title>
+        <Text type="secondary">Sign in or create a new account</Text>
       </div>
-      <Space direction="vertical" style={{ width: "100%" }}>
-        <LoginOptionButton
-          icon={<KeyOutlined />}
-          text="Sign in with Nostr Extension (NIP-07)"
-          type="primary"
-          onClick={handleNip07}
-          loading={loadingNip07}
-        />
-        <LoginOptionButton
-          icon={<LinkOutlined />}
-          text="Connect with Remote Signer (NIP-46)"
-          onClick={() => setShowNip46(!showNip46)}
-        />
-        {showNip46 && <Nip46Section onSuccess={() => {onLogin()}} />}
-      </Space>
-
-      <FooterInfo />
+      <Tabs defaultActiveKey="signin">
+        <TabPane tab="Sign In" key="signin">
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <LoginOptionButton
+              icon={<KeyOutlined />}
+              text="Sign in with Nostr Extension (NIP-07)"
+              type="primary"
+              onClick={handleNip07}
+              loading={loadingNip07}
+            />
+            <LoginOptionButton
+              icon={<LockOutlined />}
+              text="Sign in with Encrypted Key"
+              onClick={() => { setShowNcryptsec(!showNcryptsec); setShowNip46(false); }}
+            />
+            {showNcryptsec && <NcryptsecSection onSuccess={onLogin} />}
+            <LoginOptionButton
+              icon={<LinkOutlined />}
+              text="Connect with Remote Signer (NIP-46)"
+              onClick={() => { setShowNip46(!showNip46); setShowNcryptsec(false); }}
+            />
+            {showNip46 && <Nip46Section onSuccess={() => { onLogin(); }} />}
+          </Space>
+          <FooterInfo />
+        </TabPane>
+        <TabPane tab="Create Account" key="signup">
+          <SignUpSection onLogin={onLogin} />
+        </TabPane>
+      </Tabs>
     </Modal>
   );
 };

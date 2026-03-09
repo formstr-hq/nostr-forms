@@ -9,8 +9,15 @@ import {
   removeKeysFromLocalStorage,
   removeBunkerUriFromLocalStorage,
   removeAppSecretFromLocalStorage,
+  getNcryptsecFromLocalStorage,
+  setNcryptsecInLocalStorage,
+  removeNcryptsecFromLocalStorage,
 } from "./utils";
 import { createLocalSigner } from "./LocalSigner";
+import { generateSecretKey } from "nostr-tools";
+import * as nip49 from "nostr-tools/nip49";
+import { bytesToHex } from "@noble/hashes/utils";
+import { publishKind0 } from "../nostr/common";
 
 class Signer {
   private signer: NostrSigner | null = null;
@@ -49,6 +56,32 @@ class Signer {
     this.signer = createLocalSigner(privkey);
   }
 
+  async loginWithNcryptsec(ncryptsec: string, password: string): Promise<void> {
+    const secretKey = nip49.decrypt(ncryptsec, password);
+    const privkeyHex = bytesToHex(secretKey);
+    this.signer = createLocalSigner(privkeyHex);
+    const pubkey = await this.signer.getPublicKey();
+    setKeysInLocalStorage(pubkey);
+    setNcryptsecInLocalStorage(ncryptsec);
+    this.notify();
+  }
+
+  async signUpWithPassword(
+    password: string,
+    metadata: { name?: string; username?: string; about?: string; picture?: string },
+  ): Promise<string> {
+    const secretKey = generateSecretKey();
+    const privkeyHex = bytesToHex(secretKey);
+    const ncryptsec = nip49.encrypt(secretKey, password);
+    this.signer = createLocalSigner(privkeyHex);
+    const pubkey = await this.signer.getPublicKey();
+    setKeysInLocalStorage(pubkey);
+    setNcryptsecInLocalStorage(ncryptsec);
+    this.notify();
+    publishKind0(this.signer, metadata).catch(console.error);
+    return ncryptsec;
+  }
+
   async createGuestAccount(
     privkey: string,
     userMetadata: { name?: string; picture?: string; about?: string },
@@ -85,6 +118,7 @@ class Signer {
     removeKeysFromLocalStorage();
     removeBunkerUriFromLocalStorage();
     removeAppSecretFromLocalStorage();
+    removeNcryptsecFromLocalStorage();
     console.log("Logged out from everywhere");
     this.notify();
   }
