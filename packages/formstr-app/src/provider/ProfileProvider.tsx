@@ -78,7 +78,7 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
       });
     });
     const unsubscribe = signerManager.onChange(async () => {
-      const signer = await signerManager.getSigner();
+      const signer = signerManager.getSignerIfAvailable();
       if (signer) {
         try {
           const pk = await signer.getPublicKey();
