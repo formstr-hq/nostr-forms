@@ -7,10 +7,12 @@ function FormBanner({
   imageUrl,
   formTitle,
   globalColor,
+  titleColor,
 }: {
   imageUrl?: string;
   formTitle: string;
   globalColor?: string;
+  titleColor?: string;
 }) {
   const settings = {
     name: formTitle,
@@ -22,7 +24,7 @@ function FormBanner({
     <StyleWrapper className="form-title" $titleImageUrl={settings.image}>
       <Text
         className="title-text"
-        style={{ color: settings.globalColor || "black" }}
+        style={{ color: titleColor || globalColor || "black" }}
       >
         <SafeMarkdown>{settings.name}</SafeMarkdown>
       </Text>

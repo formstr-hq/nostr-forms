@@ -146,6 +146,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 value={question[3] || ""}
                 onChange={handleTextChange}
                 placeholder="Enter a Question"
+                color={formSettings.colors?.question ?? formSettings.colors?.global ?? formSettings.globalColor}
               />
             </label>
           </QuestionTextStyle>

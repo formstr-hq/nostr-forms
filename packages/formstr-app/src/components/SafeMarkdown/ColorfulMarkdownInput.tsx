@@ -11,6 +11,7 @@ type Props = {
   fontSize?: number;
   className?: string;
   disabled?: boolean;
+  color?: string;
 };
 
 export const ColorfulMarkdownTextarea: React.FC<Props> = ({
@@ -20,9 +21,10 @@ export const ColorfulMarkdownTextarea: React.FC<Props> = ({
   fontSize,
   className,
   disabled,
+  color,
 }) => {
   const { formSettings } = useFormBuilderContext();
-  const globalColor = formSettings.globalColor || "black";
+  const globalColor = color ?? formSettings.colors?.global ?? formSettings.globalColor ?? "black";
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);

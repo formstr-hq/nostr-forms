@@ -503,6 +503,13 @@ export default function FormBuilderProvider({
       form.spec.filter((f) => f[0] === "settings")?.[0]?.[1] || "{}",
     );
     settingsFromFile = { ...InitialFormSettings, ...settingsFromFile };
+    // Migrate legacy globalColor into the colors object
+    if (settingsFromFile.globalColor && !settingsFromFile.colors?.global) {
+      settingsFromFile.colors = {
+        ...settingsFromFile.colors,
+        global: settingsFromFile.globalColor,
+      };
+    }
 
     // Load sections if they exist
     if (settingsFromFile.sections && Array.isArray(settingsFromFile.sections)) {
