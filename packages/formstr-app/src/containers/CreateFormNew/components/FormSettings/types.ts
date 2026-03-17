@@ -1,5 +1,12 @@
 import { SectionData } from "../../providers/FormBuilder/typeDefs";
 
+export interface IColorSettings {
+  global?: string;
+  title?: string;
+  description?: string;
+  question?: string;
+}
+
 export interface IFormSettings {
   titleImageUrl?: string;
   description?: string;
@@ -13,7 +20,9 @@ export interface IFormSettings {
   sections?: SectionData[];
   backgroundImageUrl?: string;
   cardTransparency?: number;
+  /** @deprecated use colors.global instead */
   globalColor?: string;
+  colors?: IColorSettings;
   thankYouScreenImageUrl?: string;
   formstrBranding?: boolean;
   nrpcPubkey?: string;

@@ -3,7 +3,8 @@ import { Event, getPublicKey, nip19 } from "nostr-tools";
 import { useParams, useSearchParams } from "react-router-dom";
 import { fetchFormResponses } from "../../nostr/responses";
 import SummaryStyle from "./summary.style";
-import { Button, Card, Divider, Table, Typography, Spin, message } from "antd";
+import { Button, Card, Divider, Table, Tabs, Typography, Spin, message } from "antd";
+import { FormAnalytics } from "./components/FormAnalytics";
 import ResponseWrapper from "./Responses.style";
 import { isMobile } from "../../utils/utility";
 import { useProfileContext } from "../../hooks/useProfileContext";
@@ -518,18 +519,40 @@ export const Response = () => {
           responsesData={getData(true) || []}
           formName={getFormName()}
         />
-        <div style={{ overflow: "scroll", marginBottom: 60 }}>
-          <Table
-            columns={getColumns()}
-            dataSource={getData()}
-            pagination={{ pageSize: 10 }}
-            loading={{
-              spinning: responses === undefined,
-              tip: "🔎 Looking for responses...",
-            }}
-            scroll={{ x: isMobile() ? 900 : 1500, y: "calc(65% - 400px)" }}
-          />
-        </div>
+        <Tabs
+          defaultActiveKey="responses"
+          style={{ padding: "0 16px" }}
+          items={[
+            {
+              key: "responses",
+              label: "Responses",
+              children: (
+                <div style={{ overflow: "scroll", marginBottom: 60 }}>
+                  <Table
+                    columns={getColumns()}
+                    dataSource={getData()}
+                    pagination={{ pageSize: 10 }}
+                    loading={{
+                      spinning: responses === undefined,
+                      tip: "🔎 Looking for responses...",
+                    }}
+                    scroll={{ x: isMobile() ? 900 : 1500, y: "calc(65% - 400px)" }}
+                  />
+                </div>
+              ),
+            },
+            {
+              key: "analytics",
+              label: "Analytics",
+              children: formSpec ? (
+                <FormAnalytics
+                  responsesData={getData(true)}
+                  formSpec={formSpec}
+                />
+              ) : null,
+            },
+          ]}
+        />
         <div ref={chatRef}>
           {isChatVisible && formSpec && (
             <AIAnalysisChat

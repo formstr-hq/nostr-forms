@@ -7,6 +7,7 @@ import {
 } from "../../../../nostr/types";
 import styled from "styled-components";
 import SafeMarkdown from "../../../../components/SafeMarkdown";
+import { isMobile } from "../../../../utils/utility";
 
 interface GridFillerProps {
   options: string; // JSON string of GridOptions
@@ -17,9 +18,47 @@ interface GridFillerProps {
 }
 
 const GridContainer = styled.div`
-  // width: 100%;
   overflow-x: auto;
   margin-top: 8px;
+`;
+
+const MobileGridContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+`;
+
+const MobileRowCard = styled.div`
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const MobileRowLabel = styled.div`
+  background: #f5f5f5;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom: 1px solid #e0e0e0;
+`;
+
+const MobileOptionRow = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:active {
+    background: #fafafa;
+  }
 `;
 
 const GridTable = styled.table`
@@ -131,6 +170,40 @@ export const GridFiller: React.FC<GridFillerProps> = ({
   const isCheckboxChecked = (rowId: string, columnId: string): boolean => {
     return responses[rowId]?.split(";").includes(columnId) || false;
   };
+
+  if (isMobile()) {
+    return (
+      <MobileGridContainer>
+        {gridOptions.rows?.map(([rowId, rowLabel]) => (
+          <MobileRowCard key={rowId}>
+            <MobileRowLabel>
+              <SafeMarkdown components={{ p: "span" }}>{rowLabel}</SafeMarkdown>
+            </MobileRowLabel>
+            {gridOptions.columns?.map(([colId, colLabel]) => (
+              <MobileOptionRow key={colId}>
+                {answerType === AnswerTypes.multipleChoiceGrid ? (
+                  <Radio
+                    checked={isRadioChecked(rowId, colId)}
+                    onChange={() => handleRadioChange(rowId, colId)}
+                    disabled={disabled}
+                  />
+                ) : (
+                  <Checkbox
+                    checked={isCheckboxChecked(rowId, colId)}
+                    onChange={(e) =>
+                      handleCheckboxChange(rowId, colId, e.target.checked)
+                    }
+                    disabled={disabled}
+                  />
+                )}
+                <SafeMarkdown components={{ p: "span" }}>{colLabel}</SafeMarkdown>
+              </MobileOptionRow>
+            ))}
+          </MobileRowCard>
+        ))}
+      </MobileGridContainer>
+    );
+  }
 
   return (
     <GridContainer>

@@ -22,10 +22,85 @@ import { BackgroundImageSetting } from "./BackgroundImage";
 import { SketchPicker, ColorResult } from "react-color";
 import { useState } from "react";
 import { ThankYouScreenImageSetting } from "./ThankYouImage";
+import { IColorSettings } from "./types";
 
 const { Text } = Typography;
 const { Panel } = Collapse;
 import Automations from "./Automations";
+
+type ColorKey = keyof IColorSettings;
+
+const COLOR_LABELS: Record<ColorKey, string> = {
+  global: "Global",
+  title: "Title",
+  description: "Description",
+  question: "Question",
+};
+
+function ColorSwatch({
+  colorKey,
+  label,
+  value,
+  onChange,
+}: {
+  colorKey: ColorKey;
+  label: string;
+  value: string;
+  onChange: (hex: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+        content={
+          <div style={{ padding: 4 }}>
+            <SketchPicker
+              color={value}
+              onChange={(c: ColorResult) => onChange(c.hex)}
+            />
+            <div style={{ marginTop: 8, textAlign: "right" }}>
+              <Button
+                size="small"
+                onClick={() => {
+                  onChange("#000000");
+                  setOpen(false);
+                }}
+              >
+                Reset
+              </Button>
+            </div>
+          </div>
+        }
+        placement="topLeft"
+        overlayStyle={{ padding: 0 }}
+        destroyTooltipOnHide
+      >
+        <div
+          role="button"
+          aria-label={`Open ${label} color picker`}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            background: value,
+            boxShadow: "0 0 0 2px #fff, 0 0 0 3px #d9d9d9",
+            cursor: "pointer",
+            transition: "box-shadow 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 2px #fff, 0 0 0 3px #1677ff";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 2px #fff, 0 0 0 3px #d9d9d9";
+          }}
+        />
+      </Popover>
+      <Text style={{ fontSize: 11, color: "#8c8c8c" }}>{label}</Text>
+    </div>
+  );
+}
 
 function FormSettings() {
   const {
@@ -35,17 +110,11 @@ function FormSettings() {
     toggleRelayManagerModal,
     isRelayManagerModalOpen,
   } = useFormBuilderContext();
-  const [color, setColor] = useState(formSettings.globalColor || "#000000");
-  const [pickerOpen, setPickerOpen] = useState(false);
 
-  const handleColorChange = (c: ColorResult) => {
-    setColor(c.hex);
-    updateFormSetting({ globalColor: c.hex });
-  };
-  const clearColor = () => {
-    setColor("#000000");
-    updateFormSetting({ globalColor: "#000000" });
-    setPickerOpen(false);
+  const colors = formSettings.colors || {};
+
+  const updateColor = (key: ColorKey, hex: string) => {
+    updateFormSetting({ colors: { ...colors, [key]: hex } });
   };
   return (
     <StyleWrapper>
@@ -122,39 +191,21 @@ function FormSettings() {
         </Panel>
 
         <Panel header="Customization" key="customization">
-          <div className="property-setting">
-            <div>Global Color</div>
-            <Popover
-              open={pickerOpen}
-              onOpenChange={(open) => setPickerOpen(open)}
-              content={
-                <div style={{ padding: 4 }}>
-                  <SketchPicker color={color} onChange={handleColorChange} />
-                  <div style={{ marginTop: 8, textAlign: "right" }}>
-                    <Button size="small" onClick={clearColor}>
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              }
-              placement="topLeft"
-              overlayStyle={{ padding: 0 }}
-              destroyTooltipOnHide
-            >
-              <div
-                role="button"
-                aria-label="Open color picker"
-                style={{
-                  width: 18,
-                  height: 18,
-                  borderRadius: "50%",
-                  background: color,
-                  boxShadow: "0 0 0 1px #fff, 0 1px 3px rgba(0,0,0,.2)",
-                  cursor: "pointer",
-                }}
+          <Text style={{ fontSize: 12, display: "block", marginBottom: 8 }}>Colors</Text>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 8px", marginBottom: 4 }}>
+            {(Object.keys(COLOR_LABELS) as ColorKey[]).map((key) => (
+              <ColorSwatch
+                key={key}
+                colorKey={key}
+                label={COLOR_LABELS[key]}
+                value={colors[key] || "#000000"}
+                onChange={(hex) => updateColor(key, hex)}
               />
-            </Popover>
+            ))}
           </div>
+          <Text type="secondary" style={{ fontSize: 11, display: "block", marginBottom: 8 }}>
+            Title, Description &amp; Question fall back to Global if not set.
+          </Text>
           <Divider className="divider" />
           <TitleImage titleImageUrl={formSettings.titleImageUrl} />
           <Divider className="divider" />

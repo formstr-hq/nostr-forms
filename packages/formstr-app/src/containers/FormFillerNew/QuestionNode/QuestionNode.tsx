@@ -54,8 +54,8 @@ export const QuestionNode: React.FC<QuestionProps> = ({
       className="filler-question"
       data-testid={`${testId}:card`}
       style={{
-        backgroundColor: `rgba(255, 255, 255,${formSettings.cardTransparency})`, // 0.5 is opacity
-        color: formSettings.globalColor || "black",
+        backgroundColor: `rgba(255, 255, 255,${formSettings.cardTransparency})`,
+        color: formSettings.colors?.question ?? formSettings.colors?.global ?? formSettings.globalColor ?? "black",
       }}
     >
       {required && <span style={{ color: "#ea8dea" }}>* &nbsp;</span>}

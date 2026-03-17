@@ -353,12 +353,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             <FormBanner
               imageUrl={settings.titleImageUrl}
               formTitle={name}
-              globalColor={settings.globalColor}
+              globalColor={settings.colors?.global ?? settings.globalColor}
+              titleColor={settings.colors?.title}
             />
           )}
           {!hideDescription && settings?.description && (
             <div className="form-description">
-              <Text style={{ color: settings.globalColor }}>
+              <Text style={{ color: settings.colors?.description ?? settings.colors?.global ?? settings.globalColor }}>
                 <SafeMarkdown>{settings.description}</SafeMarkdown>
               </Text>
             </div>
