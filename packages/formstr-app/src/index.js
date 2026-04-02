@@ -2,22 +2,15 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import { ConfigProvider } from "antd";
+import "./i18n";
+import AppProviders from "./i18n/AppProviders";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
   <React.StrictMode>
-    <ConfigProvider
-      theme={{
-        token: {
-          fontFamily: "Anek Devanagari, ui-serif, Inter, ui-sans-serif",
-          colorPrimary: "#FF5733",
-          colorLink: "#FF5733",
-        },
-      }}
-    >
+    <AppProviders>
       <App />
-    </ConfigProvider>
+    </AppProviders>
   </React.StrictMode>
 );

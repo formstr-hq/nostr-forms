@@ -10,6 +10,7 @@ import {
   Button,
   Alert,
   message,
+  Select,
 } from "antd";
 import { Link } from "react-router-dom";
 import "./index.css";
@@ -20,8 +21,9 @@ import {
   LockOutlined,
   WarningOutlined,
   ExclamationCircleOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
-import { HEADER_MENU, HEADER_MENU_KEYS } from "./configs";
+import { getHeaderMenu, HEADER_MENU_KEYS } from "./configs";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { useLocalForms } from "../../provider/LocalFormsProvider";
 import { NostrAvatar } from "./NostrAvatar";
@@ -30,6 +32,8 @@ import { useState } from "react";
 import { useTemplateContext } from "../../provider/TemplateProvider";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
 import { nip19 } from "nostr-tools";
+import { useTranslation } from "react-i18next";
+import { saveLocalePreference, SUPPORTED_LOCALES } from "../../i18n";
 
 const { Text, Paragraph } = Typography;
 
@@ -44,6 +48,7 @@ const truncateNpub = (pubkey: string): string => {
 
 export const NostrHeader = () => {
   const { Header } = Layout;
+  const { t, i18n } = useTranslation();
   const { pubkey, requestPubkey, logout } = useProfileContext();
   const {
     isEncrypted,
@@ -65,11 +70,11 @@ export const NostrHeader = () => {
       if (result.error) {
         message.error(result.error.message);
       } else {
-        message.success("Storage encryption enabled!");
+        message.success(t("header.storage.enabledSuccess"));
         setShowEncryptionModal(false);
       }
     } catch (e) {
-      message.error("Failed to enable encryption.");
+      message.error(t("header.storage.enableFailed"));
     } finally {
       setEncryptionLoading(false);
     }
@@ -82,11 +87,11 @@ export const NostrHeader = () => {
       if (result.error) {
         message.error(result.error.message);
       } else {
-        message.success("Storage encryption disabled.");
+        message.success(t("header.storage.disabledSuccess"));
         setShowEncryptionModal(false);
       }
     } catch (e) {
-      message.error("Failed to disable encryption.");
+      message.error(t("header.storage.disableFailed"));
     } finally {
       setEncryptionLoading(false);
     }
@@ -94,12 +99,14 @@ export const NostrHeader = () => {
 
   const getEncryptionMenuLabel = () => {
     if (encryptionError) {
-      if (encryptionError.type === "wrong_key") return "Wrong Encryption Key";
-      if (encryptionError.type === "login_required") return "Login to Decrypt";
-      return "Storage Error";
+      if (encryptionError.type === "wrong_key")
+        return t("header.storage.wrongKey");
+      if (encryptionError.type === "login_required")
+        return t("header.storage.loginToDecrypt");
+      return t("header.storage.storageError");
     }
-    if (isEncrypted) return "Storage Encrypted";
-    return "Unencrypted Storage";
+    if (isEncrypted) return t("header.storage.encrypted");
+    return t("header.storage.unencrypted");
   };
 
   const getEncryptionMenuIcon = () => {
@@ -116,10 +123,10 @@ export const NostrHeader = () => {
         return (
           <>
             <Paragraph>
-              Your forms are encrypted. Please login to access them.
+              {t("header.storage.encryptedLoginPrompt")}
             </Paragraph>
             <Button type="primary" onClick={requestPubkey}>
-              Login
+              {t("common.actions.login")}
             </Button>
           </>
         );
@@ -128,22 +135,22 @@ export const NostrHeader = () => {
         return (
           <>
             <Paragraph>
-              Your forms were encrypted with a different Nostr key.
+              {t("header.storage.wrongKeyBody")}
             </Paragraph>
             {encryptionError.encryptedBy && (
               <Paragraph>
-                <Text strong>Encrypted by: </Text>
+                <Text strong>{t("common.labels.encryptedBy")}: </Text>
                 <Text code>{truncateNpub(encryptionError.encryptedBy)}</Text>
               </Paragraph>
             )}
             {pubkey && (
               <Paragraph>
-                <Text strong>Current key: </Text>
+                <Text strong>{t("common.labels.currentKey")}: </Text>
                 <Text code>{truncateNpub(pubkey)}</Text>
               </Paragraph>
             )}
             <Paragraph type="secondary">
-              Please login with the correct key to access your forms.
+              {t("header.storage.wrongKeyHint")}
             </Paragraph>
           </>
         );
@@ -155,16 +162,16 @@ export const NostrHeader = () => {
       return (
         <>
           <Paragraph>
-            Your form keys are encrypted with your Nostr key.
+            {t("header.storage.encryptedBody")}
           </Paragraph>
           {encryptionMeta?.encryptedBy && (
             <Paragraph>
-              <Text strong>Key: </Text>
+              <Text strong>{t("common.labels.key")}: </Text>
               <Text code>{truncateNpub(encryptionMeta.encryptedBy)}</Text>
             </Paragraph>
           )}
           <Alert
-            message="Disabling encryption will store your form keys in plain text in this browser."
+            message={t("header.storage.encryptedWarning")}
             type="warning"
             showIcon
             style={{ marginTop: 16 }}
@@ -177,19 +184,18 @@ export const NostrHeader = () => {
     return (
       <>
         <Paragraph>
-          Your form keys are stored unencrypted in this browser. If your browser
-          is compromised, these keys could be exposed.
+          {t("header.storage.unencryptedBody")}
         </Paragraph>
         {pubkey ? (
           <>
             <Paragraph>
-              Your forms will be encrypted with your current Nostr key:
+              {t("header.storage.encryptWithCurrentKey")}
             </Paragraph>
             <Paragraph>
               <Text code>{truncateNpub(pubkey)}</Text>
             </Paragraph>
             <Alert
-              message="You'll only be able to access your locally stored forms when logged in with this key. If you lose access to this key, your forms will be inaccessible."
+              message={t("header.storage.unencryptedWarning")}
               type="warning"
               showIcon
               style={{ marginTop: 16 }}
@@ -197,7 +203,7 @@ export const NostrHeader = () => {
           </>
         ) : (
           <Paragraph type="secondary">
-            Login to enable encryption for your stored forms.
+            {t("header.storage.unencryptedHint")}
           </Paragraph>
         )}
       </>
@@ -208,14 +214,14 @@ export const NostrHeader = () => {
     if (encryptionError) {
       return [
         <Button key="close" onClick={() => setShowEncryptionModal(false)}>
-          Close
+          {t("common.actions.close")}
         </Button>,
       ];
     }
     if (isEncrypted) {
       return [
         <Button key="cancel" onClick={() => setShowEncryptionModal(false)}>
-          Cancel
+          {t("common.actions.cancel")}
         </Button>,
         <Button
           key="disable"
@@ -223,7 +229,7 @@ export const NostrHeader = () => {
           onClick={handleDisableEncryption}
           loading={encryptionLoading}
         >
-          Disable Encryption
+          {t("header.storage.disableAction")}
         </Button>,
       ];
     }
@@ -231,7 +237,7 @@ export const NostrHeader = () => {
     if (pubkey) {
       return [
         <Button key="cancel" onClick={() => setShowEncryptionModal(false)}>
-          Cancel
+          {t("common.actions.cancel")}
         </Button>,
         <Button
           key="enable"
@@ -239,24 +245,29 @@ export const NostrHeader = () => {
           onClick={handleEnableEncryption}
           loading={encryptionLoading}
         >
-          Enable Encryption
+          {t("header.storage.enableAction")}
         </Button>,
       ];
     }
     return [
       <Button key="close" onClick={() => setShowEncryptionModal(false)}>
-        Close
+        {t("common.actions.close")}
       </Button>,
       <Button key="login" type="primary" onClick={requestPubkey}>
-        Login
+        {t("common.actions.login")}
       </Button>,
     ];
   };
 
   const getEncryptionModalTitle = () => {
-    if (encryptionError) return "Storage Error";
-    if (isEncrypted) return "Disable Encryption?";
-    return "Encrypt Local Storage?";
+    if (encryptionError) return t("header.storage.storageError");
+    if (isEncrypted) return t("header.storage.disableTitle");
+    return t("header.storage.enableTitle");
+  };
+
+  const handleLanguageChange = (locale: string) => {
+    saveLocalePreference(locale);
+    i18n.changeLanguage(locale);
   };
 
   const onMenuClick: MenuProps["onClick"] = (e) => {
@@ -280,11 +291,11 @@ export const NostrHeader = () => {
       pubkey
         ? {
             key: "logout",
-            label: <a onClick={logout}>Logout</a>,
+            label: <a onClick={logout}>{t("common.actions.logout")}</a>,
           }
         : {
             key: "login",
-            label: <a onClick={requestPubkey}>Login</a>,
+            label: <a onClick={requestPubkey}>{t("common.actions.login")}</a>,
           },
     ],
     {
@@ -316,8 +327,7 @@ export const NostrHeader = () => {
             }}
           />
           <Typography.Text style={{ marginTop: 2 }}>
-            {" "}
-            Support Us
+            {t("header.supportUs")}
           </Typography.Text>
         </div>
       ),
@@ -351,7 +361,7 @@ export const NostrHeader = () => {
       </div>
     ),
   };
-  const newHeaderMenu = [...HEADER_MENU, User];
+  const newHeaderMenu = [...getHeaderMenu(t), User];
   return (
     <>
       <Header
@@ -368,15 +378,36 @@ export const NostrHeader = () => {
             </Link>
           </Col>
           <Col md={12} xs={10} sm={2}>
-            <Menu
-              mode="horizontal"
-              theme="light"
-              defaultSelectedKeys={[]}
-              selectedKeys={selectedKey}
-              overflowedIndicator={<MenuOutlined />}
-              items={newHeaderMenu}
-              onClick={onMenuClick}
-            />
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-end",
+                gap: 12,
+              }}
+            >
+              <Select
+                size="small"
+                value={i18n.language}
+                onChange={handleLanguageChange}
+                suffixIcon={<GlobalOutlined />}
+                options={SUPPORTED_LOCALES.map((locale) => ({
+                  label: locale.label,
+                  value: locale.code,
+                }))}
+                aria-label={t("common.labels.language")}
+                style={{ minWidth: 110 }}
+              />
+              <Menu
+                mode="horizontal"
+                theme="light"
+                defaultSelectedKeys={[]}
+                selectedKeys={selectedKey}
+                overflowedIndicator={<MenuOutlined />}
+                items={newHeaderMenu}
+                onClick={onMenuClick}
+              />
+            </div>
           </Col>
         </Row>
       </Header>
@@ -387,7 +418,7 @@ export const NostrHeader = () => {
           setSelectedKey([]);
         }}
         filePath="/docs/faq.md"
-        title="Frequently Asked Questions"
+        title={t("header.faqTitle")}
       />
       <Modal
         title={getEncryptionModalTitle()}

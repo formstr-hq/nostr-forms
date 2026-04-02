@@ -2,6 +2,7 @@ import { Event, nip44 } from "nostr-tools";
 import { Field, Tag, GridOptions, GridResponse } from "../nostr/types";
 import { getDefaultRelays } from "../nostr/common";
 import { hexToBytes } from "nostr-tools/utils";
+import i18n from "../i18n";
 
 export const getResponseRelays = (formEvent: Event): string[] => {
   let formRelays = formEvent.tags
@@ -124,10 +125,10 @@ export const getResponseLabels = (
     }
 
     if (questionField[2] === "datetime" && answerValue) {
-      const epoch = Number(answerValue);
-      if (!isNaN(epoch)) {
-        const date = new Date(epoch * 1000); // convert seconds → ms
-        const formatted = date.toLocaleString(undefined, {
+        const epoch = Number(answerValue);
+        if (!isNaN(epoch)) {
+          const date = new Date(epoch * 1000); // convert seconds → ms
+        const formatted = date.toLocaleString(i18n.language || "en", {
           year: "numeric",
           month: "short",
           day: "numeric",

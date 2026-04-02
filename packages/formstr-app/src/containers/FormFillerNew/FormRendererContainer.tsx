@@ -6,6 +6,7 @@ import { getAllowedUsers, getFormSpec } from "../../utils/formUtils";
 import { SubmitButton } from "./SubmitButton/submit";
 import { FormRenderer } from "./FormRenderer";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { getResponseRelays } from "../../utils/ResponseUtils";
 import { IFormSettings } from "../CreateFormNew/components/FormSettings/types";
 import { LOCAL_STORAGE_KEYS, getItem, setItem } from "../../utils/localStorage";
@@ -39,6 +40,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
   hideDescription,
   hideTitleImage,
 }) => {
+  const { t } = useTranslation();
   const { pubkey: userPubKey, requestPubkey } = useProfileContext();
   const [form] = Form.useForm();
   const [formTemplate, setFormTemplate] = useState<Tag[]>();
@@ -257,14 +259,14 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
   } else if (!userPubKey) {
     footer = (
       <Button type="primary" onClick={requestPubkey}>
-        Login to fill this form
+        {t("filler.loginToFill")}
       </Button>
     );
   } else if (!allowedUsers.includes(userPubKey)) {
     footer = (
       <div style={{ textAlign: "center", padding: "20px" }}>
         <Text type="warning" style={{ fontSize: "16px" }}>
-          You do not have permission participate in this form
+          {t("filler.noPermission")}
         </Text>
       </div>
     );
@@ -297,12 +299,12 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       >
         <Typography.Text style={{ fontSize: "16px" }}>
           {isFetchingKeys
-            ? "Fetching keys to decrypt form..."
-            : "This form is encrypted and requires access keys to view"}
+            ? t("filler.fetchingKeys")
+            : t("filler.encryptedNotice")}
         </Typography.Text>
         {!userPubKey && !isFetchingKeys && (
           <Button type="primary" onClick={handleLoginAndFetchKeys}>
-            Login to Access Form
+            {t("filler.loginToAccess")}
           </Button>
         )}
       </div>

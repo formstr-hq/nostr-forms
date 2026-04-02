@@ -1,12 +1,15 @@
 import { Menu } from "antd";
-import { INPUTS_MENU } from "../../configs/menuConfig";
+import { useTranslation } from "react-i18next";
+import { getInputsMenu } from "../../configs/menuConfig";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 
 function InputsMenu() {
+  const { t } = useTranslation();
   const { addQuestion } = useFormBuilderContext();
+  const inputsMenu = getInputsMenu(t);
 
   const onMenuClick = ({ key }: { key: string }) => {
-    const selectedItem = INPUTS_MENU.find((item) => item.key === key);
+    const selectedItem = inputsMenu.find((item) => item.key === key);
     addQuestion(
       selectedItem?.primitive,
       undefined,
@@ -15,7 +18,12 @@ function InputsMenu() {
   };
 
   const items = [
-    { key: "Inputs", label: "Inputs", children: INPUTS_MENU, type: "group" },
+    {
+      key: "Inputs",
+      label: t("builder.menus.inputs"),
+      children: inputsMenu,
+      type: "group",
+    },
   ];
   return (
     <Menu

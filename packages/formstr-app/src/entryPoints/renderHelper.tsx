@@ -1,8 +1,9 @@
 import ReactDOM from "react-dom/client";
 import React from "react";
-import { ConfigProvider } from "antd";
 import { HashRouter } from "react-router-dom";
 import { ProfileProvider } from "../provider/ProfileProvider";
+import "../i18n";
+import AppProviders from "../i18n/AppProviders";
 
 let numTries = 0;
 
@@ -20,21 +21,13 @@ const tryAndRender = ({ Component }: { Component: React.FC }) => {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <React.StrictMode>
-      <ConfigProvider
-        theme={{
-          token: {
-            fontFamily: "Anek Devanagari, ui-serif, Inter, ui-sans-serif",
-            colorPrimary: "#FF5733",
-            colorLink: "#FF5733",
-          },
-        }}
-      >
+      <AppProviders>
         <HashRouter>
           <ProfileProvider>
             <Component />
           </ProfileProvider>
         </HashRouter>
-      </ConfigProvider>
+      </AppProviders>
     </React.StrictMode>,
   );
   return true;

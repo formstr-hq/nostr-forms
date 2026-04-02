@@ -24,6 +24,7 @@ import {
   FormSettingsPopover,
   SaveStatus,
 } from "./components";
+import { useTranslation } from "react-i18next";
 
 const { Text, Title } = Typography;
 const { Step } = Steps;
@@ -77,6 +78,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   responderSecretKey,
   uploaderPubkey,
 }) => {
+  const { t } = useTranslation();
   const name = formTemplate.find((tag) => tag[0] === "name")?.[1] || "";
   const settings = JSON.parse(
     formTemplate.find((tag) => tag[0] === "settings")?.[1] || "{}",
@@ -98,7 +100,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         {
           type: "questions",
           id: "all-questions",
-          title: "Form Questions",
+          title: t("common.labels.formQuestions"),
           fields: fields,
         },
       ];
@@ -119,8 +121,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       contentItems.push({
         type: "questions",
         id: "unsectioned-questions",
-        title: "General Questions",
-        description: "Please answer these questions first",
+        title: t("common.labels.generalQuestions"),
+        description: t("common.labels.generalQuestionsDescription"),
         fields: unsectionedFields,
       });
     }
@@ -233,7 +235,10 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             strokeColor="#FF5733"
           />
           <Text type="secondary" style={{ fontSize: "12px" }}>
-            Step {currentStep + 1} of {contentItems.length}
+            {t("common.labels.step", {
+              current: currentStep + 1,
+              total: contentItems.length,
+            })}
           </Text>
         </div>
       )}
@@ -280,8 +285,9 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                   type="secondary"
                   style={{ display: "block", marginTop: 8 }}
                 >
-                  {currentItem.fields.length} question
-                  {currentItem.fields.length !== 1 ? "s" : ""} in this step
+                  {t("common.labels.questionsInStep", {
+                    count: currentItem.fields.length,
+                  })}
                 </Text>
               )}
             </Card>
@@ -315,7 +321,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             disabled={currentStep === 0}
             icon={<LeftOutlined />}
           >
-            Back
+            {t("common.actions.back")}
           </Button>
 
           {!isLastStep ? (
@@ -328,7 +334,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             >
               {renderAutoSaveControls()}
               <Button type="primary" onClick={handleNext}>
-                Continue <RightOutlined />
+                {t("common.actions.continue")} <RightOutlined />
               </Button>
             </div>
           ) : (
@@ -381,7 +387,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 className="foss-link"
               >
                 <Text className="text-style">
-                  Formstr is free and Open Source
+                  {t("filler.branding")}
                 </Text>
               </a>
             )}
