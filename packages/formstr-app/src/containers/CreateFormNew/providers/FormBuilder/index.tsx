@@ -36,6 +36,7 @@ export const FormBuilderContext = React.createContext<IFormBuilderContext>({
   saveForm: () => Promise.resolve(),
   editQuestion: () => null,
   addQuestion: () => null,
+  duplicateQuestion: () => null,
   deleteQuestion: () => null,
   questionIdInFocus: undefined,
   setQuestionIdInFocus: () => null,
@@ -472,6 +473,37 @@ export default function FormBuilderProvider({
     }, 200);
   };
 
+  const duplicateQuestion = (tempId: string) => {
+    const index = questionsList.findIndex(q => q[1] === tempId);
+    if (index === -1) return;
+
+    const original = questionsList[index];
+    const newId = makeTag(6);
+
+    // copy to avoid accidental mutation
+    const duplicatedQuestion: Field = [...original];
+    duplicatedQuestion[1] = newId;
+
+    setQuestionsList(prev => {
+      const updated = [...prev];
+      updated.splice(index + 1, 0, duplicatedQuestion);
+      return updated;
+    });
+
+    const sectionId = getSectionForQuestion(tempId);
+    if (sectionId) {
+      moveQuestionToSection(newId, sectionId);
+    }
+
+    setQuestionIdInFocus(newId);
+
+    setTimeout(() => {
+      document
+        .getElementById(`question-${newId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 200);
+  };
+
   const deleteQuestion = (tempId: string) => {
     if (questionIdInFocus === tempId) {
       setQuestionIdInFocus(undefined);
@@ -568,6 +600,7 @@ export default function FormBuilderProvider({
         saveForm,
         editQuestion,
         addQuestion,
+        duplicateQuestion,
         deleteQuestion,
         questionIdInFocus,
         setQuestionIdInFocus,

@@ -72,6 +72,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
     <motion.div
       key={question[1]}
       layout // 🔑 enables smooth reordering animations
+      id={`question-${question[1]}`}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}

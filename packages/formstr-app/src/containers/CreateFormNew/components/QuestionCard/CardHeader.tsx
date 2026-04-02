@@ -2,6 +2,7 @@ import React from "react";
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
+  CopyOutlined,
   MoreOutlined,
 } from "@ant-design/icons";
 import { ReactComponent as Asterisk } from "../../../../Images/asterisk.svg";
@@ -30,7 +31,7 @@ const CardHeader: React.FC<CardHeaderProps> = ({
   lastQuestion,
 }) => {
   const { MOBILE } = useDeviceType();
-  const { toggleSettingsWindow, deleteQuestion, setQuestionIdInFocus } =
+  const { toggleSettingsWindow, deleteQuestion, setQuestionIdInFocus, duplicateQuestion } =
     useFormBuilderContext();
 
   return (
@@ -74,6 +75,13 @@ const CardHeader: React.FC<CardHeaderProps> = ({
               setQuestionIdInFocus(undefined);
             }}
           />
+          <div
+            className="action-icon"
+            onClick={() => duplicateQuestion(question[1])}
+            title="Duplicate question"
+          >
+            <CopyOutlined className="icon-svg" />
+          </div>
         </div>
 
         {MOBILE && (
