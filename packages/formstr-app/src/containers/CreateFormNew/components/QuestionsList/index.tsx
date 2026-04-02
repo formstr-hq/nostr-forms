@@ -243,6 +243,7 @@ export const QuestionsList = () => {
               onChange={handleDescriptionChange}
               placeholder="Add a form description (optional, supports Markdown)"
               color={formSettings.colors?.description ?? formSettings.colors?.global ?? formSettings.globalColor}
+              selectOnFocus={true}
             />
           </div>
         </DescriptionStyle>

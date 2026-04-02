@@ -12,6 +12,7 @@ type Props = {
   className?: string;
   disabled?: boolean;
   color?: string;
+  selectOnFocus?: boolean;
 };
 
 export const ColorfulMarkdownTextarea: React.FC<Props> = ({
@@ -22,6 +23,7 @@ export const ColorfulMarkdownTextarea: React.FC<Props> = ({
   className,
   disabled,
   color,
+  selectOnFocus,
 }) => {
   const { formSettings } = useFormBuilderContext();
   const globalColor = color ?? formSettings.colors?.global ?? formSettings.globalColor ?? "black";
@@ -42,6 +44,7 @@ export const ColorfulMarkdownTextarea: React.FC<Props> = ({
         placeholder={placeholder}
         disabled={disabled}
         autoSize
+        onFocus={(e) => selectOnFocus && e.target.select()}
       />
     </div>
   );
