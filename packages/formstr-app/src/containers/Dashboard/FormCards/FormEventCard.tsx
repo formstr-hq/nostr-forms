@@ -2,18 +2,15 @@ import { Button, Card, Divider, Dropdown, MenuProps } from "antd";
 import { Event } from "nostr-tools";
 import { useNavigate } from "react-router-dom";
 import DeleteFormTrigger from "./DeleteForm";
-import {
-  downloadHTMLToDevice,
-  makeFormNAddr,
-  naddrUrl,
-  makeTag,
-} from "../../../utils/utility";
+import { downloadHTMLToDevice, makeTag } from "../../../utils/utility";
 import {
   editPath,
-  getDecryptedForm,
-  getFormData,
+  makeFormNAddr,
+  naddrUrl,
   responsePath,
-} from "../../../utils/formUtils";
+  constructDraftUrl,
+} from "../../../utils/formLinks";
+import { getDecryptedForm, getFormData } from "../../../utils/formUtils";
 import {
   DownloadOutlined,
   EditOutlined,
@@ -22,7 +19,6 @@ import {
   InfoCircleOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
-import { constructDraftUrl } from "./Drafts";
 import { FormDetails } from "../../CreateFormNew/components/FormDetails";
 import SafeMarkdown from "../../../components/SafeMarkdown";
 import { IFormSettings } from "../../CreateFormNew/components/FormSettings/types";
@@ -39,7 +35,6 @@ interface FormEventCardProps {
 export const FormEventCard: React.FC<FormEventCardProps> = ({
   event,
   onDeleted,
-  relay,
   secretKey,
   viewKey,
   shortLink,
