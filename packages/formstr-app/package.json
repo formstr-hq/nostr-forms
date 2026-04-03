@@ -73,6 +73,7 @@
     "terser-webpack-plugin": "^5.2.5",
     "typescript": "^5.2.2",
     "url": "^0.11.3",
+    "web-llm-runner": "^0.1.6",
     "web-vitals": "^2.1.4",
     "webpack": "^5.64.4",
     "webpack-dev-server": "^4.6.0",

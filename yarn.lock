@@ -8441,6 +8441,11 @@ lodash@^4.0.1, lodash@^4.17.15, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.7.0:
   resolved "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
+loglevel@^1.9.1:
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.9.2.tgz#c2e028d6c757720107df4e64508530db6621ba08"
+  integrity sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==
+
 longest-streak@^3.0.0:
   version "3.1.0"
   resolved "https://registry.npmjs.org/longest-streak/-/longest-streak-3.1.0.tgz"
@@ -12544,6 +12549,13 @@ wbuf@^1.1.0, wbuf@^1.7.3:
   integrity sha512-O84QOnr0icsbFGLS0O3bI5FswxzRr8/gHwWkDlQFskhSPryQXvrTMxjxGP4+iWYoauLoBvfDpkrOauZ+0iZpDA==
   dependencies:
     minimalistic-assert "^1.0.0"
+
+web-llm-runner@^0.1.6:
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/web-llm-runner/-/web-llm-runner-0.1.6.tgz#fa84e90b35cfba6673c7d81f62666218c2a97042"
+  integrity sha512-oOSi0nzL/nXC01M7kVHWPCFgG59aGfhjNnzLmQ12Cno/3QFAfZEtbwE7vLZHlQzOB0wwFuWCMp4v0Z+Ldlhh3A==
+  dependencies:
+    loglevel "^1.9.1"
 
 web-namespaces@^2.0.0:
   version "2.0.1"
