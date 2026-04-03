@@ -3,6 +3,7 @@ import {
   MaxRule,
   MinRule,
   NumberConstraint,
+  NumberValidationRule,
   RangeRule,
   RegexRule,
   ValidationRuleTypes,
@@ -26,6 +27,7 @@ export interface IAnswerSettings {
     [ValidationRuleTypes.min]?: MinRule;
     [ValidationRuleTypes.regex]?: RegexRule;
     [ValidationRuleTypes.match]?: MatchRule;
+    [ValidationRuleTypes.numberRule]?: NumberValidationRule;
   };
   [key: string]: unknown;
 }

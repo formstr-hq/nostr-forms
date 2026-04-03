@@ -99,6 +99,26 @@ export enum ValidationRuleTypes {
   min = "min",
   regex = "regex",
   match = "match",
+  numberRule = "numberRule",
+}
+
+export type NumberValidationType =
+  | "greaterThan"
+  | "greaterThanOrEqual"
+  | "lessThan"
+  | "lessThanOrEqual"
+  | "equalTo"
+  | "notEqualTo"
+  | "between"
+  | "notBetween"
+  | "isNumber"
+  | "wholeNumber";
+
+export interface NumberValidationRule {
+  type: NumberValidationType;
+  value1?: number;
+  value2?: number;
+  errorMessage?: string;
 }
 export interface RangeRule {
   min: number;
@@ -161,6 +181,7 @@ export interface AnswerSettings {
     [ValidationRuleTypes.min]?: MinRule;
     [ValidationRuleTypes.regex]?: RegexRule;
     [ValidationRuleTypes.match]?: MatchRule;
+    [ValidationRuleTypes.numberRule]?: NumberValidationRule;
   };
   [key: string]: unknown;
 }
