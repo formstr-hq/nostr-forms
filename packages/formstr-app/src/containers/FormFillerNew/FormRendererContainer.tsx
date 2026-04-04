@@ -1,6 +1,6 @@
-import { Button, Form, Popconfirm, Space, Typography } from "antd";
-import { Event, generateSecretKey, getPublicKey } from "nostr-tools";
-import { Response, Tag } from "../../nostr/types";
+import { Button, Form, Typography, message } from "antd";
+import { Event, generateSecretKey } from "nostr-tools";
+import { FileUploadMetadata, Response, Tag } from "../../nostr/types";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { getAllowedUsers, getFormSpec } from "../../utils/formUtils";
 import { SubmitButton } from "./SubmitButton/submit";
@@ -9,6 +9,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { getResponseRelays } from "../../utils/ResponseUtils";
 import { IFormSettings } from "../CreateFormNew/components/FormSettings/types";
 import { LOCAL_STORAGE_KEYS, getItem, setItem } from "../../utils/localStorage";
+import { BlossomClient } from "../../utils/blossom";
+import { createAuthEvent } from "../../utils/blossomAuth";
 
 const { Text } = Typography;
 
@@ -23,6 +25,25 @@ interface DraftData {
   values: Record<string, [string, string | undefined] | null>;
   savedAt: number;
 }
+
+const isFileUploadMetadata = (
+  value: unknown,
+): value is FileUploadMetadata => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<FileUploadMetadata>;
+  return (
+    typeof candidate.sha256 === "string" &&
+    typeof candidate.filename === "string" &&
+    typeof candidate.size === "number" &&
+    typeof candidate.mimeType === "string" &&
+    typeof candidate.server === "string" &&
+    typeof candidate.uploaderPubkey === "string" &&
+    typeof candidate.uploadedAt === "number"
+  );
+};
 
 interface FormRendererContainerProps {
   formEvent: Event;
@@ -247,25 +268,62 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     }
   };
 
+  const getUploadedFilesFromForm = (): FileUploadMetadata[] => {
+    const formValues = form.getFieldsValue(true);
+
+    return Object.values(formValues).flatMap((value) => {
+      if (!Array.isArray(value) || typeof value[0] !== "string") {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(value[0]);
+        return isFileUploadMetadata(parsed) ? [parsed] : [];
+      } catch {
+        return [];
+      }
+    });
+  };
+
+  const clearUploadedFiles = async (files: FileUploadMetadata[]) => {
+    const results = await Promise.allSettled(
+      files.map(async (file) => {
+        const authHeader = await createAuthEvent(
+          "delete",
+          file.sha256,
+          60,
+          responderSecretKey,
+        );
+        const client = new BlossomClient(file.server);
+        await client.delete(file.sha256, authHeader);
+      }),
+    );
+
+    if (results.some((result) => result.status === "rejected")) {
+      message.warning(
+        "Some uploaded files could not be removed from the server.",
+      );
+    }
+  };
+
   const handleClearForm = () => {
+    const uploadedFiles = getUploadedFilesFromForm();
     form.resetFields();
     clearDraft();
     setResetSignal((prev) => prev + 1);
+
+    if (uploadedFiles.length > 0) {
+      void clearUploadedFiles(uploadedFiles);
+    }
   };
 
-  const renderSubmitFooter = (selfSign: boolean) => (
-    <Space wrap>
-      <Popconfirm
-        title="Clear all responses?"
-        description="This will remove all entered answers and clear any saved draft."
-        okText="Clear form"
-        cancelText="Cancel"
-        onConfirm={handleClearForm}
-      >
-        <Button danger>Clear form</Button>
-      </Popconfirm>
+  const allowedUsers = getAllowedUsers(formEvent);
+  let footer: React.ReactNode = null;
+
+  if (allowedUsers.length === 0) {
+    footer = (
       <SubmitButton
-        selfSign={selfSign}
+        selfSign={!!settings?.disallowAnonymous}
         edit={false}
         onSubmit={onSubmit}
         form={form}
@@ -274,14 +332,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         formTemplate={formTemplate!}
         responderSecretKey={responderSecretKey}
       />
-    </Space>
-  );
-
-  const allowedUsers = getAllowedUsers(formEvent);
-  let footer: React.ReactNode = null;
-
-  if (allowedUsers.length === 0) {
-    footer = renderSubmitFooter(!!settings?.disallowAnonymous);
+    );
   } else if (!userPubKey) {
     footer = (
       <Button type="primary" onClick={requestPubkey}>
@@ -297,7 +348,18 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       </div>
     );
   } else {
-    footer = renderSubmitFooter(true);
+    footer = (
+      <SubmitButton
+        selfSign={true}
+        edit={false}
+        onSubmit={onSubmit}
+        form={form}
+        relays={getResponseRelays(formEvent)}
+        formEvent={formEvent}
+        formTemplate={formTemplate!}
+        responderSecretKey={responderSecretKey}
+      />
+    );
   }
 
   if (!formTemplate) {
@@ -341,6 +403,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       formAuthorPubkey={formEvent.pubkey}
       responderSecretKey={responderSecretKey}
       resetSignal={resetSignal}
+      onClearForm={handleClearForm}
     />
   );
 };

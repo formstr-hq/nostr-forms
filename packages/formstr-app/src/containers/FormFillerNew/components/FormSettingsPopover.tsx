@@ -1,17 +1,35 @@
-import { Popover, Switch, Typography } from "antd";
+import { Button, Divider, Modal, Popover, Switch, Typography } from "antd";
 import { SettingOutlined } from "@ant-design/icons";
+import { useState } from "react";
 
 const { Text } = Typography;
 
 interface FormSettingsPopoverProps {
   autoSaveEnabled: boolean;
   onToggleAutoSave: () => void;
+  onClearForm?: () => void;
 }
 
 export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
   autoSaveEnabled,
   onToggleAutoSave,
+  onClearForm,
 }) => {
+  const [open, setOpen] = useState(false);
+
+  const handleClearClick = () => {
+    setOpen(false);
+    Modal.confirm({
+      title: "Clear all responses?",
+      content:
+        "This will remove all entered answers, clear also uploaded files and this action cannot be undone.",
+      okText: "Clear form",
+      cancelText: "Cancel",
+      okButtonProps: { danger: true },
+      onOk: onClearForm,
+    });
+  };
+
   const content = (
     <div style={{ minWidth: 200 }}>
       <div
@@ -34,6 +52,14 @@ export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
       >
         Saves your answers locally so you can continue later
       </Text>
+      {onClearForm && (
+        <>
+          <Divider style={{ margin: "12px 0" }} />
+          <Button danger block onClick={handleClearClick}>
+            Clear form
+          </Button>
+        </>
+      )}
     </div>
   );
 
@@ -43,6 +69,8 @@ export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
       title="Form Settings"
       trigger="click"
       placement="topRight"
+      open={open}
+      onOpenChange={setOpen}
     >
       <div
         style={{
