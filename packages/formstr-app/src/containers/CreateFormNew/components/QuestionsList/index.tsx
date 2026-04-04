@@ -5,7 +5,7 @@ import StyleWrapper from "./style";
 import DescriptionStyle from "./description.style";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 import React, { ChangeEvent, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, Reorder, useDragControls } from "framer-motion";
 import { Field } from "../../../../nostr/types";
 import AIFormGeneratorModal from "../AIFormGeneratorModal";
 import Section from "../SectionManager/Section";
@@ -68,14 +68,20 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   firstQuestion,
   lastQuestion,
 }) => {
+  const controls = useDragControls();
+
   return (
-    <motion.div
-      key={question[1]}
-      layout // 🔑 enables smooth reordering animations
+    <Reorder.Item
+      value={question}
+      id={`question-${question[1]}`}
+      dragListener={false}
+      dragControls={controls}
+      layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2 }}
+      style={{ listStyle: "none" }}
     >
       <QuestionCard
         question={question}
@@ -83,8 +89,9 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
         onReorderKey={onReorderKey}
         firstQuestion={firstQuestion}
         lastQuestion={lastQuestion}
+        dragControls={controls}
       />
-    </motion.div>
+    </Reorder.Item>
   );
 };
 
@@ -134,21 +141,41 @@ export const QuestionsList = () => {
     setIsLeftMenuOpen(true);
   };
 
+  const makeSectionedReorderHandler = (subset: Field[]) => (reordered: Field[]) => {
+    // Replace only the items that belong to this subset, preserving the order of other items.
+    const subsetIds = new Set(subset.map((q) => q[1]));
+    const result = [...questionsList];
+    const subsetIndices = questionsList
+      .map((q, i) => (subsetIds.has(q[1]) ? i : -1))
+      .filter((i) => i !== -1);
+    reordered.forEach((item, pos) => {
+      result[subsetIndices[pos]] = item;
+    });
+    updateQuestionsList(result);
+  };
+
   const renderQuestions = () => {
     if (!sections || sections.length === 0) {
       return (
         <div>
-          <AnimatePresence initial={false}>
-            {questionsList.map((question, idx) => (
-              <QuestionItem
-                key={question[1]}
-                question={question}
-                onEdit={editQuestion}
-                onReorderKey={onReorderKey}
-                firstQuestion={idx === 0}
-                lastQuestion={idx === questionsList.length - 1}
-              />
-            ))}
+          <AnimatePresence>
+            <Reorder.Group
+              axis="y"
+              values={questionsList}
+              onReorder={updateQuestionsList}
+              style={{ listStyle: "none", padding: 0, margin: 0 }}
+            >
+              {questionsList.map((question, idx) => (
+                <QuestionItem
+                  key={question[1]}
+                  question={question}
+                  onEdit={editQuestion}
+                  onReorderKey={onReorderKey}
+                  firstQuestion={idx === 0}
+                  lastQuestion={idx === questionsList.length - 1}
+                />
+              ))}
+            </Reorder.Group>
           </AnimatePresence>
 
           <div ref={bottomElementRef}></div>
@@ -169,22 +196,31 @@ export const QuestionsList = () => {
               padding: 16,
               border: "1.5px dashed #000000",
               borderRadius: 8,
-              backgroundColor: "rgba(255, 255, 255, 0.4)"
+              backgroundColor: "rgba(255, 255, 255, 0.4)",
             }}
           >
             <h4 style={{ margin: "0 0 16px 0", color: "#8c8c8c" }}>
               Unsectioned Questions
             </h4>
-            {unsectionedQuestions.map((question, idx) => (
-              <QuestionItem
-                key={question[1]}
-                question={question}
-                onEdit={editQuestion}
-                onReorderKey={onReorderKey}
-                firstQuestion={idx === 0}
-                lastQuestion={idx === unsectionedQuestions.length - 1}
-              />
-            ))}
+            <AnimatePresence>
+              <Reorder.Group
+                axis="y"
+                values={unsectionedQuestions}
+                onReorder={makeSectionedReorderHandler(unsectionedQuestions)}
+                style={{ listStyle: "none", padding: 0, margin: 0 }}
+              >
+                {unsectionedQuestions.map((question, idx) => (
+                  <QuestionItem
+                    key={question[1]}
+                    question={question}
+                    onEdit={editQuestion}
+                    onReorderKey={onReorderKey}
+                    firstQuestion={idx === 0}
+                    lastQuestion={idx === unsectionedQuestions.length - 1}
+                  />
+                ))}
+              </Reorder.Group>
+            </AnimatePresence>
           </div>
         )}
 
@@ -206,16 +242,25 @@ export const QuestionsList = () => {
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                 />
               ) : (
-                sectionQuestions.map((question, idx) => (
-                  <QuestionItem
-                    key={question[1]}
-                    question={question}
-                    onEdit={editQuestion}
-                    onReorderKey={onReorderKey}
-                    firstQuestion={idx === 0}
-                    lastQuestion={idx === sectionQuestions.length - 1}
-                  />
-                ))
+                <AnimatePresence>
+                  <Reorder.Group
+                    axis="y"
+                    values={sectionQuestions}
+                    onReorder={makeSectionedReorderHandler(sectionQuestions)}
+                    style={{ listStyle: "none", padding: 0, margin: 0 }}
+                  >
+                    {sectionQuestions.map((question, idx) => (
+                      <QuestionItem
+                        key={question[1]}
+                        question={question}
+                        onEdit={editQuestion}
+                        onReorderKey={onReorderKey}
+                        firstQuestion={idx === 0}
+                        lastQuestion={idx === sectionQuestions.length - 1}
+                      />
+                    ))}
+                  </Reorder.Group>
+                </AnimatePresence>
               )}
             </Section>
           );
@@ -243,6 +288,7 @@ export const QuestionsList = () => {
               onChange={handleDescriptionChange}
               placeholder="Add a form description (optional, supports Markdown)"
               color={formSettings.colors?.description ?? formSettings.colors?.global ?? formSettings.globalColor}
+              selectOnFocus={true}
             />
           </div>
         </DescriptionStyle>

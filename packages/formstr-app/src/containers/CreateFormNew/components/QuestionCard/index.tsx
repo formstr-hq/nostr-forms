@@ -8,6 +8,7 @@ import { Choice } from "./InputElements/OptionTypes/types";
 import UploadImage from "./UploadImage";
 import { AnswerSettings, AnswerTypes, Field } from "../../../../nostr/types";
 import { ColorfulMarkdownTextarea } from "../../../../components/SafeMarkdown/ColorfulMarkdownInput";
+import { DragControls } from "framer-motion";
 
 type QuestionCardProps = {
   question: Field;
@@ -15,6 +16,7 @@ type QuestionCardProps = {
   onReorderKey: (keyType: "UP" | "DOWN", tempId: string) => void;
   firstQuestion: boolean;
   lastQuestion: boolean;
+  dragControls: DragControls;
 };
 
 const QuestionCard: React.FC<QuestionCardProps> = ({
@@ -23,6 +25,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   onReorderKey,
   firstQuestion,
   lastQuestion,
+  dragControls,
 }) => {
   const answerSettings = JSON.parse(
     question[5] || '{"renderElement": "shortText"}',
@@ -111,6 +114,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           onReorderKey={onReorderKey}
           firstQuestion={firstQuestion}
           lastQuestion={lastQuestion}
+          dragControls={dragControls}
         />
 
         {!!sections.length && (
@@ -147,6 +151,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 onChange={handleTextChange}
                 placeholder="Enter a Question"
                 color={formSettings.colors?.question ?? formSettings.colors?.global ?? formSettings.globalColor}
+                selectOnFocus={true}
               />
             </label>
           </QuestionTextStyle>

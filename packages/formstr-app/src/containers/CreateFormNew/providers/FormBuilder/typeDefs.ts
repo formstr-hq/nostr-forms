@@ -49,6 +49,7 @@ export interface IFormBuilderContext {
     label?: string,
     answerSettings?: AnswerSettings,
   ) => void;
+  duplicateQuestion: (tempId: string) => void;
   deleteQuestion: (tempId: string) => void;
   questionIdInFocus?: string;
   setQuestionIdInFocus: (tempId?: string) => void;

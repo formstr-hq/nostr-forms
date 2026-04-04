@@ -53,6 +53,7 @@ function FormTitle({
           onChange={handleTitleChange}
           fontSize={24}
           color={formSettings.colors?.title ?? formSettings.colors?.global ?? formSettings.globalColor}
+          selectOnFocus={true}
         />
       )}
     </StyleWrapper>
