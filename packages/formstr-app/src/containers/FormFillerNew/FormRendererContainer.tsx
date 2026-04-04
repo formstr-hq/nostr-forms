@@ -1,4 +1,4 @@
-import { Button, Form, Typography } from "antd";
+import { Button, Form, Popconfirm, Space, Typography } from "antd";
 import { Event, generateSecretKey, getPublicKey } from "nostr-tools";
 import { Response, Tag } from "../../nostr/types";
 import { useProfileContext } from "../../hooks/useProfileContext";
@@ -47,6 +47,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     "idle",
   );
   const [isFetchingKeys, setIsFetchingKeys] = useState(false);
+  const [resetSignal, setResetSignal] = useState(0);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(() => {
     const saved = getItem<boolean>(LOCAL_STORAGE_KEYS.AUTO_SAVE_ENABLED);
     return saved !== false; // Default to true if not set
@@ -115,6 +116,14 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
 
   // Clear draft (to be called on successful submit)
   const clearDraft = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    if (statusTimeoutRef.current) {
+      clearTimeout(statusTimeoutRef.current);
+      statusTimeoutRef.current = null;
+    }
     localStorage.removeItem(draftStorageKey);
     setSaveStatus("idle");
   }, [draftStorageKey]);
@@ -238,13 +247,25 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     }
   };
 
-  const allowedUsers = getAllowedUsers(formEvent);
-  let footer: React.ReactNode = null;
+  const handleClearForm = () => {
+    form.resetFields();
+    clearDraft();
+    setResetSignal((prev) => prev + 1);
+  };
 
-  if (allowedUsers.length === 0) {
-    footer = (
+  const renderSubmitFooter = (selfSign: boolean) => (
+    <Space wrap>
+      <Popconfirm
+        title="Clear all responses?"
+        description="This will remove all entered answers and clear any saved draft."
+        okText="Clear form"
+        cancelText="Cancel"
+        onConfirm={handleClearForm}
+      >
+        <Button danger>Clear form</Button>
+      </Popconfirm>
       <SubmitButton
-        selfSign={!!settings?.disallowAnonymous}
+        selfSign={selfSign}
         edit={false}
         onSubmit={onSubmit}
         form={form}
@@ -253,7 +274,14 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         formTemplate={formTemplate!}
         responderSecretKey={responderSecretKey}
       />
-    );
+    </Space>
+  );
+
+  const allowedUsers = getAllowedUsers(formEvent);
+  let footer: React.ReactNode = null;
+
+  if (allowedUsers.length === 0) {
+    footer = renderSubmitFooter(!!settings?.disallowAnonymous);
   } else if (!userPubKey) {
     footer = (
       <Button type="primary" onClick={requestPubkey}>
@@ -269,18 +297,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       </div>
     );
   } else {
-    footer = (
-      <SubmitButton
-        selfSign={true}
-        edit={false}
-        onSubmit={onSubmit}
-        form={form}
-        relays={getResponseRelays(formEvent)}
-        formEvent={formEvent}
-        formTemplate={formTemplate!}
-        responderSecretKey={responderSecretKey}
-      />
-    );
+    footer = renderSubmitFooter(true);
   }
 
   if (!formTemplate) {
@@ -323,6 +340,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       onToggleAutoSave={toggleAutoSave}
       formAuthorPubkey={formEvent.pubkey}
       responderSecretKey={responderSecretKey}
+      resetSignal={resetSignal}
     />
   );
 };
