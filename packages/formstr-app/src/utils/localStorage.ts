@@ -12,6 +12,7 @@ export const LOCAL_STORAGE_KEYS = {
   OLLAMA_CONFIG: "formstr:ollama_config",
   LLM_PROVIDER: "formstr:llm_provider",
   WEB_LLM_CONFIG: "formstr:web_llm_config",
+  AI_IDENTITY: "formstr:ai_identity",
 };
 
 export interface LocalFormsMeta {
