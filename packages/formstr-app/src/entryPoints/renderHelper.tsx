@@ -2,8 +2,8 @@ import ReactDOM from "react-dom/client";
 import React from "react";
 import { HashRouter } from "react-router-dom";
 import { ProfileProvider } from "../provider/ProfileProvider";
-import "../i18n";
 import AppProviders from "../i18n/AppProviders";
+import { initI18n } from "../i18n";
 
 let numTries = 0;
 
@@ -39,6 +39,8 @@ export const renderReactComponent = ({
   Component: React.FC;
 }) => {
   document.addEventListener("DOMContentLoaded", () => {
-    tryAndRender({ Component });
+    void initI18n().then(() => {
+      tryAndRender({ Component });
+    });
   });
 };

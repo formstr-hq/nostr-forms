@@ -33,7 +33,7 @@ import { useTemplateContext } from "../../provider/TemplateProvider";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
 import { nip19 } from "nostr-tools";
 import { useTranslation } from "react-i18next";
-import { saveLocalePreference, SUPPORTED_LOCALES } from "../../i18n";
+import { normalizeLocale, saveLocalePreference, SUPPORTED_LOCALES } from "../../i18n";
 
 const { Text, Paragraph } = Typography;
 
@@ -266,8 +266,15 @@ export const NostrHeader = () => {
   };
 
   const handleLanguageChange = (locale: string) => {
-    saveLocalePreference(locale);
-    i18n.changeLanguage(locale);
+    const normalizedLocale = normalizeLocale(locale);
+    const currentLocale = normalizeLocale(i18n.resolvedLanguage || i18n.language);
+
+    if (normalizedLocale === currentLocale) {
+      return;
+    }
+
+    saveLocalePreference(normalizedLocale);
+    window.location.reload();
   };
 
   const onMenuClick: MenuProps["onClick"] = (e) => {

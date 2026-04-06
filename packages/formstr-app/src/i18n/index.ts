@@ -1,8 +1,9 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import enUS from "antd/locale/en_US";
-import resources from "./resources/en";
 import { getItem, LOCAL_STORAGE_KEYS, setItem } from "../utils/localStorage";
+
+type TranslationResources = typeof import("./resources/en").default;
 
 export interface SupportedLocale {
   code: string;
@@ -13,7 +14,7 @@ export interface SupportedLocale {
 export const SUPPORTED_LOCALES: SupportedLocale[] = [
   {
     code: "en",
-    label: resources.common.labels.english,
+    label: "English",
     antdLocale: enUS,
   },
 ];
@@ -58,21 +59,64 @@ export const getAntdLocaleForLanguage = (language?: string) => {
   );
 };
 
-if (!i18n.isInitialized) {
-  i18n.use(initReactI18next).init({
-    resources: {
-      en: { translation: resources },
-    },
-    lng: resolveAppLocale(),
-    fallbackLng: DEFAULT_LOCALE,
-    interpolation: {
-      escapeValue: false,
-    },
-    react: {
-      useSuspense: false,
-    },
-    returnNull: false,
-  });
-}
+const LOCALE_LOADERS: Record<
+  string,
+  () => Promise<{ default: TranslationResources }>
+> = {
+  en: () => import("./resources/en"),
+};
+
+const loadLocaleResources = async (locale: string) => {
+  const normalized = normalizeLocale(locale);
+  const loader = LOCALE_LOADERS[normalized] || LOCALE_LOADERS[DEFAULT_LOCALE];
+  const module = await loader();
+
+  const resources: Record<string, { translation: TranslationResources }> = {
+    [normalized]: { translation: module.default },
+  };
+
+  if (normalized !== DEFAULT_LOCALE) {
+    const fallbackModule = await LOCALE_LOADERS[DEFAULT_LOCALE]();
+    resources[DEFAULT_LOCALE] = { translation: fallbackModule.default };
+  }
+
+  return {
+    locale: normalized,
+    resources,
+  };
+};
+
+let initPromise: Promise<typeof i18n> | null = null;
+
+export const initI18n = async () => {
+  if (i18n.isInitialized) {
+    return i18n;
+  }
+
+  if (initPromise) {
+    return initPromise;
+  }
+
+  initPromise = (async () => {
+    const { locale, resources } = await loadLocaleResources(resolveAppLocale());
+
+    await i18n.use(initReactI18next).init({
+      resources,
+      lng: locale,
+      fallbackLng: DEFAULT_LOCALE,
+      interpolation: {
+        escapeValue: false,
+      },
+      react: {
+        useSuspense: false,
+      },
+      returnNull: false,
+    });
+
+    return i18n;
+  })();
+
+  return initPromise;
+};
 
 export default i18n;
