@@ -275,7 +275,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       {/* Feedback messages */}
       {validationMessage && (
         <div
-          style={{ color: "green", marginTop: 8 }}
+          style={{ color: "var(--app-color-success)", marginTop: 8 }}
           data-testid="validation-success"
         >
           {validationMessage}
@@ -283,7 +283,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       )}
       {errorMessage && (
         <div
-          style={{ color: "red", marginTop: 8 }}
+          style={{ color: "var(--app-color-error)", marginTop: 8 }}
           className="submit-button"
           data-testid="submit-error"
         >

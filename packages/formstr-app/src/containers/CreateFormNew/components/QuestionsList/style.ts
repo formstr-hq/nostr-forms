@@ -5,7 +5,7 @@ export default styled.div<{
   $bgImage?: string;
   $titleImageUrl?: string
 }>`
-  background-color: #dedede;
+  background-color: var(--app-color-bg-canvas);
   background-image: ${(props) =>
     props.$bgImage ? `url(${props.$bgImage})` : "none"};
   background-repeat: repeat;
@@ -27,7 +27,7 @@ export default styled.div<{
       $titleImageUrl
         ? `
         height: 250px;
-        background-color: #ff5733; /* or use gradient/image from FormBanner */
+        background-color: var(--app-color-primary); /* or use gradient/image from FormBanner */
       `
         : `
         height: auto;

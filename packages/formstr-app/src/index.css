@@ -1,3 +1,37 @@
+:root {
+  --app-color-primary: #ff5733;
+  --app-color-secondary: #ff8a66;
+  --app-color-primary-gradient-start: #ff6b00;
+  --app-color-primary-gradient-end: #ff2e00;
+  --app-color-success: #52c41a;
+  --app-color-warning: #faad14;
+  --app-color-error: #ff4d4f;
+  --app-color-info: #1677ff;
+  --app-color-success-active: #389e0d;
+  --app-color-error-active: #cf1322;
+  --app-color-bg-subtle: #fafafa;
+  --app-color-overlay-strong: rgba(0, 0, 0, 0.7);
+  --app-color-overlay-soft: rgba(0, 0, 0, 0.3);
+  --app-color-overlay-light: rgba(255, 255, 255, 0.2);
+  --app-shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --app-color-text-base: rgba(0, 0, 0, 0.88);
+  --app-color-text-default: #000000;
+  --app-color-text-muted: rgba(0, 0, 0, 0.45);
+  --app-color-text-secondary: rgba(0, 0, 0, 0.65);
+  --app-color-border: #d9d9d9;
+  --app-color-border-soft: #f0f0f0;
+  --app-color-bg-canvas: #dedede;
+  --app-color-bg-surface: #ffffff;
+  --app-shadow-header:
+    0 1px 2px 0 rgba(0, 0, 0, 0.03),
+    0 1px 6px -1px rgba(0, 0, 0, 0.02),
+    0 2px 4px 0 rgba(0, 0, 0, 0.02);
+  --app-border-radius-sm: 4px;
+  --app-border-radius-md: 8px;
+  --app-border-radius-lg: 12px;
+  --app-border-radius-xl: 16px;
+}
+
 @font-face {
   font-family: 'Anek Devanagari';
   src: url('/fonts/AnekDevanagari-SemiBold.ttf') format('truetype');
@@ -19,7 +53,7 @@ body {
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #dedede;
+  background-color: var(--app-color-bg-canvas);
   font-family: 'Anek Devanagari', sans-serif;
 }
 
@@ -34,7 +68,11 @@ code {
 
 .ant-btn-primary {
   padding: 5.5px 15px;
-  background: linear-gradient(180deg, #FF6B00 0%, #FF2E00 60.92%);
+  background: linear-gradient(
+    180deg,
+    var(--app-color-primary-gradient-start) 0%,
+    var(--app-color-primary-gradient-end) 60.92%
+  );
   transition: 0.3s;
 
   &:hover {

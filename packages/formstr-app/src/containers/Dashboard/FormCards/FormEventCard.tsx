@@ -292,8 +292,8 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
             }}
             style={{
               marginLeft: "10px",
-              color: "green",
-              borderColor: "green",
+              color: "var(--app-color-success)",
+              borderColor: "var(--app-color-success)",
             }}
             type="dashed"
           >

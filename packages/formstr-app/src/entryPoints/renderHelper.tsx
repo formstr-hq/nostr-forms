@@ -3,6 +3,7 @@ import React from "react";
 import { ConfigProvider } from "antd";
 import { HashRouter } from "react-router-dom";
 import { ProfileProvider } from "../provider/ProfileProvider";
+import { antThemeConfig, applyThemeCssVariables } from "../theme/themeConfig";
 
 let numTries = 0;
 
@@ -18,17 +19,10 @@ const tryAndRender = ({ Component }: { Component: React.FC }) => {
     return false;
   }
   const root = ReactDOM.createRoot(rootElement);
+  applyThemeCssVariables();
   root.render(
     <React.StrictMode>
-      <ConfigProvider
-        theme={{
-          token: {
-            fontFamily: "Anek Devanagari, ui-serif, Inter, ui-sans-serif",
-            colorPrimary: "#FF5733",
-            colorLink: "#FF5733",
-          },
-        }}
-      >
+      <ConfigProvider theme={antThemeConfig}>
         <HashRouter>
           <ProfileProvider>
             <Component />

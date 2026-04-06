@@ -29,7 +29,7 @@ export default styled.div<{
           background-size: auto;
         `
       : `
-          background-color: #dedede;
+          background-color: var(--app-color-bg-canvas);
         `}
 
     position: relative;
@@ -72,7 +72,7 @@ export default styled.div<{
     $titleImageUrl
       ? `
         height: 250px;
-        background-color: #ff5733; /* or use gradient/image from FormBanner */
+        background-color: var(--app-color-primary); /* or use gradient/image from FormBanner */
       `
       : `
         height: auto;
@@ -140,7 +140,7 @@ export default styled.div<{
     margin-bottom: 24px;
 
     .ant-progress-bg {
-      background: linear-gradient(90deg, #ff6b00 0%, #ff2e00 100%);
+      background: linear-gradient(90deg, var(--app-color-primary-gradient-start) 0%, var(--app-color-primary-gradient-end) 100%);
     }
   }
 
@@ -148,13 +148,13 @@ export default styled.div<{
     margin-bottom: 32px;
 
     .ant-steps-item-process .ant-steps-item-icon {
-      background-color: #ff5733;
-      border-color: #ff5733;
+      background-color: var(--app-color-primary);
+      border-color: var(--app-color-primary);
     }
 
     .ant-steps-item-finish .ant-steps-item-icon {
-      background-color: #52c41a;
-      border-color: #52c41a;
+      background-color: var(--app-color-success);
+      border-color: var(--app-color-success);
     }
 
     .ant-steps-item-title {
@@ -166,7 +166,7 @@ export default styled.div<{
     }
 
     .ant-steps-item:hover .ant-steps-item-title {
-      color: #ff5733;
+      color: var(--app-color-primary);
     }
 
     ${MEDIA_QUERY_MOBILE} {
@@ -200,7 +200,7 @@ export default styled.div<{
     align-items: center;
 
     .ant-btn-primary {
-      background: linear-gradient(180deg, #ff6b00 0%, #ff2e00 60.92%);
+      background: linear-gradient(180deg, var(--app-color-primary-gradient-start) 0%, var(--app-color-primary-gradient-end) 60.92%);
       border: none;
 
       &:hover {

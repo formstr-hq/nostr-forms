@@ -26,7 +26,7 @@ export const BASIC_MENU = [
   {
     key: BASIC_MENU_KEYS.TITLE,
     label: "Label",
-    icon: <FontColorsOutlined style={{ color: "#800080" }} />,
+    icon: <FontColorsOutlined style={{ color: "var(--app-color-secondary)" }} />,
     primitive: "label",
     answerSettings: {
       renderElement: AnswerTypes.label,
@@ -35,7 +35,7 @@ export const BASIC_MENU = [
   {
     key: BASIC_MENU_KEYS.SECTION,
     label: "Section",
-    icon: <AppstoreOutlined style={{ color: "#1e3f66" }} />,
+    icon: <AppstoreOutlined style={{ color: "var(--app-color-info)" }} />,
     primitive: "section",
     answerSettings: undefined,
   },
@@ -45,7 +45,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.SHORT_ANSWER,
     label: "Short answer",
-    icon: <FormOutlined style={{ color: "#a3ec66ff" }} />,
+    icon: <FormOutlined style={{ color: "var(--app-color-success)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.shortText,
@@ -54,7 +54,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.PARAGRAPH,
     label: "Paragraph",
-    icon: <FileTextOutlined style={{ color: "#b7ce51ff" }} />,
+    icon: <FileTextOutlined style={{ color: "var(--app-color-success-active)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.paragraph,
@@ -63,7 +63,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.NUMBER,
     label: "Number",
-    icon: <NumberOutlined style={{ color: "#e6b85eff" }} />,
+    icon: <NumberOutlined style={{ color: "var(--app-color-warning)" }} />,
     primitive: "number",
     answerSettings: {
       renderElement: AnswerTypes.number,
@@ -72,7 +72,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.MULTIPLE_CHOICE,
     label: "Multiple choice",
-    icon: <CheckSquareOutlined style={{ color: "#5dc4d6ff" }} />,
+    icon: <CheckSquareOutlined style={{ color: "var(--app-color-info)" }} />,
     primitive: "option",
     answerSettings: {
       renderElement: AnswerTypes.checkboxes,
@@ -81,7 +81,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.SINGLE_CHOICE,
     label: "Single choice",
-    icon: <CheckCircleOutlined style={{ color: "#8bd6d2ff" }} />,
+    icon: <CheckCircleOutlined style={{ color: "var(--app-color-secondary)" }} />,
     primitive: "option",
     answerSettings: {
       renderElement: AnswerTypes.radioButton,
@@ -90,7 +90,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.SELECT,
     label: "Select",
-    icon: <CaretDownOutlined style={{ color: "#FFD580" }} />,
+    icon: <CaretDownOutlined style={{ color: "var(--app-color-warning)" }} />,
     primitive: "option",
     answerSettings: {
       renderElement: AnswerTypes.dropdown,
@@ -99,7 +99,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.DATE,
     label: "Date",
-    icon: <CalendarOutlined style={{ color: "#fdc4adff" }} />,
+    icon: <CalendarOutlined style={{ color: "var(--app-color-primary)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.date,
@@ -108,7 +108,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.TIME,
     label: "Time",
-    icon: <ClockCircleOutlined style={{ color: "#f7a2f7ff" }} />,
+    icon: <ClockCircleOutlined style={{ color: "var(--app-color-secondary)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.time,
@@ -117,7 +117,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.SIGNATURE,
     label: "Signature",
-    icon: <EditOutlined style={{ color: "#eba5b1ff" }} />,
+    icon: <EditOutlined style={{ color: "var(--app-color-error)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.signature,
@@ -129,7 +129,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.FILE_UPLOAD,
     label: "File upload",
-    icon: <CloudUploadOutlined style={{ color: "#FF6B6B" }} />,
+    icon: <CloudUploadOutlined style={{ color: "var(--app-color-error)" }} />,
     primitive: "file",
     answerSettings: {
       renderElement: AnswerTypes.fileUpload,
@@ -140,7 +140,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.DATETIME,
     label: "Date & Time",
-    icon: <FieldTimeOutlined style={{ color: "#FFD580" }} />,
+    icon: <FieldTimeOutlined style={{ color: "var(--app-color-warning)" }} />,
     primitive: "datetime",
     answerSettings: {
       renderElement: AnswerTypes.datetime,
@@ -149,7 +149,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.MULTIPLE_CHOICE_GRID,
     label: "Single choice grid",
-    icon: <TableOutlined style={{ color: "#B5E7A0" }} />,
+    icon: <TableOutlined style={{ color: "var(--app-color-success)" }} />,
     primitive: "grid",
     answerSettings: {
       renderElement: AnswerTypes.multipleChoiceGrid,
@@ -159,7 +159,7 @@ export const INPUTS_MENU = [
   {
     key: INPUTS_TYPES.CHECKBOX_GRID,
     label: "Multiple choice grid",
-    icon: <TableOutlined style={{ color: "#A0D3E7" }} />,
+    icon: <TableOutlined style={{ color: "var(--app-color-info)" }} />,
     primitive: "grid",
     answerSettings: {
       renderElement: AnswerTypes.checkboxGrid,
@@ -172,7 +172,7 @@ export const PRE_BUILT_MENU = [
   {
     key: PRE_BUILT_MENU_KEYS.DATE_OF_BIRTH,
     label: "Date of birth",
-    icon: <CalendarOutlined style={{ color: "#1e3f66" }} />,
+    icon: <CalendarOutlined style={{ color: "var(--app-color-info)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.date,
@@ -181,7 +181,7 @@ export const PRE_BUILT_MENU = [
   {
     key: PRE_BUILT_MENU_KEYS.EMAIL,
     label: "Email",
-    icon: <MailOutlined style={{ color: "#1e3f66" }} />,
+    icon: <MailOutlined style={{ color: "var(--app-color-info)" }} />,
     answerSettings: {
       renderElement: AnswerTypes.shortText,
       validationRules: {

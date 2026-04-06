@@ -3,7 +3,7 @@ import styled from "styled-components";
 export default styled.div`
   .builder-wrapper {
     min-width: 60%;
-    background-color: #dedede;
+    background-color: var(--app-color-bg-canvas);
     padding-left: 2rem;
     padding-right: 2rem;
     overflow: scroll;

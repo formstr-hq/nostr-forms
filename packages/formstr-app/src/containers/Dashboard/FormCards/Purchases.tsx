@@ -17,11 +17,11 @@ interface FormWithEvent {
 }
 
 const pastelColors = [
-  "#ffd6e8", // pastel pink
-  "#d6f5d6", // pastel green
-  "#d6e0f5", // pastel blue
-  "#fff0b3", // pastel yellow
-  "#f5d6d6", // pastel red-ish
+  "var(--app-color-secondary)",
+  "var(--app-color-success)",
+  "var(--app-color-info)",
+  "var(--app-color-warning)",
+  "var(--app-color-error)",
 ];
 
 // Flair box component
@@ -45,7 +45,7 @@ const Flair: React.FC<{
         userSelect: "none",
         fontWeight: 500,
         paddingTop: 6,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)", // subtle shadow
+        boxShadow: "var(--app-shadow-soft)",
         ...style,
       }}
     >

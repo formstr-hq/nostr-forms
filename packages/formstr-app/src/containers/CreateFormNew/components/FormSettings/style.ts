@@ -29,7 +29,7 @@ export default styled.div`
   }
 
   .file-input {
-    border: 1px solid #dedede;
+    border: 1px solid var(--app-color-bg-canvas);
     border-radius: 10px;
     padding: 10px;
     width: 100%;
@@ -49,7 +49,7 @@ export default styled.div`
 
   .file-input:focus {
     outline: none;
-    border: 1px solid #dedede;
+    border: 1px solid var(--app-color-bg-canvas);
     box-shadow: 0 0 10px #f00; /* Consider a less aggressive focus color */
     border-radius: 10px;
   }

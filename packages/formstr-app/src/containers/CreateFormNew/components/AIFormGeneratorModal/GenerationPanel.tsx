@@ -19,7 +19,7 @@ const GenerationPanel: React.FC<GenerationPanelProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
         <Text strong>Describe the form you want to create</Text>
         <Tooltip title="Be specific! Mention field names, types (like text, email, number, paragraph, date, checkbox, radio button, dropdown), whether they are required, and any options for choice-based fields.">
-            <InfoCircleOutlined style={{ marginLeft: 8, color: 'rgba(0, 0, 0, 0.45)', cursor: 'help' }} />
+            <InfoCircleOutlined style={{ marginLeft: 8, color: 'var(--app-color-text-muted)', cursor: 'help' }} />
         </Tooltip>
       </div>
       <TextArea

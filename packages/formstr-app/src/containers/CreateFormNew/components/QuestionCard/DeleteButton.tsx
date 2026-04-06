@@ -67,9 +67,9 @@ const DeleteButton: React.FC<DeleteButtonProps> = ({ onDelete, className }) => {
     <>
       {contextHolder}
       {showUndoDelete ? (
-        <button className={className} style={{ color: "red" }} onClick={handleUndo}>↶</button>
+        <button className={className} style={{ color: "var(--app-color-error)" }} onClick={handleUndo}>↶</button>
       ) : (
-        <DeleteOutlined className={className} style={{ color: "red" }} onClick={handleDelete} />
+        <DeleteOutlined className={className} style={{ color: "var(--app-color-error)" }} onClick={handleDelete} />
       )}
     </>
   );

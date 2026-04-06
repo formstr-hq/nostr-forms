@@ -119,7 +119,7 @@ const UploadImage: React.FC<Props> = ({ onImageUpload }) => {
                 />
               ) : (
                 <div className="image-preview-container" style={{
-                  border: '1px solid #d9d9d9',
+                  border: '1px solid var(--app-color-border)',
                   borderRadius: '8px',
                   padding: '8px',
                   marginBottom: '16px'

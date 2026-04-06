@@ -28,7 +28,7 @@ export const SectionProgressIndicator: React.FC<SectionProgressIndicatorProps> =
         <Progress 
           percent={Math.round(progress)} 
           showInfo={false}
-          strokeColor="#FF5733"
+          strokeColor="var(--app-color-primary)"
           size="small"
           style={{ flex: 1 }}
         />
@@ -47,8 +47,8 @@ export const SectionProgressIndicator: React.FC<SectionProgressIndicatorProps> =
           percent={Math.round(progress)} 
           showInfo={false}
           strokeColor={{
-            '0%': '#FF6B00',
-            '100%': '#FF2E00',
+            '0%': 'var(--app-color-primary-gradient-start)',
+            '100%': 'var(--app-color-primary-gradient-end)',
           }}
           style={{ flex: 1 }}
         />
@@ -60,9 +60,9 @@ export const SectionProgressIndicator: React.FC<SectionProgressIndicatorProps> =
       
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         {completedSections.has(currentSection) ? (
-          <CheckCircleOutlined style={{ color: '#52c41a', fontSize: '14px' }} />
+          <CheckCircleOutlined style={{ color: 'var(--app-color-success)', fontSize: '14px' }} />
         ) : (
-          <ClockCircleOutlined style={{ color: '#faad14', fontSize: '14px' }} />
+          <ClockCircleOutlined style={{ color: 'var(--app-color-warning)', fontSize: '14px' }} />
         )}
         <Text style={{ fontSize: '14px', fontWeight: 500 }}>
           {sections[currentSection]?.title || `Section ${currentSection + 1}`}

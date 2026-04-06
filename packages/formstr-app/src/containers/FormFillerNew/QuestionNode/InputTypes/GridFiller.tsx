@@ -50,7 +50,7 @@ const MobileOptionRow = styled.label`
   padding: 10px 14px;
   font-size: 13px;
   cursor: pointer;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--app-color-border-soft);
 
   &:last-child {
     border-bottom: none;
