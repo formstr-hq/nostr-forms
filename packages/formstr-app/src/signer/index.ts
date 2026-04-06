@@ -19,6 +19,17 @@ import * as nip49 from "nostr-tools/nip49";
 import { bytesToHex } from "@noble/hashes/utils";
 import { publishKind0 } from "../nostr/common";
 
+export class LoginCancelledError extends Error {
+  constructor() {
+    super("Login cancelled");
+    this.name = "LoginCancelledError";
+  }
+}
+
+export const isLoginCancelledError = (error: unknown) =>
+  error instanceof LoginCancelledError ||
+  (error instanceof Error && error.message === "Login cancelled");
+
 class Signer {
   private signer: NostrSigner | null = null;
   private onChangeCallbacks: Set<() => void> = new Set();
