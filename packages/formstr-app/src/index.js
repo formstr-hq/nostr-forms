@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import AppProviders from "./i18n/AppProviders";
+import AppProviders from "./providers/AppProviders";
 import { initI18n } from "./i18n";
 
 const renderApp = async () => {

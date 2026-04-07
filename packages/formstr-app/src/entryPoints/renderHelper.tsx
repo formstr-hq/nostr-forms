@@ -2,7 +2,7 @@ import ReactDOM from "react-dom/client";
 import React from "react";
 import { HashRouter } from "react-router-dom";
 import { ProfileProvider } from "../provider/ProfileProvider";
-import AppProviders from "../i18n/AppProviders";
+import AppProviders from "../providers/AppProviders";
 import { initI18n } from "../i18n";
 
 let numTries = 0;
