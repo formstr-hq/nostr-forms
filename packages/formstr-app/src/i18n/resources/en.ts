@@ -23,6 +23,7 @@ const resources = {
       searching: "Searching...",
       noData: "No data",
       untitledForm: "Untitled Form",
+      languageChangeFailed: "Failed to change language.",
     },
     labels: {
       author: "Author",

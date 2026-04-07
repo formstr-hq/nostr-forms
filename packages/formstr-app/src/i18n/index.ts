@@ -86,6 +86,14 @@ const loadLocaleResources = async (locale: string) => {
   };
 };
 
+const registerLocaleResources = (
+  resources: Record<string, { translation: TranslationResources }>,
+) => {
+  Object.entries(resources).forEach(([locale, bundle]) => {
+    i18n.addResourceBundle(locale, "translation", bundle.translation, true, true);
+  });
+};
+
 let initPromise: Promise<typeof i18n> | null = null;
 
 export const initI18n = async () => {
@@ -117,6 +125,19 @@ export const initI18n = async () => {
   })();
 
   return initPromise;
+};
+
+export const changeAppLanguage = async (locale: string) => {
+  const normalized = normalizeLocale(locale);
+
+  await initI18n();
+
+  const { resources } = await loadLocaleResources(normalized);
+  registerLocaleResources(resources);
+  saveLocalePreference(normalized);
+  await i18n.changeLanguage(normalized);
+
+  return normalized;
 };
 
 export default i18n;

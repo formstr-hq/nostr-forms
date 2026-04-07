@@ -33,7 +33,7 @@ import { useTemplateContext } from "../../provider/TemplateProvider";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
 import { nip19 } from "nostr-tools";
 import { useTranslation } from "react-i18next";
-import { normalizeLocale, saveLocalePreference, SUPPORTED_LOCALES } from "../../i18n";
+import { changeAppLanguage, normalizeLocale, SUPPORTED_LOCALES } from "../../i18n";
 
 const { Text, Paragraph } = Typography;
 
@@ -60,6 +60,7 @@ export const NostrHeader = () => {
   const [isFAQModalVisible, setIsFAQModalVisible] = useState(false);
   const [showEncryptionModal, setShowEncryptionModal] = useState(false);
   const [encryptionLoading, setEncryptionLoading] = useState(false);
+  const [languageLoading, setLanguageLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string[]>([]);
   const { openTemplateModal } = useTemplateContext();
 
@@ -265,16 +266,24 @@ export const NostrHeader = () => {
     return t("header.storage.enableTitle");
   };
 
-  const handleLanguageChange = (locale: string) => {
+  const handleLanguageChange = async (locale: string) => {
     const normalizedLocale = normalizeLocale(locale);
-    const currentLocale = normalizeLocale(i18n.resolvedLanguage || i18n.language);
+    const currentLocale = normalizeLocale(
+      i18n.resolvedLanguage || i18n.language,
+    );
 
     if (normalizedLocale === currentLocale) {
       return;
     }
 
-    saveLocalePreference(normalizedLocale);
-    window.location.reload();
+    setLanguageLoading(true);
+    try {
+      await changeAppLanguage(normalizedLocale);
+    } catch {
+      message.error(t("common.status.languageChangeFailed"));
+    } finally {
+      setLanguageLoading(false);
+    }
   };
 
   const onMenuClick: MenuProps["onClick"] = (e) => {
@@ -297,13 +306,13 @@ export const NostrHeader = () => {
     ...[
       pubkey
         ? {
-            key: "logout",
-            label: <a onClick={logout}>{t("common.actions.logout")}</a>,
-          }
+          key: "logout",
+          label: <a onClick={logout}>{t("common.actions.logout")}</a>,
+        }
         : {
-            key: "login",
-            label: <a onClick={requestPubkey}>{t("common.actions.login")}</a>,
-          },
+          key: "login",
+          label: <a onClick={requestPubkey}>{t("common.actions.login")}</a>,
+        },
     ],
     {
       key: "encryption",
@@ -395,8 +404,9 @@ export const NostrHeader = () => {
             >
               <Select
                 size="small"
-                value={i18n.language}
+                value={normalizeLocale(i18n.resolvedLanguage || i18n.language)}
                 onChange={handleLanguageChange}
+                loading={languageLoading}
                 suffixIcon={<GlobalOutlined />}
                 options={SUPPORTED_LOCALES.map((locale) => ({
                   label: locale.label,
