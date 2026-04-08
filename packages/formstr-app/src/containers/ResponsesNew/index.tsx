@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { Event, getPublicKey, nip19 } from "nostr-tools";
 import { useParams, useSearchParams } from "react-router-dom";
 import { fetchFormResponses } from "../../nostr/responses";
@@ -226,7 +226,7 @@ export const Response = () => {
     }
   };
 
-  const getData = (useLabels: boolean = false) => {
+  const getData = useCallback((useLabels: boolean = false) => {
     let answers: Array<{
       [key: string]: string;
     }> = [];
@@ -276,7 +276,7 @@ export const Response = () => {
       answers.push(answerObject);
     });
     return answers;
-  };
+  }, [formSpec, responses, editKey]);
 
   const getFormName = () => {
     if (!formSpec) return "Loading Form Name...";
@@ -285,7 +285,7 @@ export const Response = () => {
     return "Untitled Form";
   };
 
-  const getColumns = () => {
+  const getColumns = useCallback(() => {
     const columns: Array<{
       key: string;
       title: string | JSX.Element;
@@ -438,7 +438,12 @@ export const Response = () => {
       });
     }
     return [...columns, ...rightColumns];
-  };
+  }, [responses, formSpec, editKey]);
+
+  const memoizedColumns = useMemo(() => getColumns(), [getColumns]);
+  const memoizedData = useMemo(() => getData(), [getData]);
+  const memoizedAnalyticsData = useMemo(() => getData(true), [getData]);
+
   if (!(pubkey || secretKey) || !formId) return <Text>Invalid url</Text>;
 
   if (
@@ -516,7 +521,7 @@ export const Response = () => {
         <ResponseHeader
           hasResponses={!!hasResponses}
           onAiAnalysisClick={() => setIsChatVisible(true)}
-          responsesData={getData(true) || []}
+          responsesData={memoizedAnalyticsData || []}
           formName={getFormName()}
         />
         <Tabs
@@ -529,8 +534,8 @@ export const Response = () => {
               children: (
                 <div style={{ overflow: "scroll", marginBottom: 60 }}>
                   <Table
-                    columns={getColumns()}
-                    dataSource={getData()}
+                    columns={memoizedColumns}
+                    dataSource={memoizedData}
                     pagination={{ pageSize: 10 }}
                     loading={{
                       spinning: responses === undefined,
@@ -546,7 +551,7 @@ export const Response = () => {
               label: "Analytics",
               children: formSpec ? (
                 <FormAnalytics
-                  responsesData={getData(true)}
+                  responsesData={memoizedAnalyticsData}
                   formSpec={formSpec}
                 />
               ) : null,
@@ -558,7 +563,7 @@ export const Response = () => {
             <AIAnalysisChat
               isVisible={isChatVisible}
               onClose={() => setIsChatVisible(false)}
-              responsesData={getData(true)}
+              responsesData={memoizedAnalyticsData}
               formSpec={formSpec}
             />
           )}
