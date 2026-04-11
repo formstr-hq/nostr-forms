@@ -1,6 +1,7 @@
 import { Event, EventTemplate, Filter } from "nostr-tools";
 import {
   getZapEndpoint,
+  getSatoshisAmountFromBolt11,
   makeZapRequest,
   validateZapRequest,
 } from "nostr-tools/nip57";
@@ -16,6 +17,15 @@ export interface ResponderProfile {
   lud06?: string;
 }
 
+// Relays known to index Kind-0 profile events
+const PROFILE_RELAYS = [
+  "wss://purplepag.es",
+  "wss://relay.nostr.band",
+  "wss://relay.damus.io",
+  "wss://relay.primal.net",
+  "wss://nos.lol",
+];
+
 /**
  * Batch-fetch Kind-0 profiles for a list of pubkeys.
  * Returns a Map of hex-pubkey → parsed profile metadata.
@@ -24,12 +34,16 @@ export async function fetchProfiles(
   pubkeys: string[],
   relays?: string[],
 ): Promise<Map<string, ResponderProfile>> {
-  const relayList = relays?.length ? relays : getDefaultRelays();
+  const merged = [...new Set([
+    ...(relays || []),
+    ...PROFILE_RELAYS,
+    ...getDefaultRelays(),
+  ])];
   const unique = [...new Set(pubkeys)];
   if (unique.length === 0) return new Map();
 
   const filter: Filter = { kinds: [0], authors: unique };
-  const events = await pool.querySync(relayList, filter);
+  const events = await pool.querySync(merged, filter);
 
   // Keep newest event per pubkey
   const latest = new Map<string, Event>();
@@ -51,7 +65,7 @@ export async function fetchProfiles(
         lud06: parsed.lud06,
       });
     } catch {
-      // Malformed profile – skip
+      // skip unparseable profiles
     }
   }
   return profiles;
@@ -126,10 +140,12 @@ export async function requestZapInvoice(
   }
 
   // 4. Call the LNURL callback
-  const encodedZapRequest = encodeURIComponent(JSON.stringify(signedZapRequest));
-  const separator = callback.includes("?") ? "&" : "?";
-  const url = `${callback}${separator}amount=${amountMsats}&nostr=${encodedZapRequest}`;
-  const response = await fetch(url);
+  const url = new URL(callback);
+  url.searchParams.set("amount", amountMsats.toString());
+  url.searchParams.set("nostr", JSON.stringify(signedZapRequest));
+  if (comment) url.searchParams.set("comment", comment);
+
+  const response = await fetch(url.toString());
   if (!response.ok) {
     throw new Error(`LNURL callback failed: ${response.status}`);
   }
@@ -145,62 +161,48 @@ export async function requestZapInvoice(
 }
 
 /**
- * Open a lightning wallet with the given bolt11 invoice.
- * Tries the `lightning:` URI scheme. Falls back to clipboard copy.
+ * Pay a bolt11 invoice. Tries WebLN (in-browser payment via Alby etc.)
+ * first, then falls back to opening a lightning: URI.
+ * Returns true if paid in-browser via WebLN.
  */
-export function openLightningWallet(invoice: string): void {
+export async function payInvoice(invoice: string): Promise<boolean> {
+  const webln = typeof window !== "undefined" ? (window as any).webln : null;
+  if (webln) {
+    try {
+      await webln.enable();
+      await webln.sendPayment(invoice);
+      return true;
+    } catch {
+      // WebLN failed or user rejected — fall through to URI
+    }
+  }
   window.open(`lightning:${invoice}`, "_self");
+  return false;
 }
 
 // ── Zap receipt helpers ──────────────────────────────────────────────
 
 /**
- * Parse the sats amount from the bolt11 tag inside a Kind-9735 zap receipt.
- * Returns 0 if unparseable.
+ * Extract sats from a Kind-9735 zap receipt.
+ * Prefers the `amount` tag (msats), falls back to bolt11 parsing.
  */
 function satoshisFromReceipt(event: Event): number {
-  const bolt11Tag = event.tags.find((t) => t[0] === "bolt11");
-  if (!bolt11Tag || !bolt11Tag[1]) return 0;
-  // nostr-tools provides a parser, but it's not re-exported cleanly.
-  // Parse manually: strip "lnbc", read amount + multiplier.
-  return parseBolt11Amount(bolt11Tag[1]);
-}
-
-export function parseBolt11Amount(bolt11: string): number {
-  if (!bolt11 || bolt11.length < 6) return 0;
-  const lower = bolt11.toLowerCase();
-  if (!lower.startsWith("lnbc")) return 0;
-
-  // Find the last "1" separator — everything before it is hrp
-  const lastOne = lower.lastIndexOf("1");
-  if (lastOne < 5) return 0;
-  const hrp = lower.substring(4, lastOne);
-  if (hrp.length === 0) return 0;
-
-  // The multiplier is the last non-digit character
-  const multiplierChar = hrp[hrp.length - 1];
-  const multipliers: Record<string, number> = {
-    m: 100_000,     // milli-BTC → sats
-    u: 100,         // micro-BTC → sats
-    n: 0.1,         // nano-BTC → sats
-    p: 0.0001,      // pico-BTC → sats
-  };
-
-  let amountStr: string;
-  let multiplier: number;
-
-  if (multipliers[multiplierChar] !== undefined) {
-    amountStr = hrp.substring(0, hrp.length - 1);
-    multiplier = multipliers[multiplierChar];
-  } else {
-    // No multiplier — amount is in BTC
-    amountStr = hrp;
-    multiplier = 100_000_000; // BTC → sats
+  // Prefer the `amount` tag (value is in millisats)
+  const amountTag = event.tags.find((t) => t[0] === "amount");
+  if (amountTag?.[1]) {
+    const msats = parseInt(amountTag[1], 10);
+    if (!isNaN(msats)) return Math.round(msats / 1000);
   }
-
-  const parsed = parseInt(amountStr, 10);
-  if (isNaN(parsed)) return 0;
-  return Math.round(parsed * multiplier);
+  // Fallback: parse the bolt11 invoice
+  const bolt11Tag = event.tags.find((t) => t[0] === "bolt11");
+  if (bolt11Tag?.[1]) {
+    try {
+      return getSatoshisAmountFromBolt11(bolt11Tag[1]);
+    } catch {
+      return 0;
+    }
+  }
+  return 0;
 }
 
 export interface ZapTotal {
@@ -230,7 +232,6 @@ export async function fetchZapReceipts(
   const totals = new Map<string, ZapTotal>();
 
   for (const ev of events) {
-    // Find which response event this receipt is for
     const eTag = ev.tags.find((t) => t[0] === "e");
     if (!eTag?.[1]) continue;
     const responseId = eTag[1];

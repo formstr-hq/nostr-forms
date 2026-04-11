@@ -1,15 +1,15 @@
 import React, { useState } from "react";
-import { Modal, Button, InputNumber, Space, Typography } from "antd";
+import { Modal, Button, InputNumber, Input, Space, Typography } from "antd";
 import { ThunderboltOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
 
-const PRESETS = [21, 100, 500, 1000];
+const PRESETS = [21, 420, 1000, 5000, 10000, 15000];
 
 interface ZapAmountModalProps {
   open: boolean;
   onCancel: () => void;
-  onConfirm: (amountSats: number) => void;
+  onConfirm: (amountSats: number, comment: string) => void;
   loading?: boolean;
   recipientName?: string;
 }
@@ -22,6 +22,7 @@ export const ZapAmountModal: React.FC<ZapAmountModalProps> = ({
   recipientName,
 }) => {
   const [amount, setAmount] = useState<number>(21);
+  const [comment, setComment] = useState<string>("");
 
   return (
     <Modal
@@ -40,7 +41,7 @@ export const ZapAmountModal: React.FC<ZapAmountModalProps> = ({
         <Button
           key="zap"
           type="primary"
-          onClick={() => onConfirm(amount)}
+          onClick={() => onConfirm(amount, comment)}
           loading={loading}
           icon={<ThunderboltOutlined />}
           style={{ background: "#F7931A", borderColor: "#F7931A" }}
@@ -70,7 +71,7 @@ export const ZapAmountModal: React.FC<ZapAmountModalProps> = ({
             </Button>
           ))}
         </Space>
-        <div>
+        <div style={{ marginBottom: 16 }}>
           <InputNumber
             min={1}
             max={10_000_000}
@@ -78,6 +79,17 @@ export const ZapAmountModal: React.FC<ZapAmountModalProps> = ({
             onChange={(val) => val && setAmount(val)}
             addonAfter="sats"
             style={{ width: 200 }}
+          />
+        </div>
+        <div style={{ textAlign: "left" }}>
+          <Text type="secondary" style={{ display: "block", marginBottom: 4 }}>
+            Message (optional)
+          </Text>
+          <Input.TextArea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="thank you 👍"
+            rows={2}
           />
         </div>
       </div>

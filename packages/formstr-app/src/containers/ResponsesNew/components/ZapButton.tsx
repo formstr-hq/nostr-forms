@@ -5,7 +5,7 @@ import { Event } from "nostr-tools";
 import {
   ResponderProfile,
   requestZapInvoice,
-  openLightningWallet,
+  payInvoice,
   ZapTotal,
 } from "../../../nostr/zaps";
 import { ZapAmountModal } from "./ZapAmountModal";
@@ -44,7 +44,7 @@ export const ZapButton: React.FC<ZapButtonProps> = ({
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleZap = async (amountSats: number) => {
+  const handleZap = async (amountSats: number, comment: string) => {
     if (!recipientProfileEvent) return;
     setLoading(true);
     try {
@@ -53,10 +53,15 @@ export const ZapButton: React.FC<ZapButtonProps> = ({
         responseEvent,
         formEvent,
         amountMsats: amountSats * 1000,
+        comment,
         relays,
       });
-      openLightningWallet(invoice);
-      message.success("Lightning invoice opened in wallet");
+      const paidInBrowser = await payInvoice(invoice);
+      if (paidInBrowser) {
+        message.success("Zap sent successfully!");
+      } else {
+        message.info("Lightning invoice opened in wallet");
+      }
       setModalOpen(false);
       onZapInitiated?.();
     } catch (err: any) {

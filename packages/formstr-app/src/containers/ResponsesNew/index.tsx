@@ -38,6 +38,7 @@ import {
   ResponderProfile,
   ZapTotal,
 } from "../../nostr/zaps";
+import { getDefaultRelays } from "../../nostr/common";
 import { ZapButton } from "./components/ZapButton";
 import { pool } from "../../pool";
 
@@ -188,15 +189,16 @@ export const Response = () => {
     const pubkeys = [...new Set(responses.map((r) => r.pubkey))];
     const formRelays = formEvent ? getResponseRelays(formEvent) : undefined;
 
-    // Fetch profiles
     fetchProfiles(pubkeys, formRelays).then((profileMap) => {
       setProfiles(profileMap);
     });
 
     // Also store raw Kind-0 events for zap requests
-    const relayList = formRelays?.length ? formRelays : undefined;
     pool
-      .querySync(relayList || [], { kinds: [0], authors: pubkeys })
+      .querySync(
+        [...new Set([...(formRelays || []), ...getDefaultRelays()])],
+        { kinds: [0], authors: pubkeys },
+      )
       .then((events) => {
         const latest = new Map<string, Event>();
         for (const ev of events) {
