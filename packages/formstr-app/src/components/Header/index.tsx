@@ -10,8 +10,10 @@ import {
   Button,
   Alert,
   message,
+  Input,
 } from "antd";
 import { Link } from "react-router-dom";
+import { LOCAL_STORAGE_KEYS, getItem, setItem } from "../../utils/localStorage";
 import "./index.css";
 import { ReactComponent as Logo } from "../../Images/formstr.svg";
 import {
@@ -53,6 +55,8 @@ export const NostrHeader = () => {
     disableEncryption,
   } = useLocalForms();
   const [isFAQModalVisible, setIsFAQModalVisible] = useState(false);
+  const [isIdentityModalVisible, setIsIdentityModalVisible] = useState(false);
+  const [aiIdentity, setAiIdentity] = useState<string>(getItem(LOCAL_STORAGE_KEYS.AI_IDENTITY) || "");
   const [showEncryptionModal, setShowEncryptionModal] = useState(false);
   const [encryptionLoading, setEncryptionLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string[]>([]);
@@ -275,6 +279,12 @@ export const NostrHeader = () => {
     setSelectedKey([e.key]);
   };
 
+  const handleSaveIdentity = () => {
+    setItem(LOCAL_STORAGE_KEYS.AI_IDENTITY, aiIdentity);
+    message.success("Identity saved successfully!");
+    setIsIdentityModalVisible(false);
+  };
+
   const dropdownMenuItems: MenuProps["items"] = [
     ...[
       pubkey
@@ -367,6 +377,16 @@ export const NostrHeader = () => {
               <Logo />
             </Link>
           </Col>
+          <Col>
+            <Button 
+              type="primary" 
+              danger 
+              onClick={() => setIsIdentityModalVisible(true)}
+              style={{ borderRadius: '8px', fontWeight: 'bold' }}
+            >
+              testing_autofill_info
+            </Button>
+          </Col>
           <Col md={12} xs={10} sm={2}>
             <Menu
               mode="horizontal"
@@ -396,6 +416,29 @@ export const NostrHeader = () => {
         footer={getEncryptionModalFooter()}
       >
         {renderEncryptionModalContent()}
+      </Modal>
+      <Modal
+        title="Personal Info for AI Autofill"
+        open={isIdentityModalVisible}
+        onCancel={() => setIsIdentityModalVisible(false)}
+        footer={[
+          <Button key="save" type="primary" onClick={handleSaveIdentity} style={{ borderRadius: '20px', padding: '0 30px' }}>
+            Save
+          </Button>
+        ]}
+        bodyStyle={{ padding: '20px' }}
+        style={{ borderRadius: '15px', overflow: 'hidden' }}
+      >
+        <Typography.Paragraph type="secondary">
+          Let AI fill the forms for you using these data, local LLM which is running in your browser will use this info to fill your forms automatically
+        </Typography.Paragraph>
+        <Input.TextArea
+          rows={6}
+          value={aiIdentity}
+          onChange={(e) => setAiIdentity(e.target.value)}
+          placeholder="enter info which you want local LLM to use and fill the form automatically"
+          style={{ borderRadius: '12px', border: '1px solid #ddd' }}
+        />
       </Modal>
     </>
   );

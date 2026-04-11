@@ -6,8 +6,9 @@ import {
   Space,
   Progress,
   Card,
+  Radio,
 } from "antd";
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FormFields } from "./FormFields";
 import { Field, Tag } from "../../nostr/types";
 import FillerStyle from "./formFiller.style";
@@ -22,8 +23,14 @@ import SafeMarkdown from "../../components/SafeMarkdown";
 import {
   AutoSaveIndicator,
   FormSettingsPopover,
-  SaveStatus,
 } from "./components";
+import type { SaveStatus } from "./components";
+import { llmService, LLMProvider } from "../../services/llm";
+import { OllamaModel, OllamaConfig } from "../../services/ollamaService";
+import { getItem, setItem, LOCAL_STORAGE_KEYS } from "../../utils/localStorage";
+import ModelSelector from "../../components/ModelSelector";
+import { message as antMessage } from "antd";
+import { AnswerTypes } from "../../constants";
 
 const { Text, Title } = Typography;
 const { Step } = Steps;
@@ -86,6 +93,113 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   // Section state management
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [provider, setProvider] = useState<LLMProvider>(
+    getItem<LLMProvider>(LOCAL_STORAGE_KEYS.LLM_PROVIDER) || LLMProvider.OLLAMA
+  );
+  const [availableModels, setAvailableModels] = useState<OllamaModel[]>([]);
+  const [fetchingModels, setFetchingModels] = useState(false);
+  const [config, setConfig] = useState<OllamaConfig>(llmService.activeService.getConfig?.() || { modelName: '' });
+  const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [isAIFilling, setIsAIFilling] = useState(false);
+
+  const fetchModels = async () => {
+    setFetchingModels(true);
+    const result = await llmService.fetchModels();
+    if (result.success && result.models) {
+      const modelsWithCache = await Promise.all(result.models.map(async m => ({
+        ...m,
+        cached: provider === LLMProvider.WEB_LLM ? await (llmService.activeService as any).isModelCached(m.name) : false
+      })));
+      setAvailableModels(modelsWithCache);
+    }
+    setFetchingModels(false);
+  };
+
+  useEffect(() => {
+    fetchModels();
+  }, [provider]);
+
+  const handleDownload = async () => {
+    if (!config.modelName) return;
+    setDownloading(true);
+    setDownloadProgress(0);
+    try {
+      await (llmService.activeService as any).downloadModel(config.modelName, (p: string) => {
+        const match = p.match(/(\d+)%/);
+        if (match) setDownloadProgress(parseInt(match[1]));
+      });
+      antMessage.success('Model ready!');
+      fetchModels();
+    } catch (e: any) {
+      antMessage.error(`Download failed: ${e.message}`);
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!config.modelName) return;
+    await (llmService.activeService as any).deleteModel(config.modelName);
+    antMessage.success('Model deleted');
+    fetchModels();
+  };
+
+  const handleAIFill = async () => {
+    const personalInfo = getItem<string>(LOCAL_STORAGE_KEYS.AI_IDENTITY);
+    if (!personalInfo) {
+      antMessage.warning("Please set your personal info in the header first!");
+      return;
+    }
+    if (!config.modelName) {
+      antMessage.warning("Please select a model first");
+      return;
+    }
+
+
+    console.log("Starting AI Autofill with personal info:", personalInfo);
+    setIsAIFilling(true);
+    try {
+      for (const field of fields) {
+        const [_, fieldId, type, label] = field;
+
+        // Field type mapping based on constants/index.js
+        const fillableTypes = [AnswerTypes.string, AnswerTypes.text, AnswerTypes.number, 'Email'];
+
+        if (fillableTypes.includes(type as any)) {
+          console.log(`--- Starting Field: ${label} (ID: ${fieldId}) ---`);
+          let accumulatedAnswer = "";
+
+          const prompt = `PERSONAL INFO: "${personalInfo}"\nQUESTION: "${label}"\nANSWER:`;
+
+          const result = await llmService.generate({
+            prompt: prompt,
+            system: "You are a concise form filler. Use ONLY the provided personal info to answer the question. If the information is not present in the personal info, respond with 'N/A'. Do NOT invent any facts. Output ONLY the answer itself without any explanations, prefixes, or suffixes. If the answer is N/A, do NOT explain why.",
+            modelName: config.modelName,
+            stream: true
+          }, (chunk: any) => {
+            const token = typeof chunk === 'string' ? chunk : chunk?.response || "";
+            if (token) {
+              accumulatedAnswer += token;
+              onInput(fieldId, accumulatedAnswer);
+              form.setFieldsValue({ [fieldId]: [accumulatedAnswer, undefined] });
+            }
+          });
+
+          console.log(`--- Finished Field: ${label}. Final Result: ${accumulatedAnswer} ---`);
+          console.log("LLM Service Result Object:", result);
+        } else {
+          console.log(`Skipping non-fillable field: ${label} (Type: ${type})`);
+        }
+      }
+      antMessage.success("Autofill complete!");
+    } catch (err: any) {
+      console.error("Autofill error:", err);
+      antMessage.error(`Autofill failed: ${err.message}`);
+    } finally {
+      setIsAIFilling(false);
+    }
+  };
 
 
   const sections = settings.sections || [];
@@ -254,8 +368,8 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 completedSteps.has(index)
                   ? "finish"
                   : index === currentStep
-                  ? "process"
-                  : "wait"
+                    ? "process"
+                    : "wait"
               }
               onClick={() => handleStepClick(index)}
               style={{ cursor: "pointer" }}
@@ -348,6 +462,76 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       $titleImageUrl={settings.titleImageUrl}
     >
       <div className="filler-container">
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '10px' }}>
+          <Radio.Group
+            value={provider}
+            onChange={(e) => {
+              const p = e.target.value;
+              setProvider(p);
+              setItem(LOCAL_STORAGE_KEYS.LLM_PROVIDER, p);
+            }}
+            buttonStyle="solid"
+          >
+            <Radio.Button value={LLMProvider.OLLAMA}>Ollama</Radio.Button>
+            <Radio.Button value={LLMProvider.WEB_LLM}>WebLLM</Radio.Button>
+          </Radio.Group>
+        </div>
+        <div className="ai-filler-controls" style={{
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '20px',
+          alignItems: 'center',
+          background: 'white',
+          padding: '12px',
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+        }}>
+          <ModelSelector
+            model={config.modelName}
+            setModel={(m) => {
+              const newCfg = { ...config, modelName: m };
+              setConfig(newCfg);
+              llmService.activeService.setConfig?.(newCfg);
+            }}
+            availableModels={availableModels}
+            fetching={fetchingModels}
+            disabled={isAIFilling || downloading}
+            style={{ flex: 1, minWidth: '200px' }}
+          />
+          {provider === LLMProvider.WEB_LLM && (
+            <>
+              <Button
+                onClick={handleDownload}
+                loading={downloading}
+                type="primary"
+                danger
+                style={{ borderRadius: '8px' }}
+              >
+                Download/Initialize
+              </Button>
+              <Button onClick={handleDelete} ghost danger style={{ borderRadius: '8px' }}>
+                Delete
+              </Button>
+            </>
+          )}
+          <Button
+            onClick={handleAIFill}
+            loading={isAIFilling}
+            disabled={downloading || !config.modelName}
+            style={{
+              borderRadius: '20px',
+              padding: '0 24px',
+              fontWeight: 'bold',
+              background: 'white',
+              border: '1px solid #ddd'
+            }}
+          >
+            Fill with AI
+          </Button>
+        </div>
+        {downloading && (
+          <Progress percent={downloadProgress} status="active" style={{ marginBottom: '12px' }} />
+        )}
         <div className="form-filler">
           {!hideTitleImage && (
             <FormBanner
@@ -365,7 +549,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             </div>
           )}
 
-          <Form form={form} onFinish={() => {}} className="with-description">
+          <Form form={form} onFinish={() => { }} className="with-description">
             {renderSteppedForm()}
           </Form>
         </div>
