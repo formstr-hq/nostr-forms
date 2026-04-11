@@ -39,6 +39,8 @@ interface FormEventCardProps {
   shortLink?: string;
   syncStatus?: "synced" | "unsynced";
   onSync?: () => Promise<void>;
+  syncTooltip?: string;
+  syncIcon?: React.ReactNode;
 }
 export const FormEventCard: React.FC<FormEventCardProps> = ({
   event,
@@ -49,6 +51,8 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
   shortLink,
   syncStatus,
   onSync,
+  syncTooltip,
+  syncIcon,
 }) => {
   const navigate = useNavigate();
   const publicForm = event.content === "";
@@ -61,7 +65,6 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
     setSyncing(true);
     try {
       await onSync();
-      message.success("Form synced to Nostr");
     } catch {
       message.error("Failed to sync form");
     } finally {
@@ -223,11 +226,11 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
             </Tooltip>
           )}
           {syncStatus === "unsynced" && onSync && (
-            <Tooltip title="Sync to Nostr profile">
+            <Tooltip title={syncTooltip || "Sync to Nostr profile"}>
               <Button
                 type="text"
                 size="small"
-                icon={<CloudUploadOutlined />}
+                icon={syncIcon || <CloudUploadOutlined />}
                 loading={syncing}
                 onClick={handleSync}
                 style={{ color: "#1890ff", marginRight: 4 }}
