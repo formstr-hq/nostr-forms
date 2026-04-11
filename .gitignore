@@ -29,3 +29,4 @@ yarn-error.log*
 .idea
 packages/formstr-app/public/api/form-filler-ui/
 vkd3d-proton.*
+packages/formstr-app/public/shared-C-4vgiWP.js

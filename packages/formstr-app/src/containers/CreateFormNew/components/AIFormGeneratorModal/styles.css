@@ -2,9 +2,27 @@
     margin: 12px 0 !important;
 }
 
+.ai-provider-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.ai-powered-by {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.web-llm-instruction {
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
 .ai-modal-controls-container {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 8px;
     margin-bottom: 12px;
 }
@@ -13,26 +31,28 @@
     flex: 1;
 }
 
+.web-llm-actions {
+    display: flex;
+    gap: 8px;
+}
+
 .ai-modal-button-success {
     background-color: #52c41a;
     color: white;
     border-color: #52c41a;
 }
 
-.ai-modal-button-success:hover, .ai-modal-button-success:focus {
-    background-color: #389e0d;
-    color: white !important;
-    border-color: #389e0d !important;
-}
-
-.ai-modal-button-danger {
-    background-color: #f5222d;
+.ai-modal-button-orange {
+    background-color: #ff4d4f;
     color: white;
-    border-color: #f5222d;
+    border-color: #ff4d4f;
 }
 
-.ai-modal-button-danger:hover, .ai-modal-button-danger:focus {
-    background-color: #cf1322;
-    color: white !important;
-    border-color: #cf1322 !important;
+.ai-modal-button-orange:hover {
+    background-color: #ff7875;
+    border-color: #ff7875;
+}
+
+.download-progress {
+    margin-bottom: 12px;
 }
