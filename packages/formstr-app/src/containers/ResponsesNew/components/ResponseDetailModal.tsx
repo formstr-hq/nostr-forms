@@ -8,6 +8,8 @@ import {
   DisplayableAnswerDetail,
 } from "../../../utils/ResponseUtils";
 import { FormRenderer } from "../../FormFillerNew/FormRenderer";
+import { ResponderProfile, ZapTotal, hasLightningAddress } from "../../../nostr/zaps";
+import { ZapButton } from "./ZapButton";
 
 const { Text } = Typography;
 
@@ -24,6 +26,11 @@ interface ResponseDetailModalProps {
   responseMetadataEvent: Event | null;
   formstrBranding?: boolean;
   editKey?: string | null;
+  formEvent?: Event;
+  recipientProfileEvent?: Event;
+  profile?: ResponderProfile;
+  zapTotal?: ZapTotal;
+  onZapInitiated?: () => void;
 }
 export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
   isVisible,
@@ -33,6 +40,11 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
   responseMetadataEvent,
   formstrBranding,
   editKey,
+  formEvent,
+  recipientProfileEvent,
+  profile,
+  zapTotal,
+  onZapInitiated,
 }) => {
   const [metaData, setMetaData] = useState<{
     author?: string;
@@ -92,6 +104,16 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
           <Text type="secondary" style={{ fontSize: "0.8em" }}>
             Submitted: {metaData.timestamp || "N/A"}
           </Text>
+          {hasLightningAddress(profile) && responseMetadataEvent && formEvent && (
+            <ZapButton
+              recipientProfileEvent={recipientProfileEvent}
+              profile={profile}
+              responseEvent={responseMetadataEvent}
+              formEvent={formEvent}
+              zapTotal={zapTotal}
+              onZapInitiated={onZapInitiated}
+            />
+          )}
         </Space>
       }
       open={isVisible}

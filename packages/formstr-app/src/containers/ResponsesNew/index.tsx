@@ -31,6 +31,15 @@ import SafeMarkdown from "../../components/SafeMarkdown";
 import { ExportOutlined, DownloadOutlined } from "@ant-design/icons";
 import { decodeNKeys } from "../../utils/nkeys";
 import { downloadEncryptedFile } from "../../utils/fileDownload";
+import {
+  fetchProfiles,
+  fetchZapReceipts,
+  hasLightningAddress,
+  ResponderProfile,
+  ZapTotal,
+} from "../../nostr/zaps";
+import { ZapButton } from "./components/ZapButton";
+import { pool } from "../../pool";
 
 const { Text } = Typography;
 
@@ -76,6 +85,9 @@ export const Response = () => {
   const [isChatVisible, setIsChatVisible] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
   const [isFormSpecLoading, setIsFormSpecLoading] = useState(true);
+  const [profiles, setProfiles] = useState<Map<string, ResponderProfile>>(new Map());
+  const [profileEvents, setProfileEvents] = useState<Map<string, Event>>(new Map());
+  const [zapTotals, setZapTotals] = useState<Map<string, ZapTotal>>(new Map());
 
   useEffect(() => {
     if (isChatVisible && chatRef.current) {
@@ -170,9 +182,64 @@ export const Response = () => {
     };
   }, [formEvent, formId]);
 
+  // Fetch Kind-0 profiles and zap receipts when responses change
+  useEffect(() => {
+    if (!responses || responses.length === 0) return;
+    const pubkeys = [...new Set(responses.map((r) => r.pubkey))];
+    const formRelays = formEvent ? getResponseRelays(formEvent) : undefined;
+
+    // Fetch profiles
+    fetchProfiles(pubkeys, formRelays).then((profileMap) => {
+      setProfiles(profileMap);
+    });
+
+    // Also store raw Kind-0 events for zap requests
+    const relayList = formRelays?.length ? formRelays : undefined;
+    pool
+      .querySync(relayList || [], { kinds: [0], authors: pubkeys })
+      .then((events) => {
+        const latest = new Map<string, Event>();
+        for (const ev of events) {
+          const existing = latest.get(ev.pubkey);
+          if (!existing || ev.created_at > existing.created_at) {
+            latest.set(ev.pubkey, ev);
+          }
+        }
+        setProfileEvents(latest);
+      });
+
+    // Fetch zap receipts
+    const responseIds = getLatestResponseIds();
+    if (responseIds.length > 0) {
+      fetchZapReceipts(responseIds, formRelays).then((totals) => {
+        setZapTotals(totals);
+      });
+    }
+  }, [responses, formEvent]);
+
   const getResponderCount = () => {
     if (!responses) return 0;
     return new Set(responses.map((r) => r.pubkey)).size;
+  };
+
+  /** Get latest response event ID per pubkey (for zap receipt lookup) */
+  const getLatestResponseIds = (): string[] => {
+    if (!responses) return [];
+    const perPubkey = new Map<string, Event>();
+    for (const r of responses) {
+      const existing = perPubkey.get(r.pubkey);
+      if (!existing || r.created_at > existing.created_at) {
+        perPubkey.set(r.pubkey, r);
+      }
+    }
+    return Array.from(perPubkey.values()).map((e) => e.id);
+  };
+
+  const refreshZapTotals = () => {
+    if (!responses || responses.length === 0) return;
+    const responseIds = getLatestResponseIds();
+    const formRelays = formEvent ? getResponseRelays(formEvent) : undefined;
+    fetchZapReceipts(responseIds, formRelays).then(setZapTotals);
   };
 
   const handleRowClick = (record: any) => {
@@ -273,6 +340,8 @@ export const Response = () => {
 
         answerObject[displayKey] = isFileField ? input[2] : responseLabel;
       });
+      answerObject["responseEventId"] = responseEvent.id;
+      answerObject["responderHexPubkey"] = responseEvent.pubkey;
       answers.push(answerObject);
     });
     return answers;
@@ -332,6 +401,32 @@ export const Response = () => {
         title: "Submitted At",
         dataIndex: "createdAt",
         width: isMobile() ? 100 : 130,
+      },
+      {
+        key: "zap",
+        title: "Zap",
+        dataIndex: "responseEventId",
+        width: 80,
+        render: (_: string, record: any) => {
+          const hexPubkey = record.responderHexPubkey;
+          const profile = profiles.get(hexPubkey);
+          if (!hasLightningAddress(profile) || !formEvent) return <span>-</span>;
+          const responseEventObj = responses?.find(
+            (r) => r.id === record.responseEventId
+          );
+          if (!responseEventObj) return <span>-</span>;
+          return (
+            <ZapButton
+              recipientProfileEvent={profileEvents.get(hexPubkey)}
+              profile={profile}
+              responseEvent={responseEventObj}
+              formEvent={formEvent}
+              zapTotal={zapTotals.get(record.responseEventId)}
+              onZapInitiated={refreshZapTotals}
+              compact
+            />
+          );
+        },
       },
       {
         key: "action",
@@ -475,7 +570,9 @@ export const Response = () => {
           height: "80vh",
         }}
       >
-        <Spin size="large" tip="Loading form details..." />
+        <Spin size="large" tip="Loading form details...">
+          <div style={{ minHeight: 60 }} />
+        </Spin>
       </div>
     );
   }
@@ -580,6 +677,23 @@ export const Response = () => {
             responseMetadataEvent={selectedEventForModal}
             formstrBranding={getformstrBranding(formSpec)}
             editKey={editKey}
+            formEvent={formEvent}
+            recipientProfileEvent={
+              selectedEventForModal
+                ? profileEvents.get(selectedEventForModal.pubkey)
+                : undefined
+            }
+            profile={
+              selectedEventForModal
+                ? profiles.get(selectedEventForModal.pubkey)
+                : undefined
+            }
+            zapTotal={
+              selectedEventForModal
+                ? zapTotals.get(selectedEventForModal.id)
+                : undefined
+            }
+            onZapInitiated={refreshZapTotals}
           />
         )}
     </div>
