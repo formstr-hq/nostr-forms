@@ -10,7 +10,7 @@ export const getPublicForms = (
     limit: 50,
     "#t": ["public"],
   };
-  pool.subscribeMany(relays, [filter], {
+  return pool.subscribeMany(relays, [filter], {
     onevent: (e: Event) => {
       callback(e);
     },
