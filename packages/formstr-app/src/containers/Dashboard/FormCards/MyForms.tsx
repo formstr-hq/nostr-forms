@@ -47,7 +47,7 @@ const buildLocalForm = (
 export const MyForms = () => {
   const { pubkey: userPub } = useProfileContext();
   const { formEvents, refreshing, deleteForm } = useMyForms();
-  const { localForms, saveLocalForm } = useLocalForms();
+  const { localForms, saveLocalForm, saveManyLocalForms } = useLocalForms();
   const [bulkSaving, setBulkSaving] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
 
@@ -83,21 +83,18 @@ export const MyForms = () => {
     setBulkSaving(true);
     setBulkProgress({ current: 0, total: missingLocally.length });
 
-    let successCount = 0;
-    for (const [formId, meta] of missingLocally) {
-      try {
-        const localForm = buildLocalForm(meta, formId);
-        await saveLocalForm(localForm);
-        successCount++;
-        setBulkProgress((prev) => ({ ...prev, current: prev.current + 1 }));
-      } catch (err) {
-        console.error(`Failed to save form ${formId} to device:`, err);
-      }
-    }
-
-    setBulkSaving(false);
-    if (successCount > 0) {
-      message.success(`Saved ${successCount} form(s) to device`);
+    try {
+      const formsToSave = missingLocally.map(([formId, meta]) =>
+        buildLocalForm(meta, formId)
+      );
+      await saveManyLocalForms(formsToSave);
+      setBulkProgress({ current: missingLocally.length, total: missingLocally.length });
+      message.success(`Saved ${missingLocally.length} form(s) to device`);
+    } catch (err) {
+      console.error("Bulk save failed:", err);
+      message.error("Bulk save failed, please try again");
+    } finally {
+      setBulkSaving(false);
     }
   };
 

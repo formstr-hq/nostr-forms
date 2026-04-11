@@ -28,7 +28,7 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
 }) => {
   const [eventMap, setEventMap] = useState<Map<string, Event>>(new Map());
   const { pubkey } = useProfileContext();
-  const { inMyForms, saveToMyForms } = useMyForms();
+  const { inMyForms, saveToMyForms, saveManyToMyForms } = useMyForms();
   const [bulkSyncing, setBulkSyncing] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
 
@@ -74,27 +74,23 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
     setBulkSyncing(true);
     setBulkProgress({ current: 0, total: unsyncedForms.length });
 
-    let successCount = 0;
-    for (const form of unsyncedForms) {
-      try {
-        await saveToMyForms(
-          form.publicKey,
-          form.privateKey,
-          form.formId,
-          form.relays?.length ? form.relays : [form.relay],
-          form.viewKey,
-        );
-        successCount++;
-        setBulkProgress((prev) => ({ ...prev, current: prev.current + 1 }));
-      } catch (err) {
-        console.error(`Failed to sync form ${form.name}:`, err);
-        message.error(`Failed to sync "${form.name}"`);
-      }
-    }
-
-    setBulkSyncing(false);
-    if (successCount > 0) {
-      message.success(`Synced ${successCount} form(s) to Nostr`);
+    try {
+      await saveManyToMyForms(
+        unsyncedForms.map((form) => ({
+          formAuthorPub: form.publicKey,
+          formAuthorSecret: form.privateKey,
+          formId: form.formId,
+          relays: form.relays?.length ? form.relays : [form.relay],
+          viewKey: form.viewKey,
+        }))
+      );
+      setBulkProgress({ current: unsyncedForms.length, total: unsyncedForms.length });
+      message.success(`Synced ${unsyncedForms.length} form(s) to Nostr`);
+    } catch (err) {
+      console.error("Bulk sync failed:", err);
+      message.error("Bulk sync failed, please try again");
+    } finally {
+      setBulkSyncing(false);
     }
   };
 
