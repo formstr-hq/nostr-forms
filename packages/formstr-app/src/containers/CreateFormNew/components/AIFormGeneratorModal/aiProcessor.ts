@@ -47,7 +47,7 @@ export function processOllamaFormData(
       description: "Received invalid data from AI.",
     };
   }
-  const formName = ollamaData.title || "Untitled AI Form";
+  const formName = (ollamaData.title || "").trim();
   const description = ollamaData.description || "";
   const sourceFields = ollamaData.fields;
   const processedFields: Field[] = [];
@@ -60,7 +60,7 @@ export function processOllamaFormData(
 
     const uniqueId = makeTag(6);
     const aiFieldType = aiField.type || "text";
-    let label = aiField.label || `Untitled ${uniqueId}`;
+    let label = (aiField.label || "").trim();
     const labelLower = label.toLowerCase();
     let hasOptions =
       Array.isArray(aiField.options) && aiField.options.length > 0;

@@ -9,7 +9,7 @@ function BasicMenu() {
   const onMenuClick = ({ key }: { key: string }) => {
     if (key === BASIC_MENU_KEYS.SECTION) {
       const sectionNumber = sections.length + 1;
-      addSection(`Section ${sectionNumber}`, "Click to edit section description");
+      addSection(`Section ${sectionNumber}`, "");
       return;
     }
     
@@ -17,7 +17,7 @@ function BasicMenu() {
     if (selectedItem) {
       addQuestion(
         selectedItem?.primitive,
-        selectedItem?.label,
+        undefined,
         selectedItem?.answerSettings
       );
     }

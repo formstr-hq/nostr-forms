@@ -12,7 +12,7 @@ export const generateQuestion = (
     "field",
     makeTag(6),
     primitive,
-    label || "Click here to edit",
+    label ?? "",
     JSON.stringify(choices) || "",
     JSON.stringify(answerSettings),
   ];
