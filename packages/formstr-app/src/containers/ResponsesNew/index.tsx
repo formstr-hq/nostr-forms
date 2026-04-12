@@ -405,47 +405,44 @@ export const Response = () => {
         width: isMobile() ? 100 : 130,
       },
       {
-        key: "zap",
-        title: "Zap",
+        key: "actions",
+        title: "Actions",
         dataIndex: "responseEventId",
-        width: 80,
+        fixed: "right",
+        width: 100,
         render: (_: string, record: any) => {
           const hexPubkey = record.responderHexPubkey;
           const profile = profiles.get(hexPubkey);
-          if (!hasLightningAddress(profile) || !formEvent) return <span>-</span>;
           const responseEventObj = responses?.find(
             (r) => r.id === record.responseEventId
           );
-          if (!responseEventObj) return <span>-</span>;
+          const canZap =
+            hasLightningAddress(profile) && !!formEvent && !!responseEventObj;
           return (
-            <ZapButton
-              recipientProfileEvent={profileEvents.get(hexPubkey)}
-              profile={profile}
-              responseEvent={responseEventObj}
-              formEvent={formEvent}
-              zapTotal={zapTotals.get(record.responseEventId)}
-              onZapInitiated={refreshZapTotals}
-              compact
-            />
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              {canZap && (
+                <ZapButton
+                  recipientProfileEvent={profileEvents.get(hexPubkey)}
+                  profile={profile}
+                  responseEvent={responseEventObj!}
+                  formEvent={formEvent!}
+                  zapTotal={zapTotals.get(record.responseEventId)}
+                  onZapInitiated={refreshZapTotals}
+                  compact
+                />
+              )}
+              <div
+                style={{ cursor: "pointer", padding: "0 4px" }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRowClick(record);
+                }}
+              >
+                <ExportOutlined />
+              </div>
+            </div>
           );
         },
-      },
-      {
-        key: "action",
-        title: "Action",
-        dataIndex: "action",
-        fixed: "right",
-        width: 40,
-        render: (_: string, record: any) => (
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRowClick(record);
-            }}
-          >
-            <ExportOutlined />
-          </div>
-        ),
       },
     ];
     let uniqueQuestionIdsInResponses: Set<string> = new Set();
