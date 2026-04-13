@@ -8,7 +8,7 @@ import ModelSelector from '../../../../components/ModelSelector';
 import GenerationPanel from './GenerationPanel';
 import './styles.css';
 
-const FORM_GENERATION_SYSTEM_PROMPT = `You are an expert JSON generator. Based on the user's request, create a form structure.
+const FORM_GENERATION_SYSTEM_PROMPT = `You are an expert JSON generator. Based on the user's request, create or update a form structure.
 Here is the required JSON schema for the form:
 {
     "type": "object",
@@ -34,11 +34,14 @@ Here is the required JSON schema for the form:
 CRITICAL RULES:
 - Your response MUST be ONLY the JSON object that validates against the schema above.
 - Do NOT include any extra text, explanations, or markdown formatting like \`\`\`json.
+- If existing form context is provided, treat it as the source of truth.
+- When the user asks to add/edit/update/remove fields, return the full updated form (not only deltas).
+- Preserve unchanged fields unless the user asks to modify or remove them.
 
 For Example for output with one field:
 "{
-  "title": "Appropriate Form Title",
-  "description": "Appropriate Form Description",
+"title": "Appropriate Form Title",
+"description": "Appropriate Form Description",
   "fields": [
     {
       "type": "ShortText",
@@ -49,7 +52,7 @@ For Example for output with one field:
 }"
 `;
 
-const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onClose, onFormGenerated }) => {
+const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onClose, onFormGenerated, currentFormContext }) => {
     const [prompt, setPrompt] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
@@ -122,8 +125,24 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
         }
         setGenerating(true);
         try {
+            const hasExistingForm = Boolean(currentFormContext?.fields?.length);
+            const serializedContext = JSON.stringify(
+                currentFormContext || { title: "", description: "", fields: [] },
+                null,
+                2
+            );
+            const generationPrompt = `USER REQUEST: "${prompt}"
+EXISTING FORM CONTEXT:
+${serializedContext}
+GUIDANCE:
+- If the user asks to update the existing form, apply the changes to the context and return the full result.
+- If the user asks to create from scratch, ignore existing context and build a fresh form.
+- If the request is ambiguous and existing context has fields, prefer updating it.
+MODE_HINT: ${hasExistingForm ? "update_or_create" : "create"}
+YOUR JSON RESPONSE:`;
+
             const result = await ollamaService.generate({
-              prompt: `USER REQUEST: "${prompt}"\nYOUR JSON RESPONSE:`,
+              prompt: generationPrompt,
               system: FORM_GENERATION_SYSTEM_PROMPT,
               format: "json",
             });
@@ -192,6 +211,7 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
                 onGenerate={handleGenerate}
                 loading={generating}
                 disabled={!connectionStatus || availableModels.length === 0}
+                hasExistingForm={Boolean(currentFormContext?.fields?.length)}
             />
         </Modal>
     );
