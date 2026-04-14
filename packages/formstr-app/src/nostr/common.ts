@@ -151,10 +151,16 @@ function createQuestionMap(form: Tag[]) {
 }
 
 const getDisplayAnswer = (answer: string | number | boolean, field: Field) => {
-  const choices = JSON.parse(field[4]);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(field[4] || "[]");
+  } catch {
+    parsed = [];
+  }
+  const choices = Array.isArray(parsed) ? parsed : [];
   return (
     choices
-      ?.filter((choice: Tag) => {
+      .filter((choice: Tag) => {
         const answers = answer.toString().split(";");
         return answers.includes(choice[0]);
       })

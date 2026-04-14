@@ -5,6 +5,7 @@ import {
   PlusOutlined,
   InfoCircleOutlined,
   MailOutlined,
+  ImportOutlined
 } from "@ant-design/icons";
 import { ROUTES } from "../../constants/routes";
 
@@ -12,6 +13,7 @@ export const HEADER_MENU_KEYS = {
   PUBLIC_FORMS: "PUBLIC_FORMS",
   USER: "USER",
   CREATE_FORMS: "CREATE_FORMS",
+  IMPORT_FORMS: "IMPORT_FORMS",
   HELP: "HELP",
   CONTACT_US: "CONTACT_US",
 };
@@ -46,6 +48,11 @@ export const HEADER_MENU = [
         Create Form
       </Button>
     ),
+  },
+  {
+    key: HEADER_MENU_KEYS.IMPORT_FORMS,
+    label: "Import",
+    icon: <ImportOutlined />
   },
   {
     key: HEADER_MENU_KEYS.PUBLIC_FORMS,

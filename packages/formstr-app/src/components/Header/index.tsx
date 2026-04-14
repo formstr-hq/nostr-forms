@@ -11,7 +11,7 @@ import {
   Alert,
   message,
 } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./index.css";
 import { ReactComponent as Logo } from "../../Images/formstr.svg";
 import {
@@ -30,6 +30,12 @@ import { useState } from "react";
 import { useTemplateContext } from "../../provider/TemplateProvider";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
 import { nip19 } from "nostr-tools";
+import GoogleFormsDeployer, {
+  FetchResult,
+} from "../GoogleFormsDeployer/index";
+import { makeTag } from "../../utils/utility";
+import { ROUTES } from "../../constants/routes";
+import { mapGoogleQuestionToField } from "../GoogleFormsDeployer/helper";
 
 const { Text, Paragraph } = Typography;
 
@@ -53,10 +59,50 @@ export const NostrHeader = () => {
     disableEncryption,
   } = useLocalForms();
   const [isFAQModalVisible, setIsFAQModalVisible] = useState(false);
+  const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [showEncryptionModal, setShowEncryptionModal] = useState(false);
   const [encryptionLoading, setEncryptionLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string[]>([]);
   const { openTemplateModal } = useTemplateContext();
+  const navigate = useNavigate();
+
+  const handleGoogleFetchRender = (result: FetchResult) => {
+    if (!result.success || !Array.isArray(result.data?.questions)) {
+      message.error("No form schema available to render.");
+      return;
+    }
+    const fields = result.data!.questions.map(mapGoogleQuestionToField);
+    if (!fields.length) {
+      message.warning("No supported questions found in this Google Form.");
+      return;
+    }
+    const formId = makeTag(6);
+    const spec = [
+      ["d", formId],
+      ["name", result.data?.title || "Imported Google Form"],
+      [
+        "settings",
+        JSON.stringify({
+          thankYouPage: true,
+          publicForm: true,
+          disallowAnonymous: false,
+          encryptForm: true,
+          viewKeyInUrl: true,
+          description: result.data?.description || "",
+        }),
+      ],
+      ...fields,
+    ];
+    navigate(ROUTES.CREATE_FORMS_NEW, {
+      state: {
+        spec,
+        id: formId,
+      },
+    });
+    setIsImportModalVisible(false);
+    setSelectedKey([]);
+    message.success("Google Form rendered in Form Builder.");
+  };
 
   const handleEnableEncryption = async () => {
     setEncryptionLoading(true);
@@ -272,6 +318,11 @@ export const NostrHeader = () => {
       openTemplateModal();
       return;
     }
+    if (e.key === HEADER_MENU_KEYS.IMPORT_FORMS) {
+      setIsImportModalVisible(true);
+      setSelectedKey([e.key]);
+      return;
+    }
     setSelectedKey([e.key]);
   };
 
@@ -389,6 +440,17 @@ export const NostrHeader = () => {
         filePath="/docs/faq.md"
         title="Frequently Asked Questions"
       />
+      <Modal
+        open={isImportModalVisible}
+        onCancel={() => setIsImportModalVisible(false)}
+        footer={null}
+        width={1000}
+      >
+        <GoogleFormsDeployer
+          onFetch={(json) => console.log(json)}
+          onRenderInBuilder={handleGoogleFetchRender}
+        />
+      </Modal>
       <Modal
         title={getEncryptionModalTitle()}
         open={showEncryptionModal}
