@@ -448,7 +448,12 @@ export default function GoogleFormsDeployer({
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   {fetchResult.success && onRenderInBuilder && (
                     <button
-                      style={btnBase}
+                      style={{
+                        ...btnBase,
+                        background: "linear-gradient(180deg, #FF6B00 0%, #FF2E00 60.92%)",
+                        color: "#fff",
+                        border: "1px solid #f97316",
+                      }}
                       onClick={() => onRenderInBuilder(fetchResult)}
                     >
                       Render in Form Builder
