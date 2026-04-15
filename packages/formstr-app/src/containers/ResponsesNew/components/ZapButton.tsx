@@ -77,9 +77,25 @@ export const ZapButton: React.FC<ZapButtonProps> = ({
     <>
       <Tooltip title="Zap this responder">
         <Button
-          type="text"
+          type="default"
           size={compact ? "small" : "middle"}
-          icon={<ThunderboltOutlined style={{ color: "#F7931A" }} />}
+          icon={
+            <ThunderboltOutlined
+              style={{
+                color: "#F7931A",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            />
+          }
+          style={{
+            borderColor: "#F7931A",
+            color: "#F7931A",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
           onClick={(e) => {
             e.stopPropagation();
             setModalOpen(true);

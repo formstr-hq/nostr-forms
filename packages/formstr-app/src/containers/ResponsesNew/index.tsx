@@ -370,18 +370,39 @@ export const Response = () => {
         title: "Author",
         fixed: "left",
         dataIndex: "authorPubkey",
-        width: isMobile() ? 120 : 150,
-        render: (data: string) => (
-          <a
-            href={`https://njump.me/${data}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {isMobile()
-              ? `${data.substring(0, 10)}...${data.substring(data.length - 5)}`
-              : data}
-          </a>
-        ),
+        width: isMobile() ? 150 : 220,
+        render: (data: string, record: any) => {
+          const hexPubkey = record.responderHexPubkey;
+          const profile = profiles.get(hexPubkey);
+          const responseEventObj = responses?.find(
+            (r) => r.id === record.responseEventId
+          );
+          const canZap =
+            hasLightningAddress(profile) && !!formEvent && !!responseEventObj;
+          return (
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <a
+                href={`https://njump.me/${data}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={data}
+              >
+                {`${data.substring(0, 10)}…${data.substring(data.length - 6)}`}
+              </a>
+              {canZap && (
+                <ZapButton
+                  recipientProfileEvent={profileEvents.get(hexPubkey)}
+                  profile={profile}
+                  responseEvent={responseEventObj!}
+                  formEvent={formEvent!}
+                  zapTotal={zapTotals.get(record.responseEventId)}
+                  onZapInitiated={refreshZapTotals}
+                  compact
+                />
+              )}
+            </div>
+          );
+        },
       },
       {
         key: "responsesCount",
@@ -405,44 +426,22 @@ export const Response = () => {
         width: isMobile() ? 100 : 130,
       },
       {
-        key: "actions",
-        title: "Actions",
-        dataIndex: "responseEventId",
+        key: "action",
+        title: "Action",
+        dataIndex: "action",
         fixed: "right",
-        width: 100,
-        render: (_: string, record: any) => {
-          const hexPubkey = record.responderHexPubkey;
-          const profile = profiles.get(hexPubkey);
-          const responseEventObj = responses?.find(
-            (r) => r.id === record.responseEventId
-          );
-          const canZap =
-            hasLightningAddress(profile) && !!formEvent && !!responseEventObj;
-          return (
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              {canZap && (
-                <ZapButton
-                  recipientProfileEvent={profileEvents.get(hexPubkey)}
-                  profile={profile}
-                  responseEvent={responseEventObj!}
-                  formEvent={formEvent!}
-                  zapTotal={zapTotals.get(record.responseEventId)}
-                  onZapInitiated={refreshZapTotals}
-                  compact
-                />
-              )}
-              <div
-                style={{ cursor: "pointer", padding: "0 4px" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRowClick(record);
-                }}
-              >
-                <ExportOutlined />
-              </div>
-            </div>
-          );
-        },
+        width: 60,
+        render: (_: string, record: any) => (
+          <div
+            style={{ cursor: "pointer" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowClick(record);
+            }}
+          >
+            <ExportOutlined />
+          </div>
+        ),
       },
     ];
     let uniqueQuestionIdsInResponses: Set<string> = new Set();
