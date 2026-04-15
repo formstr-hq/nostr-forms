@@ -108,6 +108,11 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
         }
     }, [isOpen, testConnection]);
 
+    const handleClose = () => {
+        setPrompt('');
+        onClose();
+    };
+
     const handleConfigChange = (newConfig: Partial<OllamaConfig>) => {
         const updatedConfig = { ...config, ...newConfig };
         setConfig(updatedConfig);
@@ -151,7 +156,7 @@ YOUR JSON RESPONSE:`;
                 const processedData = processOllamaFormData(JSON.parse(result.data.response));
                 onFormGenerated(processedData);
                 message.success('Form generated successfully!');
-                onClose();
+                handleClose();
             } else {
                 message.error(result.error || 'An unexpected error occurred during generation.');
             }
@@ -176,7 +181,7 @@ YOUR JSON RESPONSE:`;
         <Modal
             title="AI Form Generator"
             open={isOpen}
-            onCancel={onClose}
+            onCancel={handleClose}
             footer={null}
             width={800}
         >
