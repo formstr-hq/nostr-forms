@@ -35,7 +35,7 @@ import GoogleFormsDeployer, {
 } from "../GoogleFormsDeployer/index";
 import { makeTag } from "../../utils/utility";
 import { ROUTES } from "../../constants/routes";
-import { mapGoogleQuestionToField } from "../GoogleFormsDeployer/helper";
+import { mapGoogleFormQuestionsToFieldsAndSections } from "../GoogleFormsDeployer/helper";
 
 const { Text, Paragraph } = Typography;
 
@@ -71,7 +71,9 @@ export const NostrHeader = () => {
       message.error("No form schema available to render.");
       return;
     }
-    const fields = result.data!.questions.map(mapGoogleQuestionToField);
+    const { fields, sections } = mapGoogleFormQuestionsToFieldsAndSections(
+      result.data!.questions,
+    );
     if (!fields.length) {
       message.warning("No supported questions found in this Google Form.");
       return;
@@ -89,6 +91,7 @@ export const NostrHeader = () => {
           encryptForm: true,
           viewKeyInUrl: true,
           description: result.data?.description || "",
+          ...(sections.length > 0 ? { sections } : {}),
         }),
       ],
       ...fields,

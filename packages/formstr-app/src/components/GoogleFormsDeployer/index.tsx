@@ -135,6 +135,9 @@ const buildScript = (formId: string): string => `function doGet(e) {
           }
           case FormApp.ItemType.SECTION_HEADER:
             return base;
+          case FormApp.ItemType.IMAGE:
+          case FormApp.ItemType.VIDEO:
+            return base;
           default:
             return base;
         }
