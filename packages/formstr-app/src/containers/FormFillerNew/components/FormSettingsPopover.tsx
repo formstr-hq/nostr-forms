@@ -22,7 +22,7 @@ export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
     Modal.confirm({
       title: "Clear all responses?",
       content:
-        "This will remove all entered answers, clear also uploaded files and this action cannot be undone.",
+        "This will remove all entered answers and delete uploaded files from the server. This action cannot be undone.",
       okText: "Clear form",
       cancelText: "Cancel",
       okButtonProps: { danger: true },

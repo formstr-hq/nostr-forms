@@ -7,7 +7,7 @@ import {
   Progress,
   Card,
 } from "antd";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FormFields } from "./FormFields";
 import { Field, Tag } from "../../nostr/types";
 import FillerStyle from "./formFiller.style";
@@ -46,7 +46,6 @@ interface FormRendererProps {
   formEditKey?: string;
   responderSecretKey?: Uint8Array;
   uploaderPubkey?: string; // For decryption when viewing responses
-  resetSignal?: number;
   onClearForm?: () => void;
 }
 
@@ -78,7 +77,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   formEditKey,
   responderSecretKey,
   uploaderPubkey,
-  resetSignal = 0,
   onClearForm,
 }) => {
   const name = formTemplate.find((tag) => tag[0] === "name")?.[1] || "";
@@ -93,11 +91,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
 
   const sections = settings.sections || [];
   const enableSections = !!sections.length;
-
-  useEffect(() => {
-    setCurrentStep(0);
-    setCompletedSteps(new Set());
-  }, [resetSignal]);
 
   // Create mixed content flow
   const createContentFlow = (): ContentItem[] => {

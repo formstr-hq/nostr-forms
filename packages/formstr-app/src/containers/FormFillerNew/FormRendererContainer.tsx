@@ -68,7 +68,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     "idle",
   );
   const [isFetchingKeys, setIsFetchingKeys] = useState(false);
-  const [resetSignal, setResetSignal] = useState(0);
+  const [rendererKey, setRendererKey] = useState(0);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(() => {
     const saved = getItem<boolean>(LOCAL_STORAGE_KEYS.AUTO_SAVE_ENABLED);
     return saved !== false; // Default to true if not set
@@ -285,7 +285,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     });
   };
 
-  const clearUploadedFiles = async (files: FileUploadMetadata[]) => {
+  const deleteUploadedFiles = async (files: FileUploadMetadata[]) => {
     const results = await Promise.allSettled(
       files.map(async (file) => {
         const authHeader = await createAuthEvent(
@@ -306,15 +306,16 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     }
   };
 
-  const handleClearForm = () => {
+  const handleClearForm = async () => {
     const uploadedFiles = getUploadedFilesFromForm();
-    form.resetFields();
-    clearDraft();
-    setResetSignal((prev) => prev + 1);
 
     if (uploadedFiles.length > 0) {
-      void clearUploadedFiles(uploadedFiles);
+      await deleteUploadedFiles(uploadedFiles);
     }
+
+    form.resetFields();
+    clearDraft();
+    setRendererKey((prev) => prev + 1);
   };
 
   const allowedUsers = getAllowedUsers(formEvent);
@@ -390,6 +391,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
 
   return (
     <FormRenderer
+      key={rendererKey}
       formTemplate={formTemplate}
       form={form}
       onInput={handleInput}
@@ -402,7 +404,6 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       onToggleAutoSave={toggleAutoSave}
       formAuthorPubkey={formEvent.pubkey}
       responderSecretKey={responderSecretKey}
-      resetSignal={resetSignal}
       onClearForm={handleClearForm}
     />
   );
