@@ -5,7 +5,6 @@ import {
   PlusOutlined,
   InfoCircleOutlined,
   MailOutlined,
-  ImportOutlined
 } from "@ant-design/icons";
 import { ROUTES } from "../../constants/routes";
 

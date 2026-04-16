@@ -11,7 +11,7 @@ import {
   Alert,
   message,
 } from "antd";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./index.css";
 import { ReactComponent as Logo } from "../../Images/formstr.svg";
 import {
@@ -57,8 +57,6 @@ export const NostrHeader = () => {
   const [encryptionLoading, setEncryptionLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string[]>([]);
   const { openTemplateModal } = useTemplateContext();
-  const navigate = useNavigate();
-
 
   const handleEnableEncryption = async () => {
     setEncryptionLoading(true);
