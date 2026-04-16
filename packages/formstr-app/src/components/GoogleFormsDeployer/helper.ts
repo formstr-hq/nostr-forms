@@ -1,5 +1,5 @@
 import { makeTag } from "../../utils/utility";
-import { GoogleFormQuestion } from "./index";
+import { GoogleFormQuestion } from "./types";
 import { Field, Option } from "../../nostr/types";
 import { AnswerTypes } from "../../nostr/types";
 import { SectionData } from "../../containers/CreateFormNew/providers/FormBuilder/typeDefs";

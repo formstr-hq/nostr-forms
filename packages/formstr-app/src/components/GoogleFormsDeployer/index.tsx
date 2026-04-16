@@ -1,30 +1,5 @@
-import { useState, useCallback } from "react";
-
-export interface FetchResult {
-  success: boolean;
-  data?: {
-    title?: string;
-    description?: string;
-    id?: string;
-    questions?: GoogleFormQuestion[];
-  };
-  error?: string;
-}
-
-export interface GoogleFormQuestion {
-  id: number;
-  title: string;
-  type: string;
-  helpText?: string;
-  isRequired?: boolean;
-  options?: string[];
-  hasOtherOption?: boolean;
-  rows?: string[];
-  columns?: string[];
-  allowedFileTypes?: string[];
-  maxFiles?: number;
-  maxFileSizeBytes?: number;
-}
+import { useState, useCallback, useMemo } from "react";
+import { FetchResult } from "./types";
 
 type ToastType = "success" | "error" | "warning" | "";
 
@@ -266,16 +241,23 @@ function CodeBlock({ code }: CodeBlockProps) {
   );
 }
 
+function parseFormId(url: string): string {
+  if (!url) return "";
+  const match = url.match(/\/forms\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : "";
+}
+
 export default function GoogleFormsDeployer({
   onFetch,
   onRenderInBuilder,
 }: GoogleFormsDeployerProps) {
-  const [formId, setFormId]           = useState<string>("");
+  const [formUrl, setFormUrl]         = useState<string>("");
   const [deployUrl, setDeployUrl]     = useState<string>("");
   const [fetching, setFetching]       = useState<boolean>(false);
   const [fetchResult, setFetchResult] = useState<FetchResult | null>(null);
   const [toast, setToast]             = useState<ToastState>({ msg: "", type: "" });
 
+  const formId = useMemo(() => parseFormId(formUrl), [formUrl]);
   const showToast = (msg: string, type: ToastType) => {
     setToast({ msg, type });
     setTimeout(() => setToast({ msg: "", type: "" }), 3000);
@@ -352,6 +334,19 @@ export default function GoogleFormsDeployer({
     cursor: fetching ? "not-allowed" : "pointer",
   };
 
+  const urlHasContent = formUrl.trim().length > 0;
+  const parseFeedback = urlHasContent ? (
+    formId ? (
+      <div style={{ marginTop: 6, fontSize: 12, fontFamily: "monospace", color: "#166534" }}>
+        Form ID detected: <strong>{formId}</strong>
+      </div>
+    ) : (
+      <div style={{ marginTop: 6, fontSize: 12, fontFamily: "monospace", color: "#991b1b" }}>
+        Could not parse form ID — make sure the URL contains <code style={{ fontSize: 11 }}>/forms/d/…</code>
+      </div>
+    )
+  ) : null;
+
   return (
     <>
       {/* Keyframe for spinner — injected once */}
@@ -360,21 +355,22 @@ export default function GoogleFormsDeployer({
       <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", padding: "4px 0" }}>
         <Toast msg={toast.msg} type={toast.type} />
 
-        {/* Step 1 */}
-        <Step num={1} title="Enter Form ID">
+        {/* Step 1 — accepts a full form URL */}
+        <Step num={1} title="Paste your Google Form link">
           <p style={{ fontSize: 13, color: "#64748b", marginBottom: 8, lineHeight: 1.6 }}>
-            Found in your form URL:{" "}
+            Paste the full URL from your browser — the form ID is extracted automatically.{" "}
             <code style={{ fontSize: 11, background: "#f1f5f9", padding: "1px 5px", borderRadius: 4, border: "1px solid #e2e8f0" }}>
               docs.google.com/forms/d/<strong>FORM_ID</strong>/edit
             </code>
           </p>
           <input
             type="text"
-            placeholder="e.g. 1M3sMTtLrAhXMH..."
-            value={formId}
-            onChange={(e) => setFormId(e.target.value)}
+            placeholder="https://docs.google.com/forms/d/1M3sMTtLrAhXMH.../edit"
+            value={formUrl}
+            onChange={(e) => setFormUrl(e.target.value)}
             style={inputStyle}
           />
+          {parseFeedback}
         </Step>
 
         {/* Step 2 */}

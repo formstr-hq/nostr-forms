@@ -22,6 +22,7 @@ export const CreateFormHeader: React.FC = () => {
     formSettings,
     relayList,
     setIsAiModalOpen,
+    setIsImportModalVisible,
     selectedTab,
     questionsList,
   } = useFormBuilderContext();
@@ -29,6 +30,10 @@ export const CreateFormHeader: React.FC = () => {
   const onMenuClickHandler: MenuProps["onClick"] = (e) => {
     if (e.key === HEADER_MENU_KEYS.AI_BUILDER) {
       setIsAiModalOpen(true);
+      return;
+    }
+    if(e.key === HEADER_MENU_KEYS.IMPORT_FORMS){
+      setIsImportModalVisible(true);
       return;
     }
     if (

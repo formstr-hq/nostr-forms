@@ -69,6 +69,8 @@ export const FormBuilderContext = React.createContext<IFormBuilderContext>({
   isAiModalOpen: false,
   setIsAiModalOpen: () => null,
   handleAIFormGenerated: () => null,
+  isImportModalVisible: false,
+  setIsImportModalVisible: () => null,
   sections: [],
   addSection: () => ({ id: "", title: "", questionIds: [] }),
   updateSection: () => {},
@@ -126,6 +128,7 @@ export default function FormBuilderProvider({
   const [secretKey, setSecretKey] = useState<string | null>(null);
   const [viewKey, setViewKey] = useState<string | null | undefined>(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const navigate = useNavigate();
   const [sections, setSections] = useState<SectionData[]>([]);
 
@@ -601,6 +604,8 @@ export default function FormBuilderProvider({
         isAiModalOpen,
         setIsAiModalOpen,
         handleAIFormGenerated,
+        isImportModalVisible,
+        setIsImportModalVisible,
         sections,
         addSection,
         updateSection,
