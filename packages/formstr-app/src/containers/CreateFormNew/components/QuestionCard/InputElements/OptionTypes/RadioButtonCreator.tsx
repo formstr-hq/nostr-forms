@@ -3,7 +3,12 @@ import { Input, Radio } from "antd";
 import { useState } from "react";
 import OptionsStyle from "./Options.style";
 import { AddOption } from "./AddOption";
-import { handleDelete, handleLabelChange, hasOtherOption } from "./utils";
+import {
+  handleDelete,
+  handleLabelChange,
+  hasOtherOption,
+  normalizeChoices,
+} from "./utils";
 import { Choice, ChoiceSettings } from "./types";
 import { makeTag } from "../../../../../../utils/utility";
 import { ColorfulMarkdownTextarea } from "../../../../../../components/SafeMarkdown/ColorfulMarkdownInput";
@@ -17,7 +22,9 @@ export const RadioButtonCreator: React.FC<RadioButtonCreatorProps> = ({
   initialValues,
   onValuesChange,
 }) => {
-  const [choices, setChoices] = useState<Array<Choice>>(initialValues || []);
+  const [choices, setChoices] = useState<Array<Choice>>(() =>
+    normalizeChoices(initialValues),
+  );
 
   const handleNewChoices = (choices: Array<Choice>) => {
     setChoices(choices);

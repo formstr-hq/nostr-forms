@@ -10,6 +10,7 @@ import { Field } from "../../../../nostr/types";
 import AIFormGeneratorModal from "../AIFormGeneratorModal";
 import Section from "../SectionManager/Section";
 import { ColorfulMarkdownTextarea } from "../../../../components/SafeMarkdown/ColorfulMarkdownInput";
+import GoogleFormImportModal from "../GoogleFormImportModal";
 
 const { Text } = Typography;
 
@@ -102,6 +103,8 @@ export const QuestionsList = () => {
     bottomElementRef,
     isAiModalOpen,
     setIsAiModalOpen,
+    isImportModalVisible,
+    setIsImportModalVisible,
     handleAIFormGenerated,
     sections,
     getSectionForQuestion,
@@ -271,6 +274,10 @@ export const QuestionsList = () => {
         onClose={() => setIsAiModalOpen(false)}
         onFormGenerated={handleAIFormGenerated}
       />
+      <GoogleFormImportModal
+        isOpen={isImportModalVisible}
+        onClose={() => setIsImportModalVisible(false)}
+       />
     </StyleWrapper>
   );
 };

@@ -5,6 +5,7 @@ import Inputs from "./Inputs";
 import StyledWrapper from "./index.style";
 import QuestionTextStyle from "./question.style";
 import { Choice } from "./InputElements/OptionTypes/types";
+import { normalizeChoices } from "./InputElements/OptionTypes/utils";
 import UploadImage from "./UploadImage";
 import { AnswerSettings, AnswerTypes, Field } from "../../../../nostr/types";
 import { ColorfulMarkdownTextarea } from "../../../../components/SafeMarkdown/ColorfulMarkdownInput";
@@ -43,8 +44,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       options = { columns: [], rows: [] } as any;
     }
   } else {
-    // For regular option-based questions, parse as Array<Choice>
-    options = JSON.parse(question[4] || "[]") as Array<Choice>;
+    try {
+      const parsed = JSON.parse(question[4] || "[]");
+      options = normalizeChoices(parsed);
+    } catch {
+      options = [];
+    }
   }
   const {
     setQuestionIdInFocus,
