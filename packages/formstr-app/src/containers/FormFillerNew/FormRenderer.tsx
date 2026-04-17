@@ -46,6 +46,7 @@ interface FormRendererProps {
   formEditKey?: string;
   responderSecretKey?: Uint8Array;
   uploaderPubkey?: string; // For decryption when viewing responses
+  onClearForm?: () => void;
 }
 
 // Content item can be either a section or individual questions
@@ -76,6 +77,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   formEditKey,
   responderSecretKey,
   uploaderPubkey,
+  onClearForm,
 }) => {
   const name = formTemplate.find((tag) => tag[0] === "name")?.[1] || "";
   const settings = JSON.parse(
@@ -86,7 +88,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   // Section state management
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
-
 
   const sections = settings.sections || [];
   const enableSections = !!sections.length;
@@ -199,10 +200,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   const renderAutoSaveControls = () => (
     <>
       <AutoSaveIndicator saveStatus={saveStatus} enabled={autoSaveEnabled} />
-      {onToggleAutoSave && (
+      {(onToggleAutoSave || onClearForm) && (
         <FormSettingsPopover
           autoSaveEnabled={autoSaveEnabled}
-          onToggleAutoSave={onToggleAutoSave}
+          onToggleAutoSave={onToggleAutoSave || (() => {})}
+          onClearForm={onClearForm}
         />
       )}
     </>
