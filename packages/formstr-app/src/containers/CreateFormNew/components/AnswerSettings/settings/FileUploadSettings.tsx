@@ -2,15 +2,10 @@ import { Input, InputNumber, Select, Typography, Space, Button, message } from "
 import React, { useState, useEffect } from "react";
 import { IAnswerSettings } from "../types";
 import { pool } from "../../../../../pool";
+import { getDefaultRelays } from "../../../../../nostr/common";
 
 const { Text } = Typography;
 const { Option } = Select;
-
-const PUBLIC_RELAYS = [
-  "wss://relay.damus.io",
-  "wss://relay.nostr.band",
-  "wss://nos.lol",
-];
 
 export const DEFAULT_SERVERS = [
   "https://nostr.download",
@@ -46,7 +41,7 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
   useEffect(() => {
     const queryServers = async () => {
       try {
-        const events = await pool.querySync(PUBLIC_RELAYS, {
+        const events = await pool.querySync(getDefaultRelays(), {
           kinds: [36363],
           limit: 50,
         });

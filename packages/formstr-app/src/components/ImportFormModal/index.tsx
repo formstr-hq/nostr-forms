@@ -6,6 +6,7 @@ import { parseFormUrl, ParsedFormUrl } from "../../utils/formUrlParser";
 import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
 import { ILocalForm } from "../../containers/CreateFormNew/providers/FormBuilder/typeDefs";
 import { useLocalForms } from "../../provider/LocalFormsProvider";
+import { getDefaultRelays } from "../../nostr/common";
 
 const { Title, Text } = Typography;
 
@@ -131,7 +132,7 @@ const ImportFormModal: React.FC<ImportFormModalProps> = ({
 
     const { parsed, formName } = preview;
     const relays =
-      parsed.relays.length > 0 ? parsed.relays : ["wss://relay.damus.io"];
+      parsed.relays.length > 0 ? parsed.relays : getDefaultRelays();
 
     const formToSave: ILocalForm = {
       key: `${parsed.pubkey}:${parsed.formId}`,

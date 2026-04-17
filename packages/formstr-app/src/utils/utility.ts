@@ -2,6 +2,7 @@ import { DEVICE_TYPE, DEVICE_WIDTH } from "../constants/index";
 import { getItem, LOCAL_STORAGE_KEYS, setItem } from "./localStorage";
 import { nip19 } from "nostr-tools";
 import { encodeNKeys } from "./nkeys";
+import { getDefaultRelays } from "../nostr/common";
 
 export function makeTag(length: number) {
   let result = "";
@@ -39,7 +40,7 @@ export const makeFormNAddr = (
   return nip19.naddrEncode({
     pubkey: publicKey,
     identifier: formId,
-    relays: relaysEncode || ["wss://relay.damus.io"],
+    relays: relaysEncode || getDefaultRelays(),
     kind: 30168,
   });
 };
@@ -54,7 +55,7 @@ export const naddrUrl = (
   const base = `/f/${makeFormNAddr(
     publicKey,
     formId,
-    relaysEncode || ["wss://relay.damus.io"],
+    relaysEncode || getDefaultRelays(),
   )}`;
 
   // OLD behavior

@@ -27,6 +27,7 @@ import { FormDetails } from "../../CreateFormNew/components/FormDetails";
 import SafeMarkdown from "../../../components/SafeMarkdown";
 import { IFormSettings } from "../../CreateFormNew/components/FormSettings/types";
 import { Tag } from "../../../nostr/types";
+import { getDefaultRelays } from "../../../nostr/common";
 
 interface FormEventCardProps {
   event: Event;
@@ -80,7 +81,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
     const naddr = makeFormNAddr(
       pubKey,
       formId,
-      relays.length ? relays : ["wss://relay.damus.io"],
+      relays.length ? relays : getDefaultRelays(),
     );
     const formData = JSON.stringify(await getFormData(naddr));
     const formFillerUI = (await (await fetch("/api/form-filler-ui")).text())
@@ -284,7 +285,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
                   naddrUrl(
                     pubKey,
                     formId,
-                    relays.length ? relays : ["wss://relay.damus.io"],
+                    relays.length ? relays : getDefaultRelays(),
                     viewKey,
                   ),
                 );
