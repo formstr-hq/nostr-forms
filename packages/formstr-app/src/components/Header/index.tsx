@@ -10,7 +10,6 @@ import {
   Button,
   Alert,
   message,
-  Select,
 } from "antd";
 import { Link } from "react-router-dom";
 import "./index.css";
@@ -63,6 +62,10 @@ export const NostrHeader = () => {
   const [languageLoading, setLanguageLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string[]>([]);
   const { openTemplateModal } = useTemplateContext();
+  const currentLocale = normalizeLocale(i18n.resolvedLanguage || i18n.language);
+  const currentLocaleLabel =
+    SUPPORTED_LOCALES.find((locale) => locale.code === currentLocale)?.label ||
+    currentLocale;
 
   const handleEnableEncryption = async () => {
     setEncryptionLoading(true);
@@ -268,9 +271,6 @@ export const NostrHeader = () => {
 
   const handleLanguageChange = async (locale: string) => {
     const normalizedLocale = normalizeLocale(locale);
-    const currentLocale = normalizeLocale(
-      i18n.resolvedLanguage || i18n.language,
-    );
 
     if (normalizedLocale === currentLocale) {
       return;
@@ -283,6 +283,33 @@ export const NostrHeader = () => {
       message.error(t("common.status.languageChangeFailed"));
     } finally {
       setLanguageLoading(false);
+    }
+  };
+
+  const handleUserMenuClick: MenuProps["onClick"] = ({ key }) => {
+    if (key === "logout") {
+      logout();
+      return;
+    }
+
+    if (key === "login") {
+      void requestPubkey();
+      return;
+    }
+
+    if (key === "encryption") {
+      setShowEncryptionModal(true);
+      return;
+    }
+
+    if (key === "support-us") {
+      window.open("https://geyser.fund/project/formstr", "_blank");
+      return;
+    }
+
+    if (typeof key === "string" && key.startsWith("language-")) {
+      const locale = key.replace("language-", "");
+      void handleLanguageChange(locale);
     }
   };
 
@@ -306,13 +333,13 @@ export const NostrHeader = () => {
     ...[
       pubkey
         ? {
-          key: "logout",
-          label: <a onClick={logout}>{t("common.actions.logout")}</a>,
-        }
+            key: "logout",
+            label: t("common.actions.logout"),
+          }
         : {
-          key: "login",
-          label: <a onClick={requestPubkey}>{t("common.actions.login")}</a>,
-        },
+            key: "login",
+            label: t("common.actions.login"),
+          },
     ],
     {
       key: "encryption",
@@ -321,7 +348,7 @@ export const NostrHeader = () => {
       onClick: () => setShowEncryptionModal(true),
     },
     {
-      key: "Support Us",
+      key: "support-us",
       icon: (
         <div
           style={{
@@ -347,9 +374,16 @@ export const NostrHeader = () => {
           </Typography.Text>
         </div>
       ),
-      onClick: () => {
-        window.open("https://geyser.fund/project/formstr", "_blank");
-      },
+    },
+    {
+      key: "language",
+      icon: <GlobalOutlined />,
+      label: `${t("common.labels.language")}: ${currentLocaleLabel}`,
+      children: SUPPORTED_LOCALES.map((locale) => ({
+        key: `language-${locale.code}`,
+        label: locale.label,
+        disabled: languageLoading,
+      })),
     },
   ];
 
@@ -360,6 +394,7 @@ export const NostrHeader = () => {
         <Dropdown
           menu={{
             items: dropdownMenuItems,
+            onClick: handleUserMenuClick,
             overflowedIndicator: null,
             style: { overflow: "auto" },
           }}
@@ -394,37 +429,15 @@ export const NostrHeader = () => {
             </Link>
           </Col>
           <Col md={12} xs={10} sm={2}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: 12,
-              }}
-            >
-              <Select
-                size="small"
-                value={normalizeLocale(i18n.resolvedLanguage || i18n.language)}
-                onChange={handleLanguageChange}
-                loading={languageLoading}
-                suffixIcon={<GlobalOutlined />}
-                options={SUPPORTED_LOCALES.map((locale) => ({
-                  label: locale.label,
-                  value: locale.code,
-                }))}
-                aria-label={t("common.labels.language")}
-                style={{ minWidth: 110 }}
-              />
-              <Menu
-                mode="horizontal"
-                theme="light"
-                defaultSelectedKeys={[]}
-                selectedKeys={selectedKey}
-                overflowedIndicator={<MenuOutlined />}
-                items={newHeaderMenu}
-                onClick={onMenuClick}
-              />
-            </div>
+            <Menu
+              mode="horizontal"
+              theme="light"
+              defaultSelectedKeys={[]}
+              selectedKeys={selectedKey}
+              overflowedIndicator={<MenuOutlined />}
+              items={newHeaderMenu}
+              onClick={onMenuClick}
+            />
           </Col>
         </Row>
       </Header>
