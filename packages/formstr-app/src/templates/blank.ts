@@ -1,17 +1,18 @@
 import { FormTemplate } from './types';
 import { Field } from '../nostr/types'; 
+import { TFunction } from 'i18next';
 
 let fieldCounter = 0;
 const generateFieldId = (): string => `template_field_${Date.now()}_${fieldCounter++}`;
 
-export const blankTemplate: FormTemplate = {
+export const createBlankTemplate = (t: TFunction): FormTemplate => ({
   id: 'blank',
-  name: 'Blank Form',
-  description: 'Start with a clean slate.',
+  name: t('templates.blank.name'),
+  description: t('templates.blank.description'),
   initialState: {
-    formName: 'Untitled Form',
+    formName: t('templates.blank.formName'),
     formSettings: {
-      description: 'description here',
+      description: t('templates.blank.formDescription'),
       thankYouPage: true,
       notifyNpubs: [],
       publicForm: true,
@@ -22,14 +23,14 @@ export const blankTemplate: FormTemplate = {
     questionsList: [
        [
         'field', 
-        generateFieldId(), // Use generated ID
-        'text', // dataType (primitive type)
-        'Untitled Question', // label
-        '[]', // options (empty stringified array for non-option types)
-        '{"renderElement": "shortText"}', // config (includes renderElement)
-      ] as Field, // Assert type for tuple safety
+        generateFieldId(),
+        'text',
+        t('templates.blank.questionLabel'),
+        '[]',
+        '{"renderElement": "shortText"}',
+      ] as Field,
     ],
   },
-};
+});
 
 fieldCounter = 0;

@@ -1,10 +1,10 @@
 import { Typography } from "antd";
+import { useTranslation } from "react-i18next";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
-import { ChangeEvent, useState } from "react";
-
-const { Text } = Typography;
+import { ChangeEvent } from "react";
 
 function FormIdentifier() {
+  const { t } = useTranslation();
   const { updateFormSetting, formSettings } = useFormBuilderContext();
   const handleIdentifierChange = (e: ChangeEvent<HTMLInputElement>) => {
     updateFormSetting({ ...formSettings, formId: e.target.value });
@@ -14,7 +14,7 @@ function FormIdentifier() {
       <input
         className="file-input"
         type="text"
-        placeholder="Form Identifier"
+        placeholder={t("builder.formSettings.formIdentifier")}
         value={formSettings.formId}
         onChange={handleIdentifierChange}
       />

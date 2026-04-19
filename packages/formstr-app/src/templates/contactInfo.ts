@@ -1,19 +1,20 @@
 import { FormTemplate } from './types';
 import { Field } from '../nostr/types';
+import { TFunction } from 'i18next';
 
 let fieldCounter = 0;
 const generateFieldId = (): string => `template_field_${Date.now()}_${fieldCounter++}`;
 
 const emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 
-export const contactInfoTemplate: FormTemplate = {
+export const createContactInfoTemplate = (t: TFunction): FormTemplate => ({
   id: 'contactInfo',
-  name: 'Contact Info',
-  description: 'Gather contact details.',
+  name: t('templates.contactInfo.name'),
+  description: t('templates.contactInfo.description'),
   initialState: {
-    formName: 'Contact Information',
+    formName: t('templates.contactInfo.formName'),
     formSettings: {
-      description: 'Contact details.',
+      description: t('templates.contactInfo.formDescription'),
       thankYouPage: true,
       notifyNpubs: [],
       publicForm: true,
@@ -27,7 +28,7 @@ export const contactInfoTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Name', // label
+        t('templates.contactInfo.nameQuestion'),
         '[]', // options
         '{"renderElement": "shortText", "required": true}', // config
       ] as Field,
@@ -37,7 +38,7 @@ export const contactInfoTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Email', // label
+        t('templates.contactInfo.emailQuestion'),
         '[]', // options
         JSON.stringify({ // Stringify the config object
           renderElement: "shortText",
@@ -45,7 +46,7 @@ export const contactInfoTemplate: FormTemplate = {
           validationRules: {
             regex: {
               pattern: emailRegex,
-              errorMessage: "Please enter a valid email address."
+              errorMessage: t('templates.contactInfo.emailInvalid')
             }
           }
         }), // config
@@ -56,7 +57,7 @@ export const contactInfoTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Address', // label
+        t('templates.contactInfo.addressQuestion'),
         '[]', // options
         '{"renderElement": "paragraph", "required": true}', // config (Assuming 'paragraph' exists)
       ] as Field,
@@ -66,7 +67,7 @@ export const contactInfoTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Phone number', // label
+        t('templates.contactInfo.phoneQuestion'),
         '[]', // options
         '{"renderElement": "shortText", "required": false}', // config
       ] as Field,
@@ -76,12 +77,12 @@ export const contactInfoTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Comments', // label
+        t('templates.contactInfo.commentsQuestion'),
         '[]', // options
         '{"renderElement": "paragraph", "required": false}', // config (Assuming 'paragraph' exists)
       ] as Field,
     ],
   },
-};
+});
 
 fieldCounter = 0;

@@ -1,4 +1,5 @@
 import { Divider, Modal, Switch, Tooltip, Typography } from "antd";
+import { useTranslation } from "react-i18next";
 import useFormBuilderContext from "../../../hooks/useFormBuilderContext";
 import { isMobile } from "../../../../../utils/utility";
 import { NpubList } from "./NpubList";
@@ -12,15 +13,18 @@ export const Participants: React.FC<ParticipantProps> = ({
   open,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   const { viewList, setViewList, formSettings, updateFormSetting } =
     useFormBuilderContext();
   return (
     <Modal open={open} onCancel={onCancel} footer={null}>
-      <Typography.Text style={{ fontSize: 18 }}>Visibility</Typography.Text>
+      <Typography.Text style={{ fontSize: 18 }}>
+        {t("builder.sharing.visibility")}
+      </Typography.Text>
       {/*  */}
       {formSettings.encryptForm && (
         <Tooltip
-          title="This toggle will include the view key in the form URL meaning anyone with the url will be able to see it."
+          title={t("builder.sharing.anyoneWithUrlTooltip")}
           trigger={isMobile() ? "click" : "hover"}
         >
           <div
@@ -32,7 +36,9 @@ export const Participants: React.FC<ParticipantProps> = ({
               marginTop: 10,
             }}
           >
-            <Typography.Text>Anyone with URL can access?</Typography.Text>
+            <Typography.Text>
+              {t("builder.sharing.anyoneWithUrl")}
+            </Typography.Text>
             <Switch
               checked={formSettings.viewKeyInUrl}
               onChange={() =>
@@ -49,7 +55,7 @@ export const Participants: React.FC<ParticipantProps> = ({
       {(viewList || {}).size === 0 && !formSettings.encryptForm ? (
         <>
           <Typography.Text>
-            The form is currently public for everyone
+            {t("builder.sharing.publicForEveryone")}
           </Typography.Text>
           <Divider />
         </>
@@ -57,7 +63,7 @@ export const Participants: React.FC<ParticipantProps> = ({
       {(viewList || {}).size !== 0 && (
         <>
           <Typography.Text>
-            Only the npubs below can fill the form
+            {t("builder.sharing.onlyListedCanFill")}
           </Typography.Text>
           <Divider />
         </>
@@ -65,7 +71,7 @@ export const Participants: React.FC<ParticipantProps> = ({
       <NpubList
         NpubList={viewList}
         setNpubList={setViewList}
-        ListHeader={"Participants"}
+        ListHeader={t("builder.sharing.participants")}
       />
       <Divider />
     </Modal>

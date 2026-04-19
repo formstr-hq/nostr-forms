@@ -3,7 +3,12 @@ import { Checkbox, Input } from "antd";
 import { useState } from "react";
 import OptionsStyle from "./Options.style";
 import { AddOption } from "./AddOption";
-import { handleDelete, handleLabelChange, hasOtherOption } from "./utils";
+import {
+  handleDelete,
+  handleLabelChange,
+  hasOtherOption,
+  normalizeChoices,
+} from "./utils";
 import { Choice, ChoiceSettings } from "./types";
 import { ColorfulMarkdownTextarea } from "../../../../../../components/SafeMarkdown/ColorfulMarkdownInput";
 
@@ -16,7 +21,9 @@ export const CheckboxCreator: React.FC<CheckboxCreatorProps> = ({
   initialValues,
   onValuesChange,
 }) => {
-  const [choices, setChoices] = useState<Array<Choice>>(initialValues || []);
+  const [choices, setChoices] = useState<Array<Choice>>(() =>
+    normalizeChoices(initialValues),
+  );
 
   const handleNewChoices = (choices: Array<Choice>) => {
     setChoices(choices);

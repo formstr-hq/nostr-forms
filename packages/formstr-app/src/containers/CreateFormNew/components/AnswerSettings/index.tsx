@@ -1,8 +1,9 @@
 import { Button, Divider, Dropdown, Switch, Typography, MenuProps } from "antd";
 import { DeleteOutlined, DownOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 import Validation from "../Validation";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
-import { INPUTS_MENU } from "../../configs/menuConfig";
+import { getInputsMenu } from "../../configs/menuConfig";
 import StyleWrapper from "./style";
 import { RightAnswer } from "./RightAnswer";
 import { IAnswerSettings } from "./types";
@@ -13,8 +14,10 @@ import { FileUploadSettings } from "./settings/FileUploadSettings";
 const { Text } = Typography;
 
 function AnswerSettings() {
+  const { t } = useTranslation();
   const { questionsList, questionIdInFocus, editQuestion, deleteQuestion } =
     useFormBuilderContext();
+  const inputsMenu = getInputsMenu(t);
 
   if (!questionIdInFocus) {
     return null;
@@ -30,7 +33,7 @@ function AnswerSettings() {
     question[5] || '{ "renderElement": "shortText"}'
   );
 
-  const answerType = INPUTS_MENU.find(
+  const answerType = inputsMenu.find(
     (option) =>
       option.answerSettings.renderElement === answerSettings.renderElement
   );
@@ -72,7 +75,7 @@ function AnswerSettings() {
   };
 
   const updateAnswerType: MenuProps["onClick"] = ({ key }) => {
-    const selectedItem = INPUTS_MENU.find((item) => item.key === key);
+    const selectedItem = inputsMenu.find((item) => item.key === key);
     if (!selectedItem) return;
     let field = question;
     field[2] = selectedItem.primitive;
@@ -98,14 +101,17 @@ function AnswerSettings() {
   return (
     <StyleWrapper>
       <Text className="question">
-        Question {questionIndex + 1} of {questionsList.length}
+        {t("builder.properties.questionCounter", {
+          current: questionIndex + 1,
+          total: questionsList.length,
+        })}
       </Text>
       <Divider className="divider" />
       <div className="input-property">
-        <Text className="property-title">Properties</Text>
+        <Text className="property-title">{t("builder.properties.title")}</Text>
         <div className="property-setting">
-          <Text className="property-name">Type</Text>
-          <Dropdown menu={{ items: INPUTS_MENU, onClick: updateAnswerType }}>
+          <Text className="property-name">{t("builder.properties.type")}</Text>
+          <Dropdown menu={{ items: inputsMenu, onClick: updateAnswerType }}>
             <Text>
               {answerType?.label} <DownOutlined />
             </Text>
@@ -113,7 +119,9 @@ function AnswerSettings() {
         </div>
         {answerType && (
           <div className="property-setting">
-            <Text className="property-name">Required</Text>
+            <Text className="property-name">
+              {t("builder.properties.required")}
+            </Text>
             <Switch
               checked={answerSettings.required}
               onChange={updateIsRequired}
@@ -148,7 +156,7 @@ function AnswerSettings() {
         className="delete-button"
         onClick={() => deleteQuestion(question[1])}
       >
-        <DeleteOutlined /> Delete
+        <DeleteOutlined /> {t("common.actions.delete")}
       </Button>
       <Divider className="divider" />
     </StyleWrapper>
