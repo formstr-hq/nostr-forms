@@ -58,6 +58,7 @@ export enum AnswerTypes {
   multipleChoiceGrid = "multipleChoiceGrid",
   checkboxGrid = "checkboxGrid",
   fileUpload = "fileUpload",
+  rating = "rating",
 }
 
 export interface FormSpec {

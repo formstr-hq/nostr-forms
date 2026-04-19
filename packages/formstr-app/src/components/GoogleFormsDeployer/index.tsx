@@ -140,14 +140,6 @@ function CopyIcon() {
   );
 }
 
-function BoltIcon() {
-  return (
-    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
-  );
-}
-
 function CheckIcon() {
   return (
     <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
@@ -398,7 +390,7 @@ export default function GoogleFormsDeployer({
               <>Go to <a href="https://script.google.com" target="_blank" rel="noreferrer" style={{ color: "#2563eb" }}>script.google.com</a> → <strong>New project</strong></>,
               <>Delete default code, paste the script, save (Ctrl+S)</>,
               <>Click <strong>Deploy → New deployment</strong> → type <code style={{ fontSize: 11, background: "#f1f5f9", padding: "1px 5px", borderRadius: 4, border: "1px solid #e2e8f0" }}>Web app</code></>,
-              <>Set <em>Execute as</em>: <code style={{ fontSize: 11, background: "#f1f5f9", padding: "1px 5px", borderRadius: 4, border: "1px solid #e2e8f0" }}>Me</code> · <em>Access</em>: <code style={{ fontSize: 11, background: "#f1f5f9", padding: "1px 5px", borderRadius: 4, border: "1px solid #e2e8f0" }}>Anyone</code> → <strong>Deploy</strong> &amp; authorize</>,
+              <>Set <em>Execute as</em>: <code style={{ fontSize: 11, background: "#f1f5f9", padding: "1px 5px", borderRadius: 4, border: "1px solid #e2e8f0" }}>Me</code> · <em>Access</em>: <code style={{ fontSize: 13, background: "#f1f5f9", padding: "1px 5px", borderRadius: 4, border: "1px solid #e2e8f0" }}><strong>Anyone</strong></code> → <strong>Deploy</strong> &amp; authorize</>,
               <>Copy the generated Web app URL</>,
             ].map((item, i) => (
               <li key={i} style={{ fontSize: 13, color: "#475569", lineHeight: 2 }}>{item}</li>
@@ -418,8 +410,8 @@ export default function GoogleFormsDeployer({
               style={{ ...inputStyle, borderRadius: "8px 0 0 8px", borderRight: "none" }}
             />
             <button style={{ ...btnPrimary, borderRadius: "0 8px 8px 0" }} onClick={handleFetch} disabled={fetching}>
-              {fetching ? <SpinnerIcon /> : <BoltIcon />}
-              {fetching ? "Fetching…" : "Fetch"}
+              {fetching && <SpinnerIcon />}
+              {fetching ? "Fetching…" : "Fetch Schema"}
             </button>
           </div>
 

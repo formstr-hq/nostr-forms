@@ -389,7 +389,31 @@ export const Response = () => {
         dataIndex: fieldId,
         width: 150,
       };
-
+      
+      // Add custom render for rating fields
+      if (fieldType === "rating") {
+        column.render = (data: string) => {
+          if (!data) return <span>-</span>;
+          const value = parseInt(data, 10);
+          if (isNaN(value)) return <span>{data}</span>;
+          return (
+            <div style={{ display: "flex", gap: 2 }}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <svg key={n} width={20} height={20} viewBox="0 0 28 28">
+                  <polygon
+                    points="14,3 17.5,10.5 26,11.5 20,17.5 21.5,26 14,22 6.5,26 8,17.5 2,11.5 10.5,10.5"
+                    fill={n <= value ? "#EF9F27" : "none"}
+                    stroke={n <= value ? "#EF9F27" : "#B4B2A9"}
+                    strokeWidth={1.5}
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ))}
+            </div>
+          );
+        };
+      }
+      
       // Add custom render for file upload fields
       if (fieldType === "file") {
         column.render = (data: string, record: any) => {

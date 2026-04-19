@@ -158,6 +158,17 @@ export const mapGoogleQuestionToField = (question: GoogleFormQuestion): Field =>
       ];
     }
 
+    if(questionType === "RATING") {
+      return [
+        "field",
+        makeTag(6),
+        "rating",
+        label,
+        "[]",
+        JSON.stringify({ renderElement: AnswerTypes.rating, required }),
+      ];
+    }
+
     const renderElement = hasOptions ? AnswerTypes.radioButton : AnswerTypes.shortText;
     return [
       "field",

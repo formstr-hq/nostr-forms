@@ -10,6 +10,7 @@ import { DateTimeFiller } from "./InputTypes/DateTimeFiller";
 import { GridFiller } from "./InputTypes/GridFiller";
 import { FileUploadFiller } from "./InputTypes/FileUploadFiller";
 import { AnswerTypes, GridOptions, Option } from "../../../nostr/types";
+import { RatingFiller } from "./InputTypes/RatingFiller";
 
 interface InputFillerProps {
   fieldConfig: any;
@@ -171,6 +172,13 @@ export const InputFiller: React.FC<InputFillerProps> = ({
           onChange={handleValueChange}
           defaultValue={defaultValue as string}
           disabled={disabled}
+        />
+      ),
+      [AnswerTypes.rating]: (
+        <RatingFiller
+          defaultValue={defaultValue as number}
+          disabled={disabled}
+          onChange={handleValueChange}
         />
       ),
     };
