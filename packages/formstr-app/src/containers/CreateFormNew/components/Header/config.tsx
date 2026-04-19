@@ -1,4 +1,5 @@
 import { ImportOutlined } from "@ant-design/icons";
+import { TFunction } from "i18next";
 
 export const HEADER_MENU_KEYS = {
   BUILDER: "BUILDER",
@@ -8,22 +9,22 @@ export const HEADER_MENU_KEYS = {
   IMPORT_FORMS: "IMPORT_FORMS",
 };
 
-export const HEADER_MENU = [
+export const getHeaderMenu = (t: TFunction) => [
   {
     key: HEADER_MENU_KEYS.IMPORT_FORMS,
-    label: "Import",
-    icon: <ImportOutlined />
+    label: t("builder.header.importForms"),
+    icon: <ImportOutlined />,
   },
   {
     key: HEADER_MENU_KEYS.AI_BUILDER,
-    label: "AI Builder",
+    label: t("builder.header.aiBuilder"),
   },
   {
     key: HEADER_MENU_KEYS.BUILDER,
-    label: "Form Builder",
+    label: t("builder.header.formBuilder"),
   },
   {
     key: HEADER_MENU_KEYS.PREVIEW,
-    label: "Preview",
+    label: t("builder.header.preview"),
   },
 ];

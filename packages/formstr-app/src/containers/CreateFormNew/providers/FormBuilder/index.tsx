@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   FormInitData,
   IFormBuilderContext,
@@ -27,6 +27,7 @@ import {
   sampleThankYouScreens,
 } from "../../components/FormSettings/constants";
 import { getDefaultRelays } from "../../../../nostr/common";
+import { useTranslation } from "react-i18next";
 
 const LOCAL_STORAGE_CUSTOM_RELAYS_KEY = "formstr:customRelays";
 
@@ -80,11 +81,11 @@ export const FormBuilderContext = React.createContext<IFormBuilderContext>({
   reorderSections: () => {},
 });
 
-const InitialFormSettings: IFormSettings = {
+const createInitialFormSettings = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+): IFormSettings => ({
   titleImageUrl: sampleBackgrounds[0],
-  description:
-    "This is the description, you can use markdown while editing it!" +
-    " tap anywhere on the form to edit, including this description.",
+  description: t("builder.initialDescription"),
   thankYouPage: true,
   formId: makeTag(6),
   encryptForm: true,
@@ -94,13 +95,20 @@ const InitialFormSettings: IFormSettings = {
   formstrBranding: true,
   thankYouScreenImageUrl: sampleThankYouScreens[0],
   disablePreview: false,
-};
+});
+
+const getDefaultSectionTitle = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+  sectionNumber: number,
+) => t("builder.defaults.sectionTitle", { number: sectionNumber });
 
 export default function FormBuilderProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation();
+  const initialFormSettings = useMemo(() => createInitialFormSettings(t), [t]);
   const { userRelays } = useProfileContext();
 
   const [questionsList, setQuestionsList] = useState<Array<Field>>([
@@ -110,11 +118,11 @@ export default function FormBuilderProvider({
     string | undefined
   >();
   const [formSettings, setFormSettings] =
-    useState<IFormSettings>(InitialFormSettings);
+    useState<IFormSettings>(initialFormSettings);
   const [isRightSettingsOpen, setIsRightSettingsOpen] = useState(false);
   const [isLeftMenuOpen, setIsLeftMenuOpen] = useState(false);
   const [formName, setFormName] = useState<string>(
-    "This is the title of your form! Tap to edit.",
+    t("builder.initialTitle"),
   );
   const bottomElement = useRef<HTMLDivElement>(null);
   const { pubkey: userPubkey } = useProfileContext();
@@ -187,7 +195,7 @@ export default function FormBuilderProvider({
   const addSection = useCallback(
     (title?: string, description = ""): SectionData => {
       const sectionNumber = sections.length + 1;
-      const defaultTitle = title || `Section ${sectionNumber}`;
+      const defaultTitle = title || getDefaultSectionTitle(t, sectionNumber);
 
       const newSection: SectionData = {
         id: makeTag(8),
@@ -206,7 +214,7 @@ export default function FormBuilderProvider({
 
       return newSection;
     },
-    [sections.length],
+    [sections.length, t],
   );
 
   const updateSection = useCallback(
@@ -236,7 +244,7 @@ export default function FormBuilderProvider({
         const sectionNumber = index + 1;
         const isDefaultTitle = /^Section \d+$/.test(section.title);
         const newTitle = isDefaultTitle
-          ? `Section ${sectionNumber}`
+          ? getDefaultSectionTitle(t, sectionNumber)
           : section.title;
 
         return {
@@ -248,7 +256,7 @@ export default function FormBuilderProvider({
 
       return renumberedSections;
     });
-  }, []);
+  }, [t]);
 
   const moveQuestionToSection = useCallback(
     (questionId: string, sectionId?: string) => {
@@ -290,7 +298,7 @@ export default function FormBuilderProvider({
         const sectionNumber = index + 1;
         const isDefaultTitle = /^Section \d+$/.test(section.title);
         const newTitle = isDefaultTitle
-          ? `Section ${sectionNumber}`
+          ? getDefaultSectionTitle(t, sectionNumber)
           : section.title;
 
         return {
@@ -300,7 +308,7 @@ export default function FormBuilderProvider({
         };
       }),
     );
-  }, []);
+  }, [t]);
 
   // Relay management functions
   const toggleRelayManagerModal = useCallback(() => {
@@ -310,7 +318,7 @@ export default function FormBuilderProvider({
   const addRelayToList = useCallback((url: string) => {
     setRelayList((prevRelayList) => {
       if (prevRelayList.some((relay) => relay.url === url)) {
-        message.warning(`Relay URL ${url} already exists.`);
+        message.warning(t("builder.relayManager.duplicateUrl", { url }));
         return prevRelayList;
       }
       const newRelay: RelayItem = { url, tempId: makeTag(6) };
@@ -321,7 +329,7 @@ export default function FormBuilderProvider({
       );
       return updatedList;
     });
-  }, []);
+  }, [t]);
 
   const editRelayInList = useCallback((tempId: string, newUrl: string) => {
     setRelayList((prevRelayList) => {
@@ -330,7 +338,9 @@ export default function FormBuilderProvider({
           (relay) => relay.url === newUrl && relay.tempId !== tempId,
         )
       ) {
-        message.warning(`Relay URL ${newUrl} already exists.`);
+        message.warning(
+          t("builder.relayManager.duplicateUrl", { url: newUrl }),
+        );
         return prevRelayList;
       }
       const updatedList = prevRelayList.map((relay) =>
@@ -342,7 +352,7 @@ export default function FormBuilderProvider({
       );
       return updatedList;
     });
-  }, []);
+  }, [t]);
 
   const deleteRelayFromList = useCallback((tempId: string) => {
     setRelayList((prevRelayList) => {
@@ -388,7 +398,7 @@ export default function FormBuilderProvider({
   const saveForm = async (onRelayAccepted?: (url: string) => void) => {
     const formToSave = getFormSpec();
     if (!formSettings.formId) {
-      message.error("Form ID is required");
+      message.error(t("builder.header.formIdRequired"));
       return;
     }
     const relayUrls = relayList.map((relay) => relay.url);
@@ -405,7 +415,7 @@ export default function FormBuilderProvider({
     const { signingKey, viewKey: formViewKey, acceptedRelays } = artifacts;
 
     if (acceptedRelays.length === 0) {
-      throw new Error("No relays accepted the form. Please try again.");
+      throw new Error(t("builder.save.noRelaysAccepted"));
     }
 
     navigate("/dashboard", {
@@ -505,7 +515,7 @@ export default function FormBuilderProvider({
     let settingsFromFile = JSON.parse(
       form.spec.filter((f) => f[0] === "settings")?.[0]?.[1] || "{}",
     );
-    settingsFromFile = { ...InitialFormSettings, ...settingsFromFile };
+    settingsFromFile = { ...initialFormSettings, ...settingsFromFile };
     // Migrate legacy globalColor into the colors object
     if (settingsFromFile.globalColor && !settingsFromFile.colors?.global) {
       settingsFromFile.colors = {

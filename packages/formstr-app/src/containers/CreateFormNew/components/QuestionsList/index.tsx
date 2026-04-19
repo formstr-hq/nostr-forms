@@ -5,6 +5,7 @@ import StyleWrapper from "./style";
 import DescriptionStyle from "./description.style";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 import React, { ChangeEvent, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { Field } from "../../../../nostr/types";
 import AIFormGeneratorModal from "../AIFormGeneratorModal";
@@ -90,6 +91,7 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
 };
 
 export const QuestionsList = () => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -176,7 +178,7 @@ export const QuestionsList = () => {
             }}
           >
             <h4 style={{ margin: "0 0 16px 0", color: "#8c8c8c" }}>
-              Unsectioned Questions
+              {t("builder.questionsList.unsectionedQuestions")}
             </h4>
             {unsectionedQuestions.map((question, idx) => (
               <QuestionItem
@@ -205,7 +207,7 @@ export const QuestionsList = () => {
             >
               {sectionQuestions.length === 0 ? (
                 <Empty
-                  description="No questions in this section. Add new ones."
+                  description={t("builder.questionsList.emptySection")}
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                 />
               ) : (
@@ -244,7 +246,7 @@ export const QuestionsList = () => {
             <ColorfulMarkdownTextarea
               value={formSettings.description || ""}
               onChange={handleDescriptionChange}
-              placeholder="Add a form description (optional, supports Markdown)"
+              placeholder={t("builder.questionsList.descriptionPlaceholder")}
               color={formSettings.colors?.description ?? formSettings.colors?.global ?? formSettings.globalColor}
             />
           </div>
@@ -256,8 +258,7 @@ export const QuestionsList = () => {
       ) : (
         <div style={{ textAlign: "center", padding: "40px", color: "grey" }}>
           <Text type="secondary">
-            No questions yet. Add some using the sidebar or click "AI Builder"
-            in the header.
+            {t("builder.questionsList.empty")}
           </Text>
         </div>
       )}
