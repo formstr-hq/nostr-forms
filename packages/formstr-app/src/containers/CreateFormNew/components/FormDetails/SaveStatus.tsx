@@ -1,4 +1,5 @@
 import { Spin, Typography, Button } from "antd";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -13,25 +14,31 @@ export const SaveStatus = ({
   userPub: string | undefined;
   requestPubkey: () => void;
 }) => {
+  const { t } = useTranslation();
   return (
     <div className="save-status">
-      <div>Saved Locally? {savedLocally ? "✅" : "❌"}</div>
+      <div>
+        {t("builder.formDetails.savedLocally")} {savedLocally ? "✅" : "❌"}
+      </div>
       {userPub ? (
         <div className="nostr-save-status">
           {!savedOnNostr ? (
             <div className="saving-indicator">
-              <Text>Saving to nostr profile...</Text>
+              <Text>{t("builder.formDetails.savingToProfile")}</Text>
               <Spin size="small" style={{ marginLeft: 4 }} />
             </div>
           ) : (
-            <div>Saved To Profile? {savedOnNostr ? "✅" : "❌"}</div>
+            <div>
+              {t("builder.formDetails.savedToProfile")}{" "}
+              {savedOnNostr ? "✅" : "❌"}
+            </div>
           )}
         </div>
       ) : (
         <div className="login-prompt">
-          <Text>Login to save to your profile</Text>
+          <Text>{t("builder.formDetails.loginToSave")}</Text>
           <Button onClick={requestPubkey} className="ml-2">
-            Login
+            {t("common.actions.login")}
           </Button>
         </div>
       )}

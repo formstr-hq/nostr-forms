@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, Divider, Typography, Skeleton } from "antd";
+import { useTranslation } from "react-i18next";
 import StyleWrapper from "./style";
 import { getPublicForms } from "../../nostr/publicForms";
 import { Event } from "nostr-tools";
@@ -7,6 +8,7 @@ import { getDefaultRelays } from "../../nostr/common";
 import PublicFormCard from "./PublicFormCard";
 
 function PublicForms() {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [forms, setForms] = useState<Event[]>([]);
 
@@ -35,7 +37,7 @@ function PublicForms() {
 
   return (
     <StyleWrapper>
-      <Typography.Text>Recently Posted</Typography.Text>
+      <Typography.Text>{t("publicForms.recentlyPosted")}</Typography.Text>
       {isLoading ? (
         <div
           style={{
@@ -88,7 +90,7 @@ function PublicForms() {
         <Typography.Text
           style={{ display: "block", textAlign: "center", margin: "40px" }}
         >
-          No public forms found on the connected relays.
+          {t("publicForms.empty")}
         </Typography.Text>
       )}
     </StyleWrapper>

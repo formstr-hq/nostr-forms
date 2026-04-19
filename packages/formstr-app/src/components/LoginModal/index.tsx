@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Button, Typography, Space, Input, Tabs, message, Alert, Divider } from "antd";
 import { KeyOutlined, LinkOutlined, LockOutlined } from "@ant-design/icons";
 import QRCode from "qrcode.react";
+import { useTranslation } from "react-i18next";
 import { signerManager } from "../../signer";
 import { getAppSecretKeyFromLocalStorage, getNcryptsecFromLocalStorage, removeNcryptsecFromLocalStorage } from "../../signer/utils";
 import { getPublicKey } from "nostr-tools";
@@ -37,6 +38,7 @@ interface Nip46SectionProps {
   onSuccess: () => void;
 }
 const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("manual");
   const [bunkerUri, setBunkerUri] = useState("");
   const [loadingConnect, setLoadingConnect] = useState(false);
@@ -75,20 +77,20 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
 
   const connectToBunkerUri = async (bunkerUri: string) => {
     await signerManager.loginWithNip46(bunkerUri);
-    message.success("Connected to Remote Signer");
+    message.success(t("auth.nip46.connected"));
     onSuccess();
   };
 
   const handleConnectManual = async () => {
     if (!bunkerUri) {
-      message.error("Please enter a bunker URI.");
+      message.error(t("auth.nip46.enterBunkerUriError"));
       return;
     }
     setLoadingConnect(true);
     try {
       await connectToBunkerUri(bunkerUri);
     } catch (err) {
-      message.error("Connection failed.");
+      message.error(t("auth.nip46.connectionFailed"));
     } finally {
       setLoadingConnect(false);
     }
@@ -104,10 +106,10 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
           }
         }}
       >
-        <TabPane tab="Paste URI" key="manual">
+        <TabPane tab={t("auth.nip46.pasteUri")} key="manual">
           <Space direction="vertical" style={{ width: "100%" }}>
             <Input
-              placeholder="Enter bunker URI"
+              placeholder={t("auth.nip46.enterBunkerUri")}
               value={bunkerUri}
               onChange={(e) => setBunkerUri(e.target.value)}
             />
@@ -116,16 +118,16 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
               onClick={handleConnectManual}
               loading={loadingConnect}
             >
-              Connect
+              {t("common.actions.connect")}
             </Button>
           </Space>
         </TabPane>
-        <TabPane tab="QR Code" key="qr">
+        <TabPane tab={t("auth.nip46.qrCode")} key="qr">
           <div style={{ textAlign: "center", marginTop: 16 }}>
             <QRCode value={qrPayload} size={180} />
             <div style={{ marginTop: 8 }}>
               <Text type="secondary" style={{ fontSize: 12 }}>
-                Using relay.nsec.app for communication
+                {t("auth.nip46.usingRelay")}
               </Text>
             </div>
           </div>
@@ -140,6 +142,7 @@ interface NcryptsecSectionProps {
   onSuccess: () => void;
 }
 const NcryptsecSection: React.FC<NcryptsecSectionProps> = ({ onSuccess }) => {
+  const { t } = useTranslation();
   const [ncryptsec, setNcryptsec] = useState(() => getNcryptsecFromLocalStorage() ?? "");
   const [storedNcryptsec, setStoredNcryptsec] = useState(() => !!getNcryptsecFromLocalStorage());
   const [password, setPassword] = useState("");
@@ -147,16 +150,16 @@ const NcryptsecSection: React.FC<NcryptsecSectionProps> = ({ onSuccess }) => {
 
   const handleLogin = async () => {
     if (!ncryptsec.trim() || !password) {
-      message.error("Please enter your encrypted key and password.");
+      message.error(t("auth.ncryptsec.enterCredentials"));
       return;
     }
     setLoading(true);
     try {
       await signerManager.loginWithNcryptsec(ncryptsec.trim(), password);
-      message.success("Logged in successfully.");
+      message.success(t("auth.ncryptsec.loginSuccess"));
       onSuccess();
     } catch {
-      message.error("Invalid key or wrong password.");
+      message.error(t("auth.ncryptsec.loginFailed"));
     } finally {
       setLoading(false);
     }
@@ -164,12 +167,11 @@ const NcryptsecSection: React.FC<NcryptsecSectionProps> = ({ onSuccess }) => {
 
   const handleForget = () => {
     Modal.confirm({
-      title: "Forget saved key?",
-      content:
-        "This will remove your encrypted key from this device. You will need to paste it manually next time you sign in. Make sure you have it backed up before continuing.",
-      okText: "Forget key",
+      title: t("auth.ncryptsec.forgetSavedKey"),
+      content: t("auth.ncryptsec.forgetSavedKeyBody"),
+      okText: t("auth.ncryptsec.forgetSavedKeyAction"),
       okType: "danger",
-      cancelText: "Cancel",
+      cancelText: t("common.actions.cancel"),
       onOk() {
         removeNcryptsecFromLocalStorage();
         setNcryptsec("");
@@ -182,7 +184,7 @@ const NcryptsecSection: React.FC<NcryptsecSectionProps> = ({ onSuccess }) => {
     <div style={{ marginTop: 16 }}>
       <Space direction="vertical" style={{ width: "100%" }}>
         <Input
-          placeholder="ncryptsec1..."
+          placeholder={t("auth.ncryptsec.encryptedKeyPlaceholder")}
           value={ncryptsec}
           onChange={(e) => setNcryptsec(e.target.value)}
         />
@@ -192,17 +194,17 @@ const NcryptsecSection: React.FC<NcryptsecSectionProps> = ({ onSuccess }) => {
             style={{ fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
             onClick={handleForget}
           >
-            Forget saved key
+            {t("auth.ncryptsec.forgetSavedKeyLink")}
           </Text>
         )}
         <Input.Password
-          placeholder="Password"
+          placeholder={t("auth.ncryptsec.passwordPlaceholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onPressEnter={handleLogin}
         />
         <Button type="primary" block loading={loading} onClick={handleLogin}>
-          Sign In
+          {t("auth.ncryptsec.signIn")}
         </Button>
       </Space>
     </div>
@@ -215,6 +217,7 @@ interface SignUpSectionProps {
 }
 
 const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState<"form" | "backup">("form");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -227,11 +230,11 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
 
   const handleCreate = async () => {
     if (!password) {
-      message.error("Password is required.");
+      message.error(t("auth.signUp.passwordRequired"));
       return;
     }
     if (password !== confirmPassword) {
-      message.error("Passwords do not match.");
+      message.error(t("auth.signUp.passwordMismatch"));
       return;
     }
     setLoading(true);
@@ -246,7 +249,7 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
       setStep("backup");
     } catch (err) {
       console.error(err);
-      message.error("Account creation failed. Please try again.");
+      message.error(t("auth.signUp.creationFailed"));
     } finally {
       setLoading(false);
     }
@@ -260,12 +263,12 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
           showIcon
           message={
             <Text strong>
-              Save this encrypted key. It's the only way to recover your account.
+              {t("auth.signup.backupWarning")}
             </Text>
           }
         />
         <Text type="secondary" style={{ fontSize: 12 }}>
-          Your encrypted private key (ncryptsec):
+          {t("auth.signup.backupLabel")}
         </Text>
         <Paragraph
           copyable
@@ -280,7 +283,7 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
           {ncryptsec}
         </Paragraph>
         <Button type="primary" block onClick={onLogin}>
-          I've saved my key
+          {t("auth.signup.savedKeyButton")}
         </Button>
       </Space>
     );
@@ -293,30 +296,29 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
         showIcon
         message={
           <Text style={{ fontSize: 12 }}>
-            This information will be public on the Nostr network — share only
-            as much as you're comfortable with.
+            {t("auth.signup.publicInfo")}
           </Text>
         }
         style={{ marginBottom: 4 }}
       />
       <Input
-        placeholder="Name (optional)"
+        placeholder={t("auth.signUp.namePlaceholder")}
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
       <Input
-        placeholder="Username (optional)"
+        placeholder={t("auth.signUp.usernamePlaceholder")}
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
       <Input.TextArea
-        placeholder="About (optional)"
+        placeholder={t("auth.signUp.aboutPlaceholder")}
         value={about}
         onChange={(e) => setAbout(e.target.value)}
         rows={2}
       />
       <Input
-        placeholder="Picture URL (optional)"
+        placeholder={t("auth.signUp.picturePlaceholder")}
         value={picture}
         onChange={(e) => setPicture(e.target.value)}
       />
@@ -324,22 +326,21 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
       <Divider style={{ margin: "8px 0" }} />
 
       <Text type="secondary" style={{ fontSize: 12 }}>
-        Your Nostr key will be encrypted with this password. Choose it carefully
-        — there's no way to recover your account without it.
+        {t("auth.signup.passwordHint")}
       </Text>
       <Input.Password
-        placeholder="Password"
+        placeholder={t("auth.ncryptsec.passwordPlaceholder")}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
       <Input.Password
-        placeholder="Confirm password"
+        placeholder={t("auth.signUp.confirmPasswordPlaceholder")}
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
       />
 
       <Button type="primary" block loading={loading} onClick={handleCreate}>
-        Create Account
+        {t("auth.signUp.createAccount")}
       </Button>
     </Space>
   );
@@ -347,12 +348,13 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
 
 // Footer info component
 const FooterInfo: React.FC = () => {
+  const { t } = useTranslation();
   const [isFAQModalVisible, setIsFAQModalVisible] = useState(false);
 
   return (
     <div style={{ marginTop: 24, textAlign: "center" }}>
       <Text type="secondary" style={{ fontSize: 12 }}>
-        Your keys never leave your control.
+        {t("auth.footer.keysStayWithYou")}
       </Text>
       <br />
       <a
@@ -361,7 +363,7 @@ const FooterInfo: React.FC = () => {
           setIsFAQModalVisible(true);
         }}
       >
-        Need help?
+        {t("auth.footer.needHelp")}
       </a>
       <ThemedUniversalModal
         visible={isFAQModalVisible}
@@ -369,7 +371,7 @@ const FooterInfo: React.FC = () => {
           setIsFAQModalVisible(false);
         }}
         filePath="/docs/faq.md"
-        title="Frequently Asked Questions"
+        title={t("header.faqTitle")}
       />
     </div>
   );
@@ -382,6 +384,7 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
+  const { t } = useTranslation();
   const [showNip46, setShowNip46] = useState(false);
   const [showNcryptsec, setShowNcryptsec] = useState(() => !!getNcryptsecFromLocalStorage());
 
@@ -393,51 +396,51 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
       setLoadingNip07(true);
       try {
         await signerManager.loginWithNip07();
-        message.success("Logged in with NIP-07");
+        message.success(t("auth.messages.nip07Success"));
         onLogin();
       } catch (err) {
-        message.error("Login failed.");
+        message.error(t("auth.messages.nip07Failed"));
         onClose();
       } finally {
         setLoadingNip07(false);
       }
     } else {
-      message.error("No NIP-07 extension found.");
+      message.error(t("auth.messages.nip07Missing"));
     }
   };
 
   return (
     <Modal open={open} onCancel={onClose} footer={null} centered width={420} zIndex={1100} destroyOnClose>
       <div style={{ textAlign: "center", marginBottom: 16 }}>
-        <Title level={4}>Welcome to Formstr</Title>
-        <Text type="secondary">Sign in or create a new account</Text>
+        <Title level={4}>{t("auth.welcomeTitle")}</Title>
+        <Text type="secondary">{t("auth.title")}</Text>
       </div>
       <Tabs defaultActiveKey="signin">
-        <TabPane tab="Sign In" key="signin">
+        <TabPane tab={t("auth.signInTab")} key="signin">
           <Space direction="vertical" style={{ width: "100%" }}>
             <LoginOptionButton
               icon={<KeyOutlined />}
-              text="Sign in with Nostr Extension (NIP-07)"
+              text={t("auth.options.nip07")}
               type="primary"
               onClick={handleNip07}
               loading={loadingNip07}
             />
             <LoginOptionButton
               icon={<LockOutlined />}
-              text="Sign in with Encrypted Key"
+              text={t("auth.options.ncryptsec")}
               onClick={() => { setShowNcryptsec(!showNcryptsec); setShowNip46(false); }}
             />
             {showNcryptsec && <NcryptsecSection onSuccess={onLogin} />}
             <LoginOptionButton
               icon={<LinkOutlined />}
-              text="Connect with Remote Signer (NIP-46)"
+              text={t("auth.options.remoteSigner")}
               onClick={() => { setShowNip46(!showNip46); setShowNcryptsec(false); }}
             />
             {showNip46 && <Nip46Section onSuccess={() => { onLogin(); }} />}
           </Space>
           <FooterInfo />
         </TabPane>
-        <TabPane tab="Create Account" key="signup">
+        <TabPane tab={t("auth.createAccountTab")} key="signup">
           <SignUpSection onLogin={onLogin} />
         </TabPane>
       </Tabs>

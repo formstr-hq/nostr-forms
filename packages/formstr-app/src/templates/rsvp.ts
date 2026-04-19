@@ -1,5 +1,6 @@
 import { FormTemplate } from './types';
 import { Field, Option } from '../nostr/types';
+import { TFunction } from 'i18next';
 
 let fieldCounter = 0;
 let optionCounter = 0;
@@ -11,17 +12,14 @@ const createOptionsString = (options: Array<[string, string]>): string => {
     return JSON.stringify(optionsWithIds);
 };
 
-const rsvpDescription = `Event Address: 123 Your Street Your City, ST 12345
-Contact us at (123) 456-7890 or no_reply@example.com`;
-
-export const rsvpTemplate: FormTemplate = {
+export const createRsvpTemplate = (t: TFunction): FormTemplate => ({
   id: 'rsvp',
-  name: 'RSVP', 
-  description: 'Collect attendance for an event.',
+  name: t('templates.rsvp.name'),
+  description: t('templates.rsvp.description'),
   initialState: {
-    formName: 'Event RSVP',
+    formName: t('templates.rsvp.formName'),
     formSettings: {
-      description: rsvpDescription,
+      description: t('templates.rsvp.formDescription'),
       thankYouPage: true,
       notifyNpubs: [],
       publicForm: true,
@@ -34,10 +32,10 @@ export const rsvpTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'option', // dataType
-        'Can you attend?', // label
+        t('templates.rsvp.attendQuestion'),
         createOptionsString([
-          ["Yes, I'll be there", ""],
-          ["Sorry, can't make it", ""],
+          [t('templates.rsvp.yesAttend'), ""],
+          [t('templates.rsvp.cantAttend'), ""],
         ]), // options
         '{"renderElement": "radioButton", "required": true}', // config (Radio button, required)
       ] as Field,
@@ -47,7 +45,7 @@ export const rsvpTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'What are the names of people attending?', // label
+        t('templates.rsvp.attendeeNamesQuestion'),
         '[]', // options (none)
         '{"renderElement": "paragraph", "required": false}', // config (Using paragraph for potentially long list, not required)
       ] as Field,
@@ -57,12 +55,12 @@ export const rsvpTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'option', // dataType
-        'How did you hear about this event?', // label
+        t('templates.rsvp.referralQuestion'),
         createOptionsString([
-          ["Website", ""],
-          ["Friend", ""],
-          ["Newsletter", ""],
-          ["Advertisement", ""],
+          [t('templates.rsvp.website'), ""],
+          [t('templates.rsvp.friend'), ""],
+          [t('templates.rsvp.newsletter'), ""],
+          [t('templates.rsvp.advertisement'), ""],
         ]), // options
         '{"renderElement": "checkboxes", "required": false}', // config (Checkboxes, not required)
       ] as Field,
@@ -72,13 +70,13 @@ export const rsvpTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Comments and/or questions', // label
+        t('templates.rsvp.commentsQuestion'),
         '[]', // options (none)
         '{"renderElement": "paragraph", "required": false}', // config (Using paragraph, not required)
       ] as Field,
     ],
   },
-};
+});
 
 fieldCounter = 0;
 optionCounter = 0;

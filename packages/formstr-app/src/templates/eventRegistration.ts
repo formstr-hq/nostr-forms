@@ -1,5 +1,6 @@
 import { FormTemplate } from './types';
 import { Field, Option } from '../nostr/types';
+import { TFunction } from 'i18next';
 
 let fieldCounter = 0;
 let optionCounter = 0;
@@ -13,19 +14,14 @@ const createOptionsString = (options: Array<[string, string]>): string => {
 
 const emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 
-const eventDescription = `Event Timing: January 4th-6th, 2016
-Event Address: 123 Your Street Your City, ST 12345
-Contact us at (123) 456-7890 or no_reply@example.com
-`;
-
-export const eventRegistrationTemplate: FormTemplate = {
+export const createEventRegistrationTemplate = (t: TFunction): FormTemplate => ({
   id: 'eventRegistration',
-  name: 'Event Registration',
-  description: 'Register attendees for an event.', 
+  name: t('templates.eventRegistration.name'),
+  description: t('templates.eventRegistration.description'),
   initialState: {
-    formName: 'Event Registration', 
+    formName: t('templates.eventRegistration.formName'),
     formSettings: {
-      description: eventDescription, 
+      description: t('templates.eventRegistration.formDescription'),
       thankYouPage: true,
       notifyNpubs: [],
       publicForm: true,
@@ -39,7 +35,7 @@ export const eventRegistrationTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Name', // label
+        t('templates.eventRegistration.nameQuestion'),
         '[]', // options
         '{"renderElement": "shortText", "required": true}', // config
       ] as Field,
@@ -49,7 +45,7 @@ export const eventRegistrationTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Email', // label
+        t('templates.eventRegistration.emailQuestion'),
         '[]', // options
         JSON.stringify({
             renderElement: "shortText",
@@ -57,7 +53,7 @@ export const eventRegistrationTemplate: FormTemplate = {
             validationRules: {
               regex: {
                 pattern: emailRegex,
-                errorMessage: "Please enter a valid email address."
+                errorMessage: t('templates.eventRegistration.emailInvalid')
               }
             }
           }), // config
@@ -68,7 +64,7 @@ export const eventRegistrationTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Organization', // label
+        t('templates.eventRegistration.organizationQuestion'),
         '[]', // options
         '{"renderElement": "shortText", "required": true}', // config
       ] as Field,
@@ -78,11 +74,11 @@ export const eventRegistrationTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'option', // dataType
-        'What days will you attend?', // label
+        t('templates.eventRegistration.daysQuestion'),
         createOptionsString([
-          ["Day 1", ""],
-          ["Day 2", ""],
-          ["Day 3", ""],
+          [t('templates.eventRegistration.day1'), ""],
+          [t('templates.eventRegistration.day2'), ""],
+          [t('templates.eventRegistration.day3'), ""],
         ]), // options
         '{"renderElement": "checkboxes", "required": true}', // config
       ] as Field,
@@ -92,14 +88,14 @@ export const eventRegistrationTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'option', // dataType
-        'Dietary restrictions', // label
+        t('templates.eventRegistration.dietaryQuestion'),
         createOptionsString([
-          ["None", ""],
-          ["Vegetarian", ""],
-          ["Vegan", ""],
-          ["Kosher", ""],
-          ["Gluten-free", ""],
-          ["Other:", ""],
+          [t('templates.eventRegistration.none'), ""],
+          [t('templates.eventRegistration.vegetarian'), ""],
+          [t('templates.eventRegistration.vegan'), ""],
+          [t('templates.eventRegistration.kosher'), ""],
+          [t('templates.eventRegistration.glutenFree'), ""],
+          [t('templates.eventRegistration.other'), ""],
         ]), // options
         '{"renderElement": "radioButton", "required": true}', // config
       ] as Field,
@@ -109,15 +105,15 @@ export const eventRegistrationTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'option', // dataType
-        'I understand that I will have to pay $$ upon arrival', // label
+        t('templates.eventRegistration.paymentQuestion'),
         createOptionsString([
-          ["Yes", ""],
+          [t('templates.eventRegistration.yes'), ""],
         ]), // options (Only "Yes")
         '{"renderElement": "radioButton", "required": true}', // config
       ] as Field,
     ],
   },
-};
+});
 
 fieldCounter = 0;
 optionCounter = 0;
