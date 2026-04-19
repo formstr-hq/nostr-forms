@@ -330,6 +330,7 @@ const resources = {
     header: {
       allForms: "All Forms",
       publish: "Publish",
+      importForms: "Import",
       aiBuilder: "AI Builder",
       formBuilder: "Form Builder",
       preview: "Preview",

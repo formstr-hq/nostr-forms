@@ -69,7 +69,8 @@ export const getResponseLabels = (
     questionLabel = questionField[3] || questionLabel;
     if (questionField[2] === "option" && answerValue) {
       try {
-        const choices = JSON.parse(questionField[4] || "[]") as Tag[];
+        const parsed = JSON.parse(questionField[4] || "[]");
+        const choices = Array.isArray(parsed) ? parsed : [];
         const selectedChoiceIds = answerValue.split(";");
         const metadata = JSON.parse(metadataString || "{}");
         const choiceLabels = choices

@@ -80,6 +80,8 @@ export interface IFormBuilderContext {
   isAiModalOpen: boolean;
   setIsAiModalOpen: (isOpen: boolean) => void;
   handleAIFormGenerated: (processedData: ProcessedFormData) => void;
+  isImportModalVisible : boolean,
+  setIsImportModalVisible : (isOpen : boolean) => void;
   sections: SectionData[];
   addSection: (title?: string, description?: string) => SectionData;
   updateSection: (id: string, updates: Partial<SectionData>) => void;

@@ -3,7 +3,7 @@ import { Button, Dropdown, Input, MenuProps } from "antd";
 import { useState } from "react";
 import OptionsStyle from "./Options.style";
 import { AddOption } from "./AddOption";
-import { handleDelete, handleLabelChange } from "./utils";
+import { handleDelete, handleLabelChange, normalizeChoices } from "./utils";
 import { MenuItemType } from "antd/es/menu/hooks/useItems";
 import { Choice, ChoiceSettings } from "./types";
 
@@ -16,7 +16,9 @@ export const DropdownCreator: React.FC<RadioButtonCreatorProps> = ({
   initialValues,
   onValuesChange,
 }) => {
-  const [choices, setChoices] = useState<Array<Choice>>(initialValues || []);
+  const [choices, setChoices] = useState<Array<Choice>>(() =>
+    normalizeChoices(initialValues),
+  );
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const handleNewChoices = (choices: Array<Choice>) => {

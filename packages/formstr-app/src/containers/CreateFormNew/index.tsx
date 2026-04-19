@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 import FormBuilder from "./FormBuilder";
 import useFormBuilderContext from "./hooks/useFormBuilderContext";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HEADER_MENU_KEYS } from "./components/Header/config";
 import { FormRenderer } from "../FormFillerNew/FormRenderer";
 import { Form } from "antd";
@@ -11,13 +11,15 @@ function CreateForm() {
   const { initializeForm, saveDraft, selectedTab, getFormSpec, formSettings } =
     useFormBuilderContext();
   const [initialized, setInitialized] = useState(false);
+  const lastFormIdRef = useRef<string | undefined>(undefined);
   const [form] = Form.useForm();
 
   useEffect(() => {
-    if (state && !initialized) {
+    if (state && state.id && state.id !== lastFormIdRef.current) {
       initializeForm(state);
+      lastFormIdRef.current = state.id;
+      setInitialized(true);
     }
-    setInitialized(true);
     return () => {
       if (initialized) {
         saveDraft();

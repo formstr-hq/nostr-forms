@@ -11,7 +11,7 @@ import { Modal } from "antd";
 import { Filter } from "nostr-tools";
 import { pool } from "../pool";
 import { getDefaultRelays } from "../nostr/common";
-import { signerManager } from "../signer";
+import { isLoginCancelledError, LoginCancelledError, signerManager } from "../signer";
 import LoginModal from "../components/LoginModal";
 
 interface ProfileProviderProps {
@@ -68,7 +68,7 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
         // Pass a function to handle modal close without login
         const handleLoginCancel = () => {
           setShowLoginModal(false);
-          reject(new Error("Login cancelled")); // Unblock getSigner with error
+          reject(new LoginCancelledError()); // Unblock getSigner with a cancellable error
         };
 
         setLoginHandler(() => ({
@@ -78,7 +78,7 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
       });
     });
     const unsubscribe = signerManager.onChange(async () => {
-      const signer = await signerManager.getSigner();
+      const signer = signerManager.getSignerIfAvailable();
       if (signer) {
         try {
           const pk = await signer.getPublicKey();
@@ -112,10 +112,18 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
   };
 
   const requestPubkey = async () => {
-    let publicKey = await (await signerManager.getSigner()).getPublicKey();
-    setPubkey(publicKey);
-    setItem(LOCAL_STORAGE_KEYS.PROFILE, { pubkey: publicKey });
-    return publicKey;
+    try {
+      const publicKey = await (await signerManager.getSigner()).getPublicKey();
+      setPubkey(publicKey);
+      setItem(LOCAL_STORAGE_KEYS.PROFILE, { pubkey: publicKey });
+      return publicKey;
+    } catch (error) {
+      if (isLoginCancelledError(error)) {
+        return undefined;
+      }
+
+      throw error;
+    }
   };
 
   return (

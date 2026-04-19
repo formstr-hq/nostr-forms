@@ -1,6 +1,6 @@
-import { Button, Form, Typography } from "antd";
-import { Event, generateSecretKey, getPublicKey } from "nostr-tools";
-import { Response, Tag } from "../../nostr/types";
+import { Button, Form, Typography, message } from "antd";
+import { Event, generateSecretKey } from "nostr-tools";
+import { FileUploadMetadata, Response, Tag } from "../../nostr/types";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { getAllowedUsers, getFormSpec } from "../../utils/formUtils";
 import { SubmitButton } from "./SubmitButton/submit";
@@ -10,6 +10,8 @@ import { useTranslation } from "react-i18next";
 import { getResponseRelays } from "../../utils/ResponseUtils";
 import { IFormSettings } from "../CreateFormNew/components/FormSettings/types";
 import { LOCAL_STORAGE_KEYS, getItem, setItem } from "../../utils/localStorage";
+import { BlossomClient } from "../../utils/blossom";
+import { createAuthEvent } from "../../utils/blossomAuth";
 
 const { Text } = Typography;
 
@@ -24,6 +26,25 @@ interface DraftData {
   values: Record<string, [string, string | undefined] | null>;
   savedAt: number;
 }
+
+const isFileUploadMetadata = (
+  value: unknown,
+): value is FileUploadMetadata => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<FileUploadMetadata>;
+  return (
+    typeof candidate.sha256 === "string" &&
+    typeof candidate.filename === "string" &&
+    typeof candidate.size === "number" &&
+    typeof candidate.mimeType === "string" &&
+    typeof candidate.server === "string" &&
+    typeof candidate.uploaderPubkey === "string" &&
+    typeof candidate.uploadedAt === "number"
+  );
+};
 
 interface FormRendererContainerProps {
   formEvent: Event;
@@ -49,6 +70,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     "idle",
   );
   const [isFetchingKeys, setIsFetchingKeys] = useState(false);
+  const [rendererKey, setRendererKey] = useState(0);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState<boolean>(() => {
     const saved = getItem<boolean>(LOCAL_STORAGE_KEYS.AUTO_SAVE_ENABLED);
     return saved !== false; // Default to true if not set
@@ -117,6 +139,14 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
 
   // Clear draft (to be called on successful submit)
   const clearDraft = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+    if (statusTimeoutRef.current) {
+      clearTimeout(statusTimeoutRef.current);
+      statusTimeoutRef.current = null;
+    }
     localStorage.removeItem(draftStorageKey);
     setSaveStatus("idle");
   }, [draftStorageKey]);
@@ -240,6 +270,56 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     }
   };
 
+  const getUploadedFilesFromForm = (): FileUploadMetadata[] => {
+    const formValues = form.getFieldsValue(true);
+
+    return Object.values(formValues).flatMap((value) => {
+      if (!Array.isArray(value) || typeof value[0] !== "string") {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(value[0]);
+        return isFileUploadMetadata(parsed) ? [parsed] : [];
+      } catch {
+        return [];
+      }
+    });
+  };
+
+  const deleteUploadedFiles = async (files: FileUploadMetadata[]) => {
+    const results = await Promise.allSettled(
+      files.map(async (file) => {
+        const authHeader = await createAuthEvent(
+          "delete",
+          file.sha256,
+          60,
+          responderSecretKey,
+        );
+        const client = new BlossomClient(file.server);
+        await client.delete(file.sha256, authHeader);
+      }),
+    );
+
+    if (results.some((result) => result.status === "rejected")) {
+      message.warning(
+        "Some uploaded files could not be removed from the server.",
+      );
+    }
+  };
+
+  const handleClearForm = async () => {
+    const uploadedFiles = getUploadedFilesFromForm();
+
+    if (uploadedFiles.length > 0) {
+      await deleteUploadedFiles(uploadedFiles);
+    }
+
+    form.resetFields();
+    clearDraft();
+    setRendererKey((prev) => prev + 1);
+  };
+
   const allowedUsers = getAllowedUsers(formEvent);
   let footer: React.ReactNode = null;
 
@@ -313,6 +393,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
 
   return (
     <FormRenderer
+      key={rendererKey}
       formTemplate={formTemplate}
       form={form}
       onInput={handleInput}
@@ -325,6 +406,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       onToggleAutoSave={toggleAutoSave}
       formAuthorPubkey={formEvent.pubkey}
       responderSecretKey={responderSecretKey}
+      onClearForm={handleClearForm}
     />
   );
 };
