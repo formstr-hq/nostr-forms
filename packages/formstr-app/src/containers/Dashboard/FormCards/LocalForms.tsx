@@ -6,6 +6,16 @@ import { getDefaultRelays } from "../../../nostr/common";
 import { Event } from "nostr-tools";
 import { FormEventCard } from "./FormEventCard";
 import { SubCloser } from "nostr-tools/abstract-pool";
+import { useMyForms } from "../../../provider/MyFormsProvider";
+import { useProfileContext } from "../../../hooks/useProfileContext";
+import { Button, Typography, message } from "antd";
+import {
+  CloudUploadOutlined,
+  CloudSyncOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
+
+const { Text } = Typography;
 
 interface LocaLFormsProps {
   localForms: ILocalForm[];
@@ -17,6 +27,11 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
   onDeleted,
 }) => {
   const [eventMap, setEventMap] = useState<Map<string, Event>>(new Map());
+  const { pubkey } = useProfileContext();
+  const { inMyForms, saveToMyForms, saveManyToMyForms } = useMyForms();
+  const [bulkSyncing, setBulkSyncing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
+
   const onFormEvent = (event: Event) => {
     const dTag = event.tags.filter((t) => t[0] === "d")[0]?.[1];
     let key = `${event.pubkey}:${dTag}`;
@@ -47,8 +62,68 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
     };
   }, []);
 
+  const unsyncedForms = pubkey
+    ? localForms.filter((f) => !inMyForms(f.publicKey, f.formId))
+    : [];
+  const syncedCount = pubkey
+    ? localForms.filter((f) => inMyForms(f.publicKey, f.formId)).length
+    : 0;
+
+  const handleBulkSync = async () => {
+    if (!pubkey || unsyncedForms.length === 0) return;
+    setBulkSyncing(true);
+    setBulkProgress({ current: 0, total: unsyncedForms.length });
+
+    try {
+      await saveManyToMyForms(
+        unsyncedForms.map((form) => ({
+          formAuthorPub: form.publicKey,
+          formAuthorSecret: form.privateKey,
+          formId: form.formId,
+          relays: form.relays?.length ? form.relays : [form.relay],
+          viewKey: form.viewKey,
+        }))
+      );
+      setBulkProgress({ current: unsyncedForms.length, total: unsyncedForms.length });
+      message.success(`Synced ${unsyncedForms.length} form(s) to Nostr`);
+    } catch (err) {
+      console.error("Bulk sync failed:", err);
+      message.error("Bulk sync failed, please try again");
+    } finally {
+      setBulkSyncing(false);
+    }
+  };
+
   return (
     <>
+      {pubkey && localForms.length > 0 && (
+        <div
+          style={{
+            width: "80%",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+          }}
+        >
+          <Text type="secondary">
+            <CheckCircleOutlined style={{ color: "#52c41a", marginRight: 4 }} />
+            {syncedCount} of {localForms.length} synced to Nostr
+          </Text>
+          {unsyncedForms.length > 0 && (
+            <Button
+              icon={<CloudSyncOutlined />}
+              loading={bulkSyncing}
+              onClick={handleBulkSync}
+              size="small"
+            >
+              {bulkSyncing
+                ? `Syncing ${bulkProgress.current}/${bulkProgress.total}...`
+                : `Sync All (${unsyncedForms.length})`}
+            </Button>
+          )}
+        </div>
+      )}
       {Array.from(localForms)
         .sort(
           (a, b) =>
@@ -59,16 +134,35 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
           let formEvent = eventMap.get(
             `${localForm.publicKey}:${localForm.formId}`
           );
+          const isSynced = pubkey
+            ? inMyForms(localForm.publicKey, localForm.formId)
+            : false;
           if (formEvent)
             return (
               <FormEventCard
                 event={formEvent}
+                key={localForm.key}
                 relay={localForm.relay}
                 secretKey={localForm.privateKey}
                 viewKey={localForm.viewKey}
                 onDeleted={() => {
                   onDeleted(localForm);
                 }}
+                syncStatus={pubkey ? (isSynced ? "synced" : "unsynced") : undefined}
+                onSync={
+                  !isSynced && pubkey
+                    ? () =>
+                        saveToMyForms(
+                          localForm.publicKey,
+                          localForm.privateKey,
+                          localForm.formId,
+                          localForm.relays?.length
+                            ? localForm.relays
+                            : [localForm.relay],
+                          localForm.viewKey,
+                        )
+                    : undefined
+                }
               />
             );
           else
@@ -79,6 +173,21 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
                 onDeleted={() => {
                   onDeleted(localForm);
                 }}
+                isSynced={isSynced}
+                onSync={
+                  !isSynced && pubkey
+                    ? () =>
+                        saveToMyForms(
+                          localForm.publicKey,
+                          localForm.privateKey,
+                          localForm.formId,
+                          localForm.relays?.length
+                            ? localForm.relays
+                            : [localForm.relay],
+                          localForm.viewKey,
+                        )
+                    : undefined
+                }
               />
             );
         })}

@@ -1,22 +1,46 @@
-import { Button, Card, Typography, Dropdown, MenuProps } from "antd";
+import { useState } from "react";
+import { Button, Card, Typography, Dropdown, MenuProps, Tooltip, message } from "antd";
 import { ILocalForm } from "../../CreateFormNew/providers/FormBuilder/typeDefs";
 import { useNavigate } from "react-router-dom";
 import DeleteFormTrigger from "./DeleteForm";
 import { makeFormNAddr, naddrUrl } from "../../../utils/utility";
 import { editPath, responsePath } from "../../../utils/formUtils";
-import { EditOutlined, MoreOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  MoreOutlined,
+  CloudUploadOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
 import SafeMarkdown from "../../../components/SafeMarkdown";
 
 interface LocalFormCardProps {
   form: ILocalForm;
   onDeleted: () => void;
+  isSynced?: boolean;
+  onSync?: () => Promise<void>;
 }
 
 const { Text } = Typography;
 export const LocalFormCard: React.FC<LocalFormCardProps> = ({
   form,
   onDeleted,
+  isSynced,
+  onSync,
 }) => {
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSync = async () => {
+    if (!onSync) return;
+    setSyncing(true);
+    try {
+      await onSync();
+      message.success(`"${form.name}" synced to Nostr`);
+    } catch (err) {
+      message.error(`Failed to sync "${form.name}"`);
+    } finally {
+      setSyncing(false);
+    }
+  };
   const navigate = useNavigate();
   let responseUrl = form.formId
     ? responsePath(
@@ -60,7 +84,26 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
       }
       className="form-card"
       extra={
-        <div>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {isSynced === true && (
+            <Tooltip title="Synced to Nostr">
+              <CheckCircleOutlined
+                style={{ color: "#52c41a", marginRight: 10, fontSize: 16 }}
+              />
+            </Tooltip>
+          )}
+          {isSynced === false && onSync && (
+            <Tooltip title="Sync to Nostr profile">
+              <Button
+                type="text"
+                size="small"
+                icon={<CloudUploadOutlined />}
+                loading={syncing}
+                onClick={handleSync}
+                style={{ color: "#1890ff", marginRight: 6 }}
+              />
+            </Tooltip>
+          )}
           <Dropdown
             menu={{ items: menuItems }}
             trigger={["click"]}

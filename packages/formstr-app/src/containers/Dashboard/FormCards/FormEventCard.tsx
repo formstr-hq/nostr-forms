@@ -1,4 +1,4 @@
-import { Button, Card, Divider, Dropdown, MenuProps } from "antd";
+import { Button, Card, Divider, Dropdown, MenuProps, Tooltip, message } from "antd";
 import { Event } from "nostr-tools";
 import { useNavigate } from "react-router-dom";
 import DeleteFormTrigger from "./DeleteForm";
@@ -20,6 +20,8 @@ import {
   MoreOutlined,
   CopyOutlined,
   InfoCircleOutlined,
+  CloudUploadOutlined,
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { constructDraftUrl } from "./Drafts";
@@ -35,6 +37,10 @@ interface FormEventCardProps {
   secretKey?: string;
   viewKey?: string | null;
   shortLink?: string;
+  syncStatus?: "synced" | "unsynced";
+  onSync?: () => Promise<void>;
+  syncTooltip?: string;
+  syncIcon?: React.ReactNode;
 }
 export const FormEventCard: React.FC<FormEventCardProps> = ({
   event,
@@ -43,11 +49,28 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
   secretKey,
   viewKey,
   shortLink,
+  syncStatus,
+  onSync,
+  syncTooltip,
+  syncIcon,
 }) => {
   const navigate = useNavigate();
   const publicForm = event.content === "";
   const [tags, setTags] = useState<Tag[]>([]);
   const [showFormDetails, setShowFormDetails] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSync = async () => {
+    if (!onSync) return;
+    setSyncing(true);
+    try {
+      await onSync();
+    } catch {
+      message.error("Failed to sync form");
+    } finally {
+      setSyncing(false);
+    }
+  };
   useEffect(() => {
     const initialize = async () => {
       if (event.content === "") {
@@ -195,6 +218,25 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
             alignItems: "center",
           }}
         >
+          {syncStatus === "synced" && (
+            <Tooltip title="Synced to Nostr">
+              <CheckCircleOutlined
+                style={{ color: "#52c41a", marginRight: 8, fontSize: 16 }}
+              />
+            </Tooltip>
+          )}
+          {syncStatus === "unsynced" && onSync && (
+            <Tooltip title={syncTooltip || "Sync to Nostr profile"}>
+              <Button
+                type="text"
+                size="small"
+                icon={syncIcon || <CloudUploadOutlined />}
+                loading={syncing}
+                onClick={handleSync}
+                style={{ color: "#1890ff", marginRight: 4 }}
+              />
+            </Tooltip>
+          )}
           <Dropdown
             menu={{ items: menuItems }}
             trigger={["click"]}
