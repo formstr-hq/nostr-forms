@@ -392,13 +392,15 @@ export const Response = () => {
       
       // Add custom render for rating fields
       if (fieldType === "rating") {
+        const answerSettings = JSON.parse(field[5] || '{"maxStars": 5}');
+        const maxStars = Math.min(answerSettings.maxStars || 5, 10);
         column.render = (data: string) => {
           if (!data) return <span>-</span>;
           const value = parseInt(data, 10);
           if (isNaN(value)) return <span>{data}</span>;
           return (
-            <div style={{ display: "flex", gap: 2 }}>
-              {[1, 2, 3, 4, 5].map((n) => (
+            <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              {Array.from({ length: maxStars }, (_, i) => i + 1).map((n) => (
                 <svg key={n} width={20} height={20} viewBox="0 0 28 28">
                   <polygon
                     points="14,3 17.5,10.5 26,11.5 20,17.5 21.5,26 14,22 6.5,26 8,17.5 2,11.5 10.5,10.5"

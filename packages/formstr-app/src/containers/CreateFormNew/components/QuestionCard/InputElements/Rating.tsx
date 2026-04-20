@@ -2,24 +2,25 @@ import React, { useState } from "react";
 
 interface RatingProps {
   initialValue?: number;
+  maxStars?: number;
   onChange: (value: number) => void;
 }
 
 export const Rating: React.FC<RatingProps> = ({
   initialValue = 0,
+  maxStars = 5,
   onChange,
 }) => {
   const [value, setValue] = useState(initialValue);
   const [hovered, setHovered] = useState(0);
   const active = hovered || value;
-  
+
+  const clampedMax = Math.max(3, Math.min(maxStars, 10));
+
   return (
     <div style={{ marginBottom: "1rem" }}>
-      <div
-        role="radiogroup"
-        style={{ display: "flex", gap: 4 }}
-      >
-        {[1, 2, 3, 4, 5].map((n) => (
+      <div role="radiogroup" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+        {Array.from({ length: clampedMax }, (_, i) => i + 1).map((n) => (
           <button
             key={n}
             type="button"
@@ -36,11 +37,11 @@ export const Rating: React.FC<RatingProps> = ({
               background: "none",
               border: "none",
               cursor: "pointer",
-              padding: 2,
+              padding: 1,
               transition: "transform 0.1s",
             }}
           >
-            <svg width={32} height={32} viewBox="0 0 28 28">
+            <svg width={24} height={24} viewBox="0 0 28 28">
               <polygon
                 points="14,3 17.5,10.5 26,11.5 20,17.5 21.5,26 14,22 6.5,26 8,17.5 2,11.5 10.5,10.5"
                 fill={n <= active ? "#EF9F27" : "none"}

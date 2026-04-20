@@ -179,6 +179,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
           defaultValue={defaultValue as number}
           disabled={disabled}
           onChange={handleValueChange}
+          maxStars={fieldConfig.maxStars || 5}
         />
       ),
     };

@@ -67,7 +67,7 @@ const Inputs: React.FC<InputsProps> = ({
       case AnswerTypes.time:
         return <TimePicker disabled={true} />;
       case AnswerTypes.rating:
-        return <Rating initialValue={0} onChange={() => {}} />;
+        return <Rating initialValue={0} maxStars={answerSettings.maxStars || 5} onChange={() => {}} />;
       case AnswerTypes.signature:
         return <SignatureInput answerSettings={answerSettings} />;
       case AnswerTypes.datetime:

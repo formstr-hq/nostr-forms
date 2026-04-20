@@ -156,6 +156,7 @@ export interface AnswerSettings {
   choices?: Array<Choice>;
   numberConstraints?: NumberConstraint;
   required?: boolean;
+  maxStars?: number;
   validationRules?: {
     [ValidationRuleTypes.range]?: RangeRule;
     [ValidationRuleTypes.max]?: MaxRule;
