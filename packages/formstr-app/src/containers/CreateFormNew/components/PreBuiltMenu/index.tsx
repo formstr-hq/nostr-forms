@@ -12,7 +12,7 @@ function PreBuiltMenu() {
     const selectedItem = preBuiltMenu.find((item) => item.key === key);
     addQuestion(
       selectedItem?.primitive,
-      selectedItem?.label,
+      undefined,
       selectedItem?.answerSettings
     );
   };

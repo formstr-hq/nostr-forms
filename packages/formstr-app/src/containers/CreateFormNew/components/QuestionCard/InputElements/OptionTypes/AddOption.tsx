@@ -24,7 +24,7 @@ export const AddOption: React.FC<AddOptionProps> = ({
         disabled={disable}
         type="dashed"
         onClick={(e) => {
-          addOption([makeTag(6), "Add option"], choices, callback);
+          addOption([makeTag(6), ""], choices, callback);
         }}
         icon={<PlusOutlined />}
       >

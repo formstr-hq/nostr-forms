@@ -23,7 +23,7 @@ function BasicMenu() {
     if (selectedItem) {
       addQuestion(
         selectedItem?.primitive,
-        selectedItem?.label,
+        undefined,
         selectedItem?.answerSettings
       );
     }
