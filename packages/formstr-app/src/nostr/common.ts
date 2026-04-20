@@ -7,7 +7,6 @@ import {
   generateSecretKey,
   getEventHash,
   getPublicKey,
-  nip04,
   nip19,
   nip44,
   Relay,
@@ -193,11 +192,12 @@ export const sendNotification = async (
   message += "Visit https://formstr.app to view the responses.";
   const newSk = generateSecretKey();
   const newPk = getPublicKey(newSk);
-  settings.notifyNpubs?.forEach(async (npub) => {
+  settings.notifyNpubs?.forEach((npub) => {
     const hexNpub = toHexNpub(npub);
-    const encryptedMessage = await nip04.encrypt(newSk, hexNpub, message);
-    const baseKind4Event: Event = {
-      kind: 4,
+    const conversationKey = nip44.getConversationKey(newSk, hexNpub);
+    const encryptedMessage = nip44.encrypt(message, conversationKey);
+    const baseDmEvent: Event = {
+      kind: 14,
       pubkey: newPk,
       tags: [["p", hexNpub]],
       content: encryptedMessage,
@@ -205,8 +205,8 @@ export const sendNotification = async (
       id: "",
       sig: "",
     };
-    const kind4Event = finalizeEvent(baseKind4Event, newSk);
-    pool.publish(defaultRelays, kind4Event);
+    const dmEvent = finalizeEvent(baseDmEvent, newSk);
+    pool.publish(defaultRelays, dmEvent);
   });
 };
 
