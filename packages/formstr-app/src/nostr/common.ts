@@ -7,6 +7,7 @@ import {
   generateSecretKey,
   getEventHash,
   getPublicKey,
+  nip04,
   nip19,
   nip44,
   Relay,
@@ -192,21 +193,39 @@ export const sendNotification = async (
   message += "Visit https://formstr.app to view the responses.";
   const newSk = generateSecretKey();
   const newPk = getPublicKey(newSk);
-  settings.notifyNpubs?.forEach((npub) => {
+  const useNip44 = settings.notificationEncryption === "nip44";
+  settings.notifyNpubs?.forEach(async (npub) => {
     const hexNpub = toHexNpub(npub);
-    const conversationKey = nip44.getConversationKey(newSk, hexNpub);
-    const encryptedMessage = nip44.encrypt(message, conversationKey);
-    const baseDmEvent: Event = {
-      kind: 14,
-      pubkey: newPk,
-      tags: [["p", hexNpub]],
-      content: encryptedMessage,
-      created_at: Math.floor(Date.now() / 1000),
-      id: "",
-      sig: "",
-    };
-    const dmEvent = finalizeEvent(baseDmEvent, newSk);
-    pool.publish(defaultRelays, dmEvent);
+    if (useNip44) {
+      // NIP-44 / NIP-17 DM (kind 14) — secure ChaCha20 encryption
+      const conversationKey = nip44.getConversationKey(newSk, hexNpub);
+      const encryptedMessage = nip44.encrypt(message, conversationKey);
+      const baseDmEvent: Event = {
+        kind: 14,
+        pubkey: newPk,
+        tags: [["p", hexNpub]],
+        content: encryptedMessage,
+        created_at: Math.floor(Date.now() / 1000),
+        id: "",
+        sig: "",
+      };
+      const dmEvent = finalizeEvent(baseDmEvent, newSk);
+      pool.publish(defaultRelays, dmEvent);
+    } else {
+      // NIP-04 legacy DM (kind 4) — preserved for existing forms
+      const encryptedMessage = await nip04.encrypt(newSk, hexNpub, message);
+      const baseKind4Event: Event = {
+        kind: 4,
+        pubkey: newPk,
+        tags: [["p", hexNpub]],
+        content: encryptedMessage,
+        created_at: Math.floor(Date.now() / 1000),
+        id: "",
+        sig: "",
+      };
+      const kind4Event = finalizeEvent(baseKind4Event, newSk);
+      pool.publish(defaultRelays, kind4Event);
+    }
   });
 };
 
