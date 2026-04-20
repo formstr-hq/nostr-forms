@@ -3,21 +3,9 @@ import { AddressPointer } from "nostr-tools/lib/types/nip19";
 import { decodeNKeys } from "./nkeys.js";
 import { Tag } from "../types.js";
 import { hexToBytes } from "@noble/hashes/utils.js";
+import { getDefaultRelays } from "../config.js";
 
-const defaultRelays = [
-  "wss://relay.damus.io/",
-  "wss://relay.primal.net/",
-  "wss://nos.lol",
-  "wss://relay.nostr.wirednet.jp/",
-  "wss://nostr-01.yakihonne.com",
-  "wss://relay.snort.social",
-  "wss://relay.nostr.band",
-  "wss://nostr21.com",
-];
-
-export const getDefaultRelays = () => {
-  return defaultRelays;
-};
+export { getDefaultRelays };
 
 const decryptFormEvent = (event: Event, nkeys?: string) => {
   if (!nkeys) return null;
