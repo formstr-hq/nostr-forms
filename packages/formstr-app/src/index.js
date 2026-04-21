@@ -2,16 +2,21 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
-import { ConfigProvider } from "antd";
-import { antThemeConfig, applyThemeCssVariables } from "./theme/themeConfig";
+import AppProviders from "./providers/AppProviders";
+import { initI18n } from "./i18n";
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-applyThemeCssVariables();
+const renderApp = async () => {
+  await initI18n();
 
-root.render(
-  <React.StrictMode>
-    <ConfigProvider theme={antThemeConfig}>
-      <App />
-    </ConfigProvider>
-  </React.StrictMode>
-);
+  const root = ReactDOM.createRoot(document.getElementById("root"));
+
+  root.render(
+    <React.StrictMode>
+      <AppProviders>
+        <App />
+      </AppProviders>
+    </React.StrictMode>
+  );
+};
+
+void renderApp();

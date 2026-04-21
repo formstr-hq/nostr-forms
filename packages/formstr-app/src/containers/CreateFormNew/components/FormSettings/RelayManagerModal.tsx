@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Modal, Button, Input, List, Typography, Tooltip, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SaveOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
+import { useTranslation } from "react-i18next";
 import useFormBuilderContext from '../../hooks/useFormBuilderContext';
 import RelayStatusIndicator from '../../../../components/RelayStatusIndicator';
 import { RelayItem, RelayStatus } from '../../providers/FormBuilder/typeDefs';
@@ -24,13 +25,14 @@ const EditableRelayListItem: React.FC<EditableRelayItemProps> = ({
   onDelete,
   onTestConnection,
 }) => {
+  const { t } = useTranslation();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUrl, setEditedUrl] = useState(relayItem.url);
   const [editError, setEditError] = useState<string | null>(null);
 
   const handleSave = () => {
     if (!isValidWebSocketUrl(editedUrl)) {
-      setEditError('Invalid WebSocket URL');
+      setEditError(t("builder.relayManager.invalidUrl"));
       return;
     }
     setEditError(null);
@@ -54,22 +56,44 @@ const EditableRelayListItem: React.FC<EditableRelayItemProps> = ({
       actions={
         isEditing
           ? [
-              <Tooltip title="Save" key="save">
-                <Button icon={<SaveOutlined />} onClick={handleSave} type="text" />,
+              <Tooltip title={t("common.actions.save")} key="save">
+                <Button
+                  icon={<SaveOutlined />}
+                  onClick={handleSave}
+                  type="text"
+                />
               </Tooltip>,
-              <Tooltip title="Cancel" key="cancel">
-                <Button icon={<CloseOutlined />} onClick={handleCancelEdit} type="text" danger />,
+              <Tooltip title={t("common.actions.cancel")} key="cancel">
+                <Button
+                  icon={<CloseOutlined />}
+                  onClick={handleCancelEdit}
+                  type="text"
+                  danger
+                />
               </Tooltip>,
             ]
           : [
-              <Tooltip title="Test Connection" key="test">
-                <Button icon={<ReloadOutlined />} onClick={() => onTestConnection(relayItem.tempId, relayItem.url)} type="text" />,
+              <Tooltip title={t("builder.relayManager.testConnection")} key="test">
+                <Button
+                  icon={<ReloadOutlined />}
+                  onClick={() => onTestConnection(relayItem.tempId, relayItem.url)}
+                  type="text"
+                />
               </Tooltip>,
-              <Tooltip title="Edit Relay" key="edit">
-                <Button icon={<EditOutlined />} onClick={() => setIsEditing(true)} type="text" />,
+              <Tooltip title={t("builder.relayManager.editRelay")} key="edit">
+                <Button
+                  icon={<EditOutlined />}
+                  onClick={() => setIsEditing(true)}
+                  type="text"
+                />
               </Tooltip>,
-              <Tooltip title="Delete Relay" key="delete">
-                <Button icon={<DeleteOutlined />} onClick={() => onDelete(relayItem.tempId)} type="text" danger />,
+              <Tooltip title={t("builder.relayManager.deleteRelay")} key="delete">
+                <Button
+                  icon={<DeleteOutlined />}
+                  onClick={() => onDelete(relayItem.tempId)}
+                  type="text"
+                  danger
+                />
               </Tooltip>,
             ]
       }
@@ -101,6 +125,7 @@ interface RelayManagerModalProps {
 }
 
 const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const {
     relayList,
     addRelayToList,
@@ -165,7 +190,7 @@ const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }
 
   const handleAddNewRelay = () => {
     if (!isValidWebSocketUrl(newRelayUrl)) {
-      setAddError('Invalid WebSocket URL');
+      setAddError(t("builder.relayManager.invalidUrl"));
       return;
     }
     setAddError(null);
@@ -184,16 +209,16 @@ const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }
 
   return (
     <Modal
-      title="Manage Relays"
+      title={t("builder.relayManager.title")}
       open={isOpen}
       onCancel={onClose}
       width={600}
       footer={[
         <Button key="testAll" onClick={testAllLocalRelayConnections} icon={<ReloadOutlined />}>
-          Test All Connections
+          {t("builder.relayManager.testAll")}
         </Button>,
         <Button key="close" onClick={onClose}>
-          Close
+          {t("common.actions.close")}
         </Button>,
       ]}
       destroyOnClose
@@ -201,13 +226,17 @@ const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }
       {isAdding ? (
         <Space.Compact style={{ width: '100%', marginBottom: '20px' }}>
            <Input
-            placeholder="wss://your.relay.url"
+            placeholder={t("builder.relayManager.placeholder")}
             value={newRelayUrl}
             onChange={(e) => setNewRelayUrl(e.target.value)}
             onPressEnter={handleAddNewRelay}
           />
-          <Button type="primary" onClick={handleAddNewRelay} icon={<SaveOutlined />}>Add</Button>
-          <Button onClick={() => {setIsAdding(false); setAddError(null); setNewRelayUrl('');}} icon={<CloseOutlined />}>Cancel</Button>
+          <Button type="primary" onClick={handleAddNewRelay} icon={<SaveOutlined />}>
+            {t("common.actions.add")}
+          </Button>
+          <Button onClick={() => {setIsAdding(false); setAddError(null); setNewRelayUrl('');}} icon={<CloseOutlined />}>
+            {t("common.actions.cancel")}
+          </Button>
         </Space.Compact>
       ) : (
         <Button
@@ -216,7 +245,7 @@ const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }
             icon={<PlusOutlined />}
             style={{ width: '100%', marginBottom: '20px' }}
         >
-            Add New Relay
+            {t("builder.relayManager.addRelay")}
         </Button>
       )}
       {addError && <Text type="danger" style={{ display: 'block', marginBottom: '10px', fontSize: '12px' }}>{addError}</Text>}
@@ -233,7 +262,7 @@ const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }
             onTestConnection={testLocalRelayConnection}
           />
         )}
-        locale={{ emptyText: 'No relays configured. Add one to get started!' }}
+        locale={{ emptyText: t("common.labels.noSupportedRelays") }}
         style={{ maxHeight: 'calc(100vh - 350px)', overflowY: 'auto' }}
       />
     </Modal>

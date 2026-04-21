@@ -3,16 +3,19 @@ import { naddrUrl } from "../../utils/utility";
 import { useNavigate } from "react-router-dom";
 import { getDefaultRelays } from "../../nostr/common";
 import { Event } from "nostr-tools";
+import { useTranslation } from "react-i18next";
 import { IFormSettings } from "../CreateFormNew/components/FormSettings/types";
 import SafeMarkdown from "../../components/SafeMarkdown";
+import { formatLocalizedDate } from "../../i18n/format";
 
 export default function PublicFormCard({ event }: { event: Event }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const nameTag = event.tags.find((t) => t[0] === "name");
   const formIdTag = event.tags.find((t) => t[0] === "d");
   const settingsTag = event.tags.find((t) => t[0] === "settings");
 
-  const name = nameTag?.[1] ?? "[Form has no name]";
+  const name = nameTag?.[1] ?? t("publicForms.noName");
   const formId = formIdTag?.[1];
 
   let settings: IFormSettings = {};
@@ -108,7 +111,7 @@ export default function PublicFormCard({ event }: { event: Event }) {
             <Typography.Text
               style={{ color: "var(--app-color-bg-surface)", marginTop: 5 }}
             >
-              {new Date(event.created_at * 1000).toLocaleDateString()}
+              {formatLocalizedDate(event.created_at * 1000)}
             </Typography.Text>
           </div>
         </div>
@@ -116,7 +119,7 @@ export default function PublicFormCard({ event }: { event: Event }) {
     </>
   ) : (
     <Card>
-      <Typography.Text>Card Content is corrupted</Typography.Text>
+      <Typography.Text>{t("publicForms.corruptedCard")}</Typography.Text>
     </Card>
   );
 }

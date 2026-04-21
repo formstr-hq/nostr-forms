@@ -12,6 +12,7 @@ import AddNpubStyle from "../addNpub.style";
 import { FC, useEffect, useState } from "react";
 import { isValidNpub } from "./utils";
 import { nip19 } from "nostr-tools";
+import { useTranslation } from "react-i18next";
 import {
   CloseCircleOutlined,
   CopyOutlined,
@@ -36,6 +37,7 @@ const NpubListItem: FC<{
   pubkey: string;
   onRemove: (pubkey: string) => void;
 }> = ({ pubkey, onRemove }) => {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
 
   useEffect(() => {
@@ -68,7 +70,7 @@ const NpubListItem: FC<{
 
   const handleCopy = () => {
     navigator.clipboard.writeText(npub);
-    message.success("Copied npub!");
+    message.success(t("builder.sharing.copiedNpub"));
   };
 
   return (
@@ -89,10 +91,10 @@ const NpubListItem: FC<{
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
           {shortNpub}
         </Typography.Text>
-        <Tooltip title="Copy npub">
+        <Tooltip title={t("builder.sharing.copyNpub")}>
           <Button type="text" icon={<CopyOutlined />} onClick={handleCopy} />
         </Tooltip>
-        <Tooltip title="Remove">
+        <Tooltip title={t("common.actions.delete")}>
           <Button
             type="text"
             danger
@@ -110,6 +112,7 @@ export const NpubList: React.FC<NpubListProps> = ({
   NpubList,
   ListHeader,
 }) => {
+  const { t } = useTranslation();
   const [newNpub, setNewNpub] = useState<string>();
 
   const removeParticipant = (participant: string) => {
@@ -147,13 +150,13 @@ export const NpubList: React.FC<NpubListProps> = ({
             ))
           ) : (
             <Typography.Text type="secondary">
-              No users added yet.
+              {t("builder.sharing.noUsers")}
             </Typography.Text>
           )}
         </div>
 
         <Input
-          placeholder="Enter nostr npub"
+          placeholder={t("builder.sharing.enterNpub")}
           value={newNpub}
           onChange={(e) => setNewNpub(e.target.value)}
           className="npub-input"
@@ -161,7 +164,7 @@ export const NpubList: React.FC<NpubListProps> = ({
         {newNpub && !isValidNpub(newNpub) && (
           <div>
             <Typography.Text className="error-npub">
-              this is not a valid npub
+              {t("builder.sharing.invalidNpub")}
             </Typography.Text>
           </div>
         )}
@@ -176,8 +179,7 @@ export const NpubList: React.FC<NpubListProps> = ({
             setNewNpub("");
           }}
         >
-          {" "}
-          Add{" "}
+          {t("common.actions.add")}
         </Button>
       </AddNpubStyle>
     </div>
