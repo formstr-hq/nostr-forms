@@ -10,6 +10,7 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import { useTranslation } from "react-i18next";
 import StyleWrapper from "./style";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 import TitleImage from "./TitleImage";
@@ -31,10 +32,10 @@ import Automations from "./Automations";
 type ColorKey = keyof IColorSettings;
 
 const COLOR_LABELS: Record<ColorKey, string> = {
-  global: "Global",
-  title: "Title",
-  description: "Description",
-  question: "Question",
+  global: "builder.formSettings.colorLabels.global",
+  title: "builder.formSettings.colorLabels.title",
+  description: "builder.formSettings.colorLabels.description",
+  question: "builder.formSettings.colorLabels.question",
 };
 
 function ColorSwatch({
@@ -103,6 +104,7 @@ function ColorSwatch({
 }
 
 function FormSettings() {
+  const { t } = useTranslation();
   const {
     formSettings,
     relayList,
@@ -120,19 +122,23 @@ function FormSettings() {
     <StyleWrapper>
       {/* Always visible */}
       <div className="form-setting">
-        <Text className="property-name">Form Identifier</Text>
+        <Text className="property-name">
+          {t("builder.formSettings.formIdentifier")}
+        </Text>
         <FormIdentifier />
       </div>
 
       {/* Collapsible groups */}
       <Collapse expandIconPosition="end">
-        <Panel header="Access & Participants" key="access">
+        <Panel header={t("builder.formSettings.sections.access")} key="access">
           <Tooltip
-            title="This toggle will leave the form un-encrypted and allow anyone to view the form."
+            title={t("builder.formSettings.postToBulletinTooltip")}
             trigger={isMobile() ? "click" : "hover"}
           >
             <div className="property-setting">
-              <Text className="property-text">Post to Bulletin Board</Text>
+              <Text className="property-text">
+                {t("builder.formSettings.postToBulletin")}
+              </Text>
               <Switch
                 checked={!formSettings.encryptForm}
                 onChange={(checked) =>
@@ -147,7 +153,7 @@ function FormSettings() {
 
           <div className="property-setting">
             <Text className="property-text">
-              Disallow Anonymous Submissions
+              {t("builder.formSettings.disallowAnonymous")}
             </Text>
             <Switch
               checked={formSettings.disallowAnonymous}
@@ -158,17 +164,18 @@ function FormSettings() {
           </div>
           {formSettings.disallowAnonymous && (
             <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-              *This will require participants to be logged in with their Nostr
-              account
+              {t("builder.formSettings.disallowAnonymousHint")}
             </Text>
           )}
           <Divider className="divider" />
           <Tooltip
-            title="If enabled, Formstr servers can access your form to generate previews."
+            title={t("builder.formSettings.disablePreviewTooltip")}
             trigger={isMobile() ? "click" : "hover"}
           >
             <div className="property-setting">
-              <Text className="property-text">Disable Link Previews</Text>
+              <Text className="property-text">
+                {t("builder.formSettings.disablePreview")}
+              </Text>
               <Switch
                 checked={formSettings.disablePreview}
                 onChange={(checked) =>
@@ -179,32 +186,38 @@ function FormSettings() {
           </Tooltip>
           {!formSettings.disablePreview && (
             <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-              *Link preview generation is enabled. Formstr servers will be able
-              to see the form template. This is required to generate the preview
-              of the form.
+              {t("builder.formSettings.disablePreviewHint")}
             </Text>
           )}
         </Panel>
 
-        <Panel header="Notifications" key="notifications">
+        <Panel
+          header={t("builder.formSettings.sections.notifications")}
+          key="notifications"
+        >
           <Notifications />
         </Panel>
 
-        <Panel header="Customization" key="customization">
-          <Text style={{ fontSize: 12, display: "block", marginBottom: 8 }}>Colors</Text>
+        <Panel
+          header={t("builder.formSettings.sections.customization")}
+          key="customization"
+        >
+          <Text style={{ fontSize: 12, display: "block", marginBottom: 8 }}>
+            {t("common.labels.colors")}
+          </Text>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 8px", marginBottom: 4 }}>
             {(Object.keys(COLOR_LABELS) as ColorKey[]).map((key) => (
               <ColorSwatch
                 key={key}
                 colorKey={key}
-                label={COLOR_LABELS[key]}
+                label={t(COLOR_LABELS[key])}
                 value={colors[key] || "#000000"}
                 onChange={(hex) => updateColor(key, hex)}
               />
             ))}
           </div>
           <Text type="secondary" style={{ fontSize: 11, display: "block", marginBottom: 8 }}>
-            Title, Description &amp; Question fall back to Global if not set.
+            {t("builder.formSettings.colorsFallback")}
           </Text>
           <Divider className="divider" />
           <TitleImage titleImageUrl={formSettings.titleImageUrl} />
@@ -224,7 +237,7 @@ function FormSettings() {
           <Divider className="divider" />
           <div className="property-setting">
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <Text>Card Transparency</Text>
+              <Text>{t("builder.formSettings.cardTransparency")}</Text>
               <Slider
                 min={0.5}
                 max={1}
@@ -235,17 +248,18 @@ function FormSettings() {
                 }
               />
               <Text type="secondary" style={{ fontSize: 12 }}>
-                Adjust transparency of form cards (0 = fully transparent, 1 =
-                fully opaque)
+                {t("builder.formSettings.cardTransparencyHint")}
               </Text>
             </div>
           </div>
           <Tooltip
-            title="This toggle will add Formstr branding to the bottom of your form."
+            title={t("builder.formSettings.brandingTooltip")}
             trigger={isMobile() ? "click" : "hover"}
           >
             <div className="property-setting">
-              <Text className="property-text">Add Formstr branding</Text>
+              <Text className="property-text">
+                {t("builder.formSettings.branding")}
+              </Text>
               <Switch
                 checked={formSettings.formstrBranding}
                 onChange={(checked) =>
@@ -256,16 +270,21 @@ function FormSettings() {
           </Tooltip>
         </Panel>
 
-        <Panel header="Relay Configuration" key="relays">
+        <Panel header={t("builder.formSettings.sections.relays")} key="relays">
           <Button
             onClick={toggleRelayManagerModal}
             type="default"
             style={{ width: "100%" }}
           >
-            Manage Relays
+            {t("builder.formSettings.manageRelays", {
+              count: relayList.length,
+            })}
           </Button>
         </Panel>
-        <Panel header="Automations" key="nrpc-webhook">
+        <Panel
+          header={t("builder.formSettings.sections.automations")}
+          key="nrpc-webhook"
+        >
           <Automations />
         </Panel>
       </Collapse>

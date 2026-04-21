@@ -1,5 +1,6 @@
 import { Input, Typography } from "antd";
 import { SettingOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 import StyleWrapper from "./style";
 import { ChangeEvent } from "react";
@@ -18,6 +19,7 @@ function FormTitle({
   imageUrl?: string;
   formTitle?: string;
 }) {
+  const { t } = useTranslation();
   const { formSettings, formName, updateFormName, toggleSettingsWindow } =
     useFormBuilderContext();
 
@@ -37,7 +39,7 @@ function FormTitle({
           <>
             <div
               className="icon-util"
-              title="Form settings"
+              title={t("builder.formSettings.title")}
               onClick={toggleSettingsWindow}
             >
               <SettingOutlined />

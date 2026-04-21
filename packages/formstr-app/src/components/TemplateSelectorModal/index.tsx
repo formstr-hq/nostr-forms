@@ -1,7 +1,8 @@
-import React from 'react';
-import { Modal, Typography } from 'antd';
-import { availableTemplates, FormTemplate } from '../../templates'; 
-import TemplateCard from '../TemplateCard';
+import React from "react";
+import { Modal, Typography } from "antd";
+import { useTranslation } from "react-i18next";
+import { FormTemplate, getAvailableTemplates } from "../../templates";
+import TemplateCard from "../TemplateCard";
 
 interface TemplateSelectorModalProps {
   visible: boolean;
@@ -14,6 +15,8 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   onClose,
   onTemplateSelect,
 }) => {
+  const { t } = useTranslation();
+  const availableTemplates = getAvailableTemplates(t);
 
   const handleCardClick = (template: FormTemplate) => {
     onTemplateSelect(template);
@@ -23,22 +26,29 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   return (
     <Modal
       title={
-        <Typography.Title level={4} style={{ textAlign: 'center', margin: 0 }}>
-          Choose a Template
+        <Typography.Title level={4} style={{ textAlign: "center", margin: 0 }}>
+          {t("templates.chooseTemplate")}
         </Typography.Title>
       }
       open={visible}
       onCancel={onClose}
       footer={null}
       width={600}
-      centered 
+      centered
     >
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', padding: '20px 0' }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          padding: "20px 0",
+        }}
+      >
         {availableTemplates.map((template) => (
           <TemplateCard
             key={template.id}
             template={template}
-            onClick={handleCardClick} 
+            onClick={handleCardClick}
           />
         ))}
       </div>

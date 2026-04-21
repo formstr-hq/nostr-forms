@@ -1,19 +1,25 @@
 import { Menu } from "antd";
-import { BASIC_MENU } from "../../configs/menuConfig";
+import { useTranslation } from "react-i18next";
+import { getBasicMenu } from "../../configs/menuConfig";
 import { BASIC_MENU_KEYS } from "../../configs/constants";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 
 function BasicMenu() {
+  const { t } = useTranslation();
   const { addQuestion, addSection, sections } = useFormBuilderContext();
+  const basicMenu = getBasicMenu(t);
 
   const onMenuClick = ({ key }: { key: string }) => {
     if (key === BASIC_MENU_KEYS.SECTION) {
       const sectionNumber = sections.length + 1;
-      addSection(`Section ${sectionNumber}`, "Click to edit section description");
+      addSection(
+        t("builder.defaults.sectionTitle", { number: sectionNumber }),
+        t("builder.defaults.sectionDescription"),
+      );
       return;
     }
     
-    const selectedItem = BASIC_MENU.find((item) => item.key === key);
+    const selectedItem = basicMenu.find((item) => item.key === key);
     if (selectedItem) {
       addQuestion(
         selectedItem?.primitive,
@@ -25,7 +31,7 @@ function BasicMenu() {
 
   return (
     <Menu
-      items={BASIC_MENU}
+      items={basicMenu}
       onClick={onMenuClick}
       style={{ width: "100%", border: "none", wordBreak: "break-word", whiteSpace: "normal" }}
     />

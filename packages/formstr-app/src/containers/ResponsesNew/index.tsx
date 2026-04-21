@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Event, getPublicKey, nip19 } from "nostr-tools";
 import { useParams, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { fetchFormResponses } from "../../nostr/responses";
 import SummaryStyle from "./summary.style";
 import { Button, Card, Divider, Table, Tabs, Typography, Spin, message } from "antd";
@@ -31,10 +32,12 @@ import SafeMarkdown from "../../components/SafeMarkdown";
 import { ExportOutlined, DownloadOutlined } from "@ant-design/icons";
 import { decodeNKeys } from "../../utils/nkeys";
 import { downloadEncryptedFile } from "../../utils/fileDownload";
+import { formatLocalizedDateTime } from "../../i18n/format";
 
 const { Text } = Typography;
 
 export const Response = () => {
+  const { t } = useTranslation();
   const [responses, setResponses] = useState<Event[] | undefined>(undefined);
   const [formEvent, setFormEvent] = useState<Event | undefined>(undefined);
   const [formSpec, setFormSpec] = useState<Tag[] | null | undefined>(undefined);
@@ -192,7 +195,7 @@ export const Response = () => {
     console.log("handleFileDownload called with:", { metadataJson, editKey });
 
     if (!editKey) {
-      message.error("Cannot download: Form edit key not available");
+      message.error(t("responses.fileDownloadUnavailable"));
       return;
     }
 
@@ -202,7 +205,7 @@ export const Response = () => {
       console.log("metadata.uploaderPubkey:", metadata.uploaderPubkey);
 
       if (!metadata.uploaderPubkey) {
-        message.error("This file was uploaded with an older version. Please re-upload the file to download it.");
+        message.error(t("responses.fileUploadedOldVersion"));
         return;
       }
 
@@ -215,7 +218,11 @@ export const Response = () => {
       });
     } catch (error: any) {
       console.error("handleFileDownload error:", error);
-      message.error(`Download failed: ${error.message || "Unknown error"}`);
+      message.error(
+        t("responses.downloadFailed", {
+          message: error.message || "Unknown error",
+        }),
+      );
     }
   };
 
@@ -245,7 +252,7 @@ export const Response = () => {
         [key: string]: string;
       } = {
         key: responseEvent.pubkey,
-        createdAt: new Date(responseEvent.created_at * 1000).toLocaleString(),
+        createdAt: formatLocalizedDateTime(responseEvent.created_at * 1000),
         authorPubkey: nip19.npubEncode(responseEvent.pubkey),
         responsesCount: pubkeyResponses.length.toString(),
       };
@@ -272,10 +279,10 @@ export const Response = () => {
   };
 
   const getFormName = () => {
-    if (!formSpec) return "Loading Form Name...";
+    if (!formSpec) return t("responses.formNameLoading");
     let nameTag = formSpec.find((tag) => tag[0] === "name");
-    if (nameTag) return nameTag[1] || "Untitled Form";
-    return "Untitled Form";
+    if (nameTag) return nameTag[1] || t("common.status.untitledForm");
+    return t("common.status.untitledForm");
   };
 
   const getColumns = () => {
@@ -289,7 +296,7 @@ export const Response = () => {
     }> = [
       {
         key: "author",
-        title: "Author",
+        title: t("common.labels.author"),
         fixed: "left",
         dataIndex: "authorPubkey",
         width: isMobile() ? 120 : 150,
@@ -307,7 +314,7 @@ export const Response = () => {
       },
       {
         key: "responsesCount",
-        title: "Submissions",
+        title: t("responses.submissions"),
         dataIndex: "responsesCount",
         width: isMobile() ? 90 : 120,
       },
@@ -322,13 +329,13 @@ export const Response = () => {
     }> = [
       {
         key: "createdAt",
-        title: "Submitted At",
+        title: t("common.labels.submittedAt"),
         dataIndex: "createdAt",
         width: isMobile() ? 100 : 130,
       },
       {
         key: "action",
-        title: "Action",
+        title: t("common.labels.action"),
         dataIndex: "action",
         fixed: "right",
         width: 40,
@@ -368,7 +375,9 @@ export const Response = () => {
         title: label ? (
           <SafeMarkdown components={{ p: "span" }}>{label as any}</SafeMarkdown>
         ) : (
-          `Question: ${fieldId.substring(0, 5)}...`
+          t("responses.questionFallback", {
+            id: fieldId.substring(0, 5),
+          })
         ),
         dataIndex: fieldId,
         width: 150,
@@ -408,7 +417,9 @@ export const Response = () => {
     extraFieldIdsFromResponses.forEach((fieldId) => {
       columns.push({
         key: fieldId,
-        title: `Question ID: ${fieldId.substring(0, 8)}...`,
+        title: t("responses.questionIdFallback", {
+          id: fieldId.substring(0, 8),
+        }),
         dataIndex: fieldId,
         width: 150,
       });
@@ -423,7 +434,9 @@ export const Response = () => {
         if (!columns.find((col) => col.key === id)) {
           columns.push({
             key: id,
-            title: `Question ID: ${id.substring(0, 8)}...`,
+            title: t("responses.questionIdFallback", {
+              id: id.substring(0, 8),
+            }),
             dataIndex: id,
             width: 150,
           });
@@ -432,7 +445,8 @@ export const Response = () => {
     }
     return [...columns, ...rightColumns];
   };
-  if (!(pubkey || secretKey) || !formId) return <Text>Invalid url</Text>;
+  if (!(pubkey || secretKey) || !formId)
+    return <Text>{t("responses.invalidUrl")}</Text>;
 
   if (
     formEvent &&
@@ -444,8 +458,7 @@ export const Response = () => {
     return (
       <div style={{ textAlign: "center", marginTop: "20px" }}>
         <Text>
-          This form's responses are private. You need to login or have a view
-          key to see them.
+          {t("responses.privateNotice")}
         </Text>
         <Button
           onClick={() => {
@@ -453,7 +466,7 @@ export const Response = () => {
           }}
           style={{ marginTop: "10px" }}
         >
-          Login
+          {t("common.actions.login")}
         </Button>
       </div>
     );
@@ -468,7 +481,7 @@ export const Response = () => {
           height: "80vh",
         }}
       >
-        <Spin size="large" tip="Loading form details..." />
+        <Spin size="large" tip={t("responses.loadingDetails")} />
       </div>
     );
   }
@@ -476,8 +489,7 @@ export const Response = () => {
     return (
       <div style={{ textAlign: "center", marginTop: "20px" }}>
         <Text>
-          Could not load or decrypt form specification. Responses cannot be
-          displayed.
+          {t("responses.decryptFailed")}
         </Text>
       </div>
     );
@@ -502,10 +514,12 @@ export const Response = () => {
                   <div className="response-count-container">
                     <Text className="response-count">
                       {responses === undefined
-                        ? "Searching..."
+                        ? t("common.status.searching")
                         : getResponderCount()}{" "}
                     </Text>
-                    <Text className="response-count-label">responder(s)</Text>
+                    <Text className="response-count-label">
+                      {t("responses.responderLabel")}
+                    </Text>
                   </div>
                 </Card>
               </div>
@@ -522,7 +536,7 @@ export const Response = () => {
               items={[
                 {
                   key: "responses",
-                  label: "Responses",
+                  label: t("responses.responsesTab"),
                   children: (
                     <div style={{ overflow: "scroll", marginBottom: 60 }}>
                       <Table
@@ -531,7 +545,7 @@ export const Response = () => {
                         pagination={{ pageSize: 10 }}
                         loading={{
                           spinning: responses === undefined,
-                          tip: "🔎 Looking for responses...",
+                          tip: t("responses.lookingForResponses"),
                         }}
                         scroll={{ x: isMobile() ? 900 : 1500, y: "calc(65% - 400px)" }}
                       />
@@ -540,7 +554,7 @@ export const Response = () => {
                 },
                 {
                   key: "analytics",
-                  label: "Analytics",
+                  label: t("responses.analyticsTab"),
                   children: formSpec ? (
                     <FormAnalytics
                       responsesData={getData(true)}
