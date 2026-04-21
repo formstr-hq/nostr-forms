@@ -36,7 +36,7 @@ export default styled.div`
   }
 
   .property-name {
-    color: rgba(0, 0, 0, 0.45);
+    color: var(--app-color-text-muted);
   }
 
   .delete-button {

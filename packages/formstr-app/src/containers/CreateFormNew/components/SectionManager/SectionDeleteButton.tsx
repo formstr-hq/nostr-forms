@@ -61,14 +61,14 @@ const SectionDeleteButton: React.FC<SectionDeleteButtonProps> = ({
     <>
       <DeleteOutlined
         className={className}
-        style={{ color: "red" }}
+        style={{ color: "var(--app-color-error)" }}
         onClick={handleDelete}
       />
 
       <Modal
         title={
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <ExclamationCircleOutlined style={{ color: "#faad14" }} />
+            <ExclamationCircleOutlined style={{ color: "var(--app-color-warning)" }} />
             Delete Section "{sectionTitle}"?
           </div>
         }

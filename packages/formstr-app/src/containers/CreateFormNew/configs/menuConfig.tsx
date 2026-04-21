@@ -27,7 +27,7 @@ export const getBasicMenu = (t: TFunction) => [
   {
     key: BASIC_MENU_KEYS.TITLE,
     label: t("builder.menus.label"),
-    icon: <FontColorsOutlined style={{ color: "#800080" }} />,
+    icon: <FontColorsOutlined style={{ color: "var(--app-color-secondary)" }} />,
     primitive: "label",
     answerSettings: {
       renderElement: AnswerTypes.label,
@@ -36,7 +36,7 @@ export const getBasicMenu = (t: TFunction) => [
   {
     key: BASIC_MENU_KEYS.SECTION,
     label: t("builder.menus.section"),
-    icon: <AppstoreOutlined style={{ color: "#1e3f66" }} />,
+    icon: <AppstoreOutlined style={{ color: "var(--app-color-info)" }} />,
     primitive: "section",
     answerSettings: undefined,
   },
@@ -46,7 +46,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.SHORT_ANSWER,
     label: t("builder.menus.shortAnswer"),
-    icon: <FormOutlined style={{ color: "#a3ec66ff" }} />,
+    icon: <FormOutlined style={{ color: "var(--app-color-success)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.shortText,
@@ -55,7 +55,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.PARAGRAPH,
     label: t("builder.menus.paragraph"),
-    icon: <FileTextOutlined style={{ color: "#b7ce51ff" }} />,
+    icon: <FileTextOutlined style={{ color: "var(--app-color-success-active)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.paragraph,
@@ -64,7 +64,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.NUMBER,
     label: t("builder.menus.number"),
-    icon: <NumberOutlined style={{ color: "#e6b85eff" }} />,
+    icon: <NumberOutlined style={{ color: "var(--app-color-warning)" }} />,
     primitive: "number",
     answerSettings: {
       renderElement: AnswerTypes.number,
@@ -73,7 +73,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.MULTIPLE_CHOICE,
     label: t("builder.menus.multipleChoice"),
-    icon: <CheckSquareOutlined style={{ color: "#5dc4d6ff" }} />,
+    icon: <CheckSquareOutlined style={{ color: "var(--app-color-info)" }} />,
     primitive: "option",
     answerSettings: {
       renderElement: AnswerTypes.checkboxes,
@@ -82,7 +82,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.SINGLE_CHOICE,
     label: t("builder.menus.singleChoice"),
-    icon: <CheckCircleOutlined style={{ color: "#8bd6d2ff" }} />,
+    icon: <CheckCircleOutlined style={{ color: "var(--app-color-secondary)" }} />,
     primitive: "option",
     answerSettings: {
       renderElement: AnswerTypes.radioButton,
@@ -91,7 +91,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.SELECT,
     label: t("builder.menus.select"),
-    icon: <CaretDownOutlined style={{ color: "#FFD580" }} />,
+    icon: <CaretDownOutlined style={{ color: "var(--app-color-warning)" }} />,
     primitive: "option",
     answerSettings: {
       renderElement: AnswerTypes.dropdown,
@@ -100,7 +100,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.DATE,
     label: t("builder.menus.date"),
-    icon: <CalendarOutlined style={{ color: "#fdc4adff" }} />,
+    icon: <CalendarOutlined style={{ color: "var(--app-color-primary)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.date,
@@ -109,7 +109,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.TIME,
     label: t("builder.menus.time"),
-    icon: <ClockCircleOutlined style={{ color: "#f7a2f7ff" }} />,
+    icon: <ClockCircleOutlined style={{ color: "var(--app-color-secondary)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.time,
@@ -118,7 +118,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.SIGNATURE,
     label: t("builder.menus.signature"),
-    icon: <EditOutlined style={{ color: "#eba5b1ff" }} />,
+    icon: <EditOutlined style={{ color: "var(--app-color-error)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.signature,
@@ -130,7 +130,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.FILE_UPLOAD,
     label: t("builder.menus.fileUpload"),
-    icon: <CloudUploadOutlined style={{ color: "#FF6B6B" }} />,
+    icon: <CloudUploadOutlined style={{ color: "var(--app-color-error)" }} />,
     primitive: "file",
     answerSettings: {
       renderElement: AnswerTypes.fileUpload,
@@ -141,7 +141,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.DATETIME,
     label: t("builder.menus.dateTime"),
-    icon: <FieldTimeOutlined style={{ color: "#FFD580" }} />,
+    icon: <FieldTimeOutlined style={{ color: "var(--app-color-warning)" }} />,
     primitive: "datetime",
     answerSettings: {
       renderElement: AnswerTypes.datetime,
@@ -150,7 +150,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.MULTIPLE_CHOICE_GRID,
     label: t("builder.menus.singleChoiceGrid"),
-    icon: <TableOutlined style={{ color: "#B5E7A0" }} />,
+    icon: <TableOutlined style={{ color: "var(--app-color-success)" }} />,
     primitive: "grid",
     answerSettings: {
       renderElement: AnswerTypes.multipleChoiceGrid,
@@ -160,7 +160,7 @@ export const getInputsMenu = (t: TFunction) => [
   {
     key: INPUTS_TYPES.CHECKBOX_GRID,
     label: t("builder.menus.multipleChoiceGrid"),
-    icon: <TableOutlined style={{ color: "#A0D3E7" }} />,
+    icon: <TableOutlined style={{ color: "var(--app-color-info)" }} />,
     primitive: "grid",
     answerSettings: {
       renderElement: AnswerTypes.checkboxGrid,
@@ -173,7 +173,7 @@ export const getPreBuiltMenu = (t: TFunction) => [
   {
     key: PRE_BUILT_MENU_KEYS.DATE_OF_BIRTH,
     label: t("builder.menus.dateOfBirth"),
-    icon: <CalendarOutlined style={{ color: "#1e3f66" }} />,
+    icon: <CalendarOutlined style={{ color: "var(--app-color-info)" }} />,
     primitive: "text",
     answerSettings: {
       renderElement: AnswerTypes.date,
@@ -182,7 +182,7 @@ export const getPreBuiltMenu = (t: TFunction) => [
   {
     key: PRE_BUILT_MENU_KEYS.EMAIL,
     label: t("builder.menus.email"),
-    icon: <MailOutlined style={{ color: "#1e3f66" }} />,
+    icon: <MailOutlined style={{ color: "var(--app-color-info)" }} />,
     answerSettings: {
       renderElement: AnswerTypes.shortText,
       validationRules: {

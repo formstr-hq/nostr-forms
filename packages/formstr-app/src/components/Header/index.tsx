@@ -115,10 +115,10 @@ export const NostrHeader = () => {
 
   const getEncryptionMenuIcon = () => {
     if (encryptionError) {
-      return <ExclamationCircleOutlined style={{ color: "#faad14" }} />;
+      return <ExclamationCircleOutlined style={{ color: "var(--app-color-warning)" }} />;
     }
-    if (isEncrypted) return <LockOutlined style={{ color: "#52c41a" }} />;
-    return <WarningOutlined style={{ color: "#faad14" }} />;
+    if (isEncrypted) return <LockOutlined style={{ color: "var(--app-color-success)" }} />;
+    return <WarningOutlined style={{ color: "var(--app-color-warning)" }} />;
   };
 
   const renderEncryptionModalContent = () => {
