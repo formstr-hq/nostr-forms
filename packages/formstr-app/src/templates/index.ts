@@ -1,16 +1,17 @@
-import { blankTemplate } from './blank';
-import { rsvpTemplate } from './rsvp';
-import { contactInfoTemplate } from './contactInfo';
-import { eventRegistrationTemplate } from './eventRegistration';
-import { partyInviteTemplate } from './partyInvite';
+import { createBlankTemplate } from './blank';
+import { createRsvpTemplate } from './rsvp';
+import { createContactInfoTemplate } from './contactInfo';
+import { createEventRegistrationTemplate } from './eventRegistration';
+import { createPartyInviteTemplate } from './partyInvite';
 import { FormTemplate } from './types';
+import { TFunction } from 'i18next';
 
-export const availableTemplates: FormTemplate[] = [
-  blankTemplate,
-  rsvpTemplate,
-  contactInfoTemplate,
-  partyInviteTemplate,
-  eventRegistrationTemplate,
+export const getAvailableTemplates = (t: TFunction): FormTemplate[] => [
+  createBlankTemplate(t),
+  createRsvpTemplate(t),
+  createContactInfoTemplate(t),
+  createPartyInviteTemplate(t),
+  createEventRegistrationTemplate(t),
 ];
 
 export * from './types';

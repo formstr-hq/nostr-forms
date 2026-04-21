@@ -10,6 +10,7 @@ export const LOCAL_STORAGE_KEYS = {
   SUBMISSIONS: "formstr:submissions",
   PROFILE: "formstr:profile",
   OLLAMA_CONFIG: "formstr:ollama_config",
+  APP_LOCALE: "formstr:locale",
 };
 
 export interface LocalFormsMeta {

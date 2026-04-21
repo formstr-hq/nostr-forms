@@ -43,12 +43,26 @@ export default function SafeMarkdown({
         ...(defaultSchema.attributes?.span ?? []),
         ["style", /^color\s*:\s*#[0-9a-fA-F]{3,6}\s*;?\s*$/],
       ],
+      audio: [
+        ...(defaultSchema.attributes?.audio ?? []),
+        "controls",
+        "src",
+      ],
+      video: [
+        ...(defaultSchema.attributes?.video ?? []),
+        "controls",
+        "src",
+        ["style", /^[\w\s:;%]+$/],
+      ],
     },
+    tagNames: [
+      ...(defaultSchema.tagNames ?? []),
+      "audio",
+      "video",
+    ],
   };
 
   const baseRemarkPlugins: Options["remarkPlugins"] = [remarkGfm];
-
-  // Base plugins
   const basePlugins: Options["rehypePlugins"] = [
     rehypeRaw,
     [rehypeSanitize, schema],

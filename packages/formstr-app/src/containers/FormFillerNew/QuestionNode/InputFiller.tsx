@@ -44,9 +44,8 @@ export const InputFiller: React.FC<InputFillerProps> = ({
     onChange(e.target.value);
   };
 
-  const handleValueChange = (value: string | null, message?: string) => {
-    if (value === null || value === undefined) return;
-    onChange(value, message);
+  const handleValueChange = (value: string | number | null, message?: string) => {
+    onChange(value?.toString() ?? "", message);
   };
 
   const getInput = (answerType: AnswerTypes) => {

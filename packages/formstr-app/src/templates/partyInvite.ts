@@ -1,5 +1,6 @@
 import { FormTemplate } from './types';
 import { Field, Option } from '../nostr/types';
+import { TFunction } from 'i18next';
 
 let fieldCounter = 0;
 let optionCounter = 0;
@@ -13,16 +14,14 @@ const createOptionsString = (options: Array<[string, string]>): string => {
 
 const emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 
-const partyDescription = `Party description here`;
-
-export const partyInviteTemplate: FormTemplate = {
+export const createPartyInviteTemplate = (t: TFunction): FormTemplate => ({
   id: 'partyInvite',
-  name: 'Party Invite',
-  description: 'Invite guests to a party.',
+  name: t('templates.partyInvite.name'),
+  description: t('templates.partyInvite.description'),
   initialState: {
-    formName: 'Party Invite', 
+    formName: t('templates.partyInvite.formName'),
     formSettings: {
-      description: partyDescription, 
+      description: t('templates.partyInvite.formDescription'),
       thankYouPage: true,
       notifyNpubs: [],
       publicForm: true,
@@ -36,7 +35,7 @@ export const partyInviteTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'What is your name?', // label
+        t('templates.partyInvite.nameQuestion'),
         '[]', // options
         '{"renderElement": "shortText", "required": true}', // config
       ] as Field,
@@ -46,10 +45,10 @@ export const partyInviteTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'option', // dataType
-        'Can you attend?', // label
+        t('templates.partyInvite.attendQuestion'),
         createOptionsString([
-          ["Yes, I'll be there", ""],
-          ["Sorry, can't make it", ""],
+          [t('templates.partyInvite.yesAttend'), ""],
+          [t('templates.partyInvite.cantAttend'), ""],
         ]), // options
         '{"renderElement": "radioButton", "required": true}', // config
       ] as Field,
@@ -59,7 +58,7 @@ export const partyInviteTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'number', // dataType
-        'How many of you are attending?', // label
+        t('templates.partyInvite.partySizeQuestion'),
         '[]', // options
         '{"renderElement": "number", "required": false, "min": 1}', // config (min 1 if they enter a number)
       ] as Field,
@@ -69,14 +68,14 @@ export const partyInviteTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'option', // dataType
-        'What will you be bringing? (Let us know what kind of dish(es) you\'ll be bringing)', // label (Combined for clarity)
+        t('templates.partyInvite.bringingQuestion'),
         createOptionsString([
-          ["Mains", ""],
-          ["Salad", ""],
-          ["Dessert", ""],
-          ["Drinks", ""],
-          ["Sides/Appetizers", ""],
-          ["Other:", ""], // Included "Other" as a standard option
+          [t('templates.partyInvite.mains'), ""],
+          [t('templates.partyInvite.salad'), ""],
+          [t('templates.partyInvite.dessert'), ""],
+          [t('templates.partyInvite.drinks'), ""],
+          [t('templates.partyInvite.sides'), ""],
+          [t('templates.partyInvite.other'), ""],
         ]), // options
         '{"renderElement": "checkboxes", "required": false}', // config
       ] as Field,
@@ -86,7 +85,7 @@ export const partyInviteTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'Do you have any allergies or dietary restrictions?', // label
+        t('templates.partyInvite.allergiesQuestion'),
         '[]', // options
         '{"renderElement": "paragraph", "required": false}', // config
       ] as Field,
@@ -96,7 +95,7 @@ export const partyInviteTemplate: FormTemplate = {
         'field', 
         generateFieldId(),
         'text', // dataType
-        'What is your email address?', // label
+        t('templates.partyInvite.emailQuestion'),
         '[]', // options
         JSON.stringify({ // Stringify the config object
             renderElement: "shortText",
@@ -104,14 +103,14 @@ export const partyInviteTemplate: FormTemplate = {
             validationRules: {
               regex: {
                 pattern: emailRegex,
-                errorMessage: "Please enter a valid email address."
+                errorMessage: t('templates.partyInvite.emailInvalid')
               }
             }
           }), // config
       ] as Field,
     ],
   },
-};
+});
 
 fieldCounter = 0;
 optionCounter = 0;

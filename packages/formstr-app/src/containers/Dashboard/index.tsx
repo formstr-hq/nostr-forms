@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FormDetails } from "../CreateFormNew/components/FormDetails";
 import { Event } from "nostr-tools";
 import { useProfileContext } from "../../hooks/useProfileContext";
@@ -17,21 +18,13 @@ import { MyForms } from "./FormCards/MyForms";
 import { Drafts } from "./FormCards/Drafts";
 import { LocalForms } from "./FormCards/LocalForms";
 import { useNavigate } from "react-router-dom";
-import { availableTemplates, FormTemplate } from "../../templates";
+import { getAvailableTemplates, FormTemplate } from "../../templates";
 import { ROUTES } from "../../constants/routes";
 import { FormInitData } from "../CreateFormNew/providers/FormBuilder/typeDefs";
 import { createFormSpecFromTemplate } from "../../utils/formUtils";
 import { Purchases } from "./FormCards/Purchases";
 import { SubCloser } from "nostr-tools/abstract-pool";
 import { getDefaultRelays } from "../../nostr/common";
-
-const MENU_OPTIONS = {
-  local: "On this device",
-  shared: "Shared with me",
-  myForms: "My forms",
-  drafts: "Drafts",
-  purchases: "Purchases",
-};
 
 type FilterType = "local" | "shared" | "myForms" | "drafts" | "purchases";
 
@@ -51,6 +44,7 @@ const ROUTE_TO_FILTER_MAP: RouteMapType = {
 const defaultRelays = getDefaultRelays();
 
 export const Dashboard = () => {
+  const { t } = useTranslation();
   const { state } = useLocation();
   const location = useLocation();
   const { pubkey } = useProfileContext();
@@ -65,6 +59,14 @@ export const Dashboard = () => {
   } = useLocalForms();
   const [nostrForms, setNostrForms] = useState<Map<string, Event>>(new Map());
   const [showImportModal, setShowImportModal] = useState(false);
+  const availableTemplates = getAvailableTemplates(t);
+  const menuOptions: Record<FilterType, string> = {
+    local: t("dashboard.filters.local"),
+    shared: t("dashboard.filters.shared"),
+    myForms: t("dashboard.filters.myForms"),
+    drafts: t("dashboard.filters.drafts"),
+    purchases: t("dashboard.filters.purchases"),
+  };
 
   const getCurrentFilterFromPath = (): FilterType => {
     const path = location.pathname;
@@ -140,9 +142,9 @@ export const Dashboard = () => {
           <EmptyScreen
             templates={availableTemplates}
             onTemplateClick={handleTemplateClick}
-            message="No forms found on this device. Start by choosing a template:"
+            message={t("dashboard.localEmpty")}
             action={() => navigate(ROUTES.CREATE_FORMS_NEW)}
-            actionLabel="Create New Form"
+            actionLabel={t("header.createForm")}
           />
         );
       }
@@ -156,7 +158,7 @@ export const Dashboard = () => {
       );
     } else if (filter === "shared") {
       if (nostrForms.size == 0) {
-        return <EmptyScreen message="No forms shared with you." />;
+        return <EmptyScreen message={t("dashboard.sharedEmpty")} />;
       }
       return Array.from(nostrForms.values()).map((formEvent: Event) => {
         let d_tag = formEvent.tags.find((t) => t[0] === "d")?.[1];
@@ -188,32 +190,32 @@ export const Dashboard = () => {
   };
 
   const menu = (
-    <Menu style={{ textAlign: "center" }}>
+      <Menu style={{ textAlign: "center" }}>
       <Menu.Item key="local" onClick={() => handleFilterChange("local")}>
-        {MENU_OPTIONS.local}
+        {menuOptions.local}
       </Menu.Item>
       <Menu.Item
         key="shared"
         onClick={() => handleFilterChange("shared")}
         disabled={!pubkey}
       >
-        {MENU_OPTIONS.shared}
+        {menuOptions.shared}
       </Menu.Item>
       <Menu.Item
         key="myForms"
         onClick={() => handleFilterChange("myForms")}
         disabled={!pubkey}
       >
-        {MENU_OPTIONS.myForms}
+        {menuOptions.myForms}
       </Menu.Item>
       <Menu.Item key="drafts" onClick={() => handleFilterChange("drafts")}>
-        {MENU_OPTIONS.drafts}
+        {menuOptions.drafts}
       </Menu.Item>
       <Menu.Item
         key="purchases"
         onClick={() => handleFilterChange("purchases")}
       >
-        {MENU_OPTIONS.purchases}
+        {menuOptions.purchases}
       </Menu.Item>
     </Menu>
   );
@@ -229,7 +231,7 @@ export const Dashboard = () => {
             overlayClassName="dashboard-filter-menu"
           >
             <Button>
-              {MENU_OPTIONS[filter]}
+              {menuOptions[filter]}
               <DownOutlined style={{ marginLeft: "8px", fontSize: "12px" }} />
             </Button>
           </Dropdown>
@@ -238,15 +240,16 @@ export const Dashboard = () => {
             onClick={() => setShowImportModal(true)}
             style={{ marginLeft: 8 }}
           >
-            Import
+            {t("dashboard.import")}
           </Button>
         </div>
         {filter === "local" && isEncrypted && !pubkey && (
           <Alert
-            message="Encrypted forms on this device"
+            message={t("dashboard.encryptedFormsTitle")}
             description={
               encryptionMeta?.encryptedBy
-                ? `You have forms encrypted for ${(() => {
+                ? t("dashboard.encryptedFormsFor", {
+                    npub: (() => {
                     try {
                       const npub = nip19.npubEncode(encryptionMeta.encryptedBy);
                       return npub.slice(0, 12) + "..." + npub.slice(-8);
@@ -257,8 +260,9 @@ export const Dashboard = () => {
                         encryptionMeta.encryptedBy.slice(-8)
                       );
                     }
-                  })()}. Login with that key to access them.`
-                : "You have encrypted forms stored on this device. Login to access them."
+                  })(),
+                  })
+                : t("dashboard.encryptedFormsDescription")
             }
             type="info"
             showIcon

@@ -7,6 +7,7 @@ import {
   MailOutlined,
 } from "@ant-design/icons";
 import { ROUTES } from "../../constants/routes";
+import { TFunction } from "i18next";
 
 export const HEADER_MENU_KEYS = {
   PUBLIC_FORMS: "PUBLIC_FORMS",
@@ -16,10 +17,10 @@ export const HEADER_MENU_KEYS = {
   CONTACT_US: "CONTACT_US",
 };
 
-export const HEADER_MENU = [
+export const getHeaderMenu = (t: TFunction) => [
   {
     key: HEADER_MENU_KEYS.HELP,
-    label: "Help",
+    label: t("header.help"),
     icon: <InfoCircleOutlined />,
   },
   {
@@ -31,7 +32,7 @@ export const HEADER_MENU = [
         rel="noopener noreferrer"
         style={{ textDecoration: "none" }}
       >
-        Contact Us
+        {t("header.contactUs")}
       </a>
     ),
     icon: <MailOutlined />,
@@ -43,13 +44,13 @@ export const HEADER_MENU = [
         type="primary"
         icon={<PlusOutlined style={{ paddingTop: "2px" }} />}
       >
-        Create Form
+        {t("header.createForm")}
       </Button>
     ),
   },
   {
     key: HEADER_MENU_KEYS.PUBLIC_FORMS,
-    label: "Bulletin Board",
+    label: t("header.bulletinBoard"),
     icon: (
       <Link to={ROUTES.PUBLIC_FORMS}>
         <SearchOutlined />

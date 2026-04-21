@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Input, Drawer, Button, Typography } from "antd";
+import { useTranslation } from "react-i18next";
 import { ImagePicker } from "../../BackgroundImagePicker";
 import { sampleThankYouScreens } from "../constants";
 const { Text } = Typography;
@@ -13,11 +14,14 @@ export const ThankYouScreenImageSetting: React.FC<Props> = ({
   value,
   onChange,
 }) => {
+  const { t } = useTranslation();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <div style={{ marginTop: 16 }}>
-      <Text className="property-name">ThankYou Screen Image</Text>
+      <Text className="property-name">
+        {t("builder.formSettings.thankYouImage")}
+      </Text>
       <div
         style={{
           display: "flex",
@@ -26,7 +30,7 @@ export const ThankYouScreenImageSetting: React.FC<Props> = ({
         }}
       >
         <Input
-          placeholder="Enter custom image URL"
+          placeholder={t("builder.formSettings.customImageUrl")}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -34,7 +38,7 @@ export const ThankYouScreenImageSetting: React.FC<Props> = ({
       </div>
 
       <Drawer
-        title="Choose a Background"
+        title={t("builder.formSettings.chooseBackground")}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={500}

@@ -193,21 +193,14 @@ export async function encryptFileToAuthor(
   let uploaderPubkey: string;
   const plaintextBase64 = uint8ArrayToBase64(fileBytes);
 
-  console.log("encryptFileToAuthor called with:", {
-    formAuthorPubkey,
-    hasResponderSecretKey: !!responderSecretKey,
-  });
-
   // If responderSecretKey provided (anonymous submission)
   if (responderSecretKey) {
     uploaderPubkey = getPublicKey(responderSecretKey);
-    console.log("Using responderSecretKey, uploaderPubkey:", uploaderPubkey);
 
     const conversationKey = nip44.v2.utils.getConversationKey(
       responderSecretKey,
       formAuthorPubkey
     );
-    console.log("Encryption conversationKey:", conversationKey);
 
     // Use our custom implementation that handles large payloads
     const ciphertext = await nip44EncryptLarge(plaintextBase64, conversationKey);
@@ -235,25 +228,14 @@ export async function decryptFileFromUploader(
   formEditKey: string,
   uploaderPubkey: string
 ): Promise<Uint8Array> {
-  console.log("decryptFileFromUploader called with:", {
-    formEditKey: formEditKey.substring(0, 10) + "...",
-    formEditKeyFull: formEditKey,
-    uploaderPubkey: uploaderPubkey.substring(0, 10) + "...",
-    uploaderPubkeyFull: uploaderPubkey,
-    ciphertextLength: ciphertext.length,
-  });
-
   try {
     // Create conversation key between form's edit key and uploader's pubkey
     const formEditKeyBytes = hexToBytes(formEditKey);
-    console.log("formEditKeyBytes:", formEditKeyBytes);
 
     const conversationKey = nip44.v2.utils.getConversationKey(
       formEditKeyBytes,
       uploaderPubkey
     );
-
-    console.log("Conversation key created:", conversationKey);
 
     // Decrypt using our custom implementation that handles large payloads
     const plaintextBase64 = await nip44DecryptLarge(ciphertext, conversationKey);
@@ -262,7 +244,6 @@ export async function decryptFileFromUploader(
       throw new Error("Decryption failed");
     }
 
-    console.log("Decryption successful, plaintextBase64 length:", plaintextBase64.length);
     return base64ToUint8Array(plaintextBase64);
   } catch (error) {
     console.error("decryptFileFromUploader error:", error);

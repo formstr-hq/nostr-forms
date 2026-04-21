@@ -1,6 +1,7 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button, Spin, Typography } from "antd";
+import { useTranslation } from "react-i18next";
 import { Event, nip19 } from "nostr-tools";
 import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
 import { useProfileContext } from "../../hooks/useProfileContext";
@@ -59,11 +60,12 @@ export const FormFiller: React.FC<FormFillerProps> = ({
   naddr: _naddr,
   viewKey: _viewKey,
 }) => {
+  const { t } = useTranslation();
   let { naddr } = useParams();
   naddr = naddr || _naddr;
   const isPreview = !!formSpec;
   if (!isPreview && !naddr)
-    return <Text> Not enough data to render this url </Text>;
+    return <Text>{t("common.labels.invalidUrl")}</Text>;
   let decodedData;
   if (!isPreview) decodedData = nip19.decode(naddr!).data as AddressPointer;
   const pubKey = decodedData?.pubkey;
@@ -113,7 +115,7 @@ export const FormFiller: React.FC<FormFillerProps> = ({
   };
 
   if ((!pubKey || !formId) && !isPreview) {
-    return <Text>INVALID FORM URL</Text>;
+    return <Text>{t("common.labels.invalidFormUrl")}</Text>;
   }
   if (!formEvent && !isPreview) {
     return (
@@ -155,14 +157,14 @@ export const FormFiller: React.FC<FormFillerProps> = ({
     return (
       <>
         <Text>
-          This form is access controlled and requires login to continue
+          {t("filler.accessControlled")}
         </Text>
         <Button
           onClick={() => {
             requestPubkey();
           }}
         >
-          Login
+          {t("common.actions.login")}
         </Button>
       </>
     );

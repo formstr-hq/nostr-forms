@@ -1,4 +1,5 @@
 import { Tooltip, Typography } from "antd";
+import { useTranslation } from "react-i18next";
 import { isMobile } from "../../../../../utils/utility";
 import useFormBuilderContext from "../../../hooks/useFormBuilderContext";
 import { EditOutlined } from "@ant-design/icons";
@@ -15,18 +16,19 @@ enum ROLE {
 
 const { Text } = Typography;
 export const Sharing = () => {
+  const { t } = useTranslation();
   const { pubkey: userPubkey, requestPubkey } = useProfileContext();
   const [isEditListOpen, setIsEditListOpen] = useState<boolean>(false);
   const [isViewListOpen, setIsViewListOpen] = useState<boolean>(false);
   return (
     <>
       <Tooltip
-        title="Configure who can access this form and how?"
+        title={t("builder.sharing.configureTooltip")}
         trigger={isMobile() ? "click" : "hover"}
       >
         <div className="sharing-settings">
           <div className="property-setting">
-            <Text>Configure Form Admins</Text>
+            <Text>{t("builder.sharing.configureAdmins")}</Text>
             <EditOutlined
               onClick={() => {
                 setIsEditListOpen(true);
@@ -34,7 +36,7 @@ export const Sharing = () => {
             />
           </div>
           <div className="property-setting">
-            <Text>Participants & Visibility</Text>
+            <Text>{t("builder.sharing.participantsVisibility")}</Text>
             <EditOutlined onClick={() => setIsViewListOpen(true)} />
           </div>
           <Editors

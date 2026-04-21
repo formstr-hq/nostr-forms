@@ -5,9 +5,11 @@ import Inputs from "./Inputs";
 import StyledWrapper from "./index.style";
 import QuestionTextStyle from "./question.style";
 import { Choice } from "./InputElements/OptionTypes/types";
-import UploadImage from "./UploadImage";
+import { normalizeChoices } from "./InputElements/OptionTypes/utils";
+import UploadFile from "./UploadFile";
 import { AnswerSettings, AnswerTypes, Field } from "../../../../nostr/types";
 import { ColorfulMarkdownTextarea } from "../../../../components/SafeMarkdown/ColorfulMarkdownInput";
+import { useTranslation } from "react-i18next";
 
 type QuestionCardProps = {
   question: Field;
@@ -24,6 +26,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
   firstQuestion,
   lastQuestion,
 }) => {
+  const { t } = useTranslation();
   const answerSettings = JSON.parse(
     question[5] || '{"renderElement": "shortText"}',
   );
@@ -43,8 +46,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
       options = { columns: [], rows: [] } as any;
     }
   } else {
-    // For regular option-based questions, parse as Array<Choice>
-    options = JSON.parse(question[4] || "[]") as Array<Choice>;
+    try {
+      const parsed = JSON.parse(question[4] || "[]");
+      options = normalizeChoices(parsed);
+    } catch {
+      options = [];
+    }
   }
   const {
     setQuestionIdInFocus,
@@ -116,18 +123,22 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         {!!sections.length && (
           <div style={{ marginBottom: 16 }}>
             <Space>
-              <span style={{ fontSize: 12, color: "#8c8c8c" }}>Section:</span>
+              <span style={{ fontSize: 12, color: "#8c8c8c" }}>
+                {t("builder.questionCard.section")}
+              </span>
               <Select
                 size="small"
                 value={currentSectionId || "unsectioned"}
                 onChange={handleSectionChange}
                 style={{ minWidth: 120 }}
-                placeholder="Select section"
+                placeholder={t("builder.chooseSection")}
               >
-                <Select.Option value="unsectioned">Unsectioned</Select.Option>
+                <Select.Option value="unsectioned">
+                  {t("builder.questionCard.unsectioned")}
+                </Select.Option>
                 {sections.map((section) => (
                   <Select.Option key={section.id} value={section.id}>
-                    {section.title || "Untitled Section"}
+                    {section.title || t("builder.questionCard.untitledSection")}
                   </Select.Option>
                 ))}
               </Select>
@@ -145,12 +156,12 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
                 key={question[1]}
                 value={question[3] || ""}
                 onChange={handleTextChange}
-                placeholder="Enter a Question"
+                placeholder={t("builder.enterQuestion")}
                 color={formSettings.colors?.question ?? formSettings.colors?.global ?? formSettings.globalColor}
               />
             </label>
           </QuestionTextStyle>
-          <UploadImage
+          <UploadFile
             onImageUpload={(markdownUrl) => {
               const currentDisplay = question[3] || "";
               const newDisplay = currentDisplay

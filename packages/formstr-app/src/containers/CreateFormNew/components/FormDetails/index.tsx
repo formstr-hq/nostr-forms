@@ -1,5 +1,6 @@
 import { Modal, Card, Divider, Typography, Button, Alert } from "antd";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import FormDetailsStyle from "./FormDetails.style";
 import { useProfileContext } from "../../../../hooks/useProfileContext";
 import {
@@ -38,6 +39,7 @@ export const FormDetails = ({
   onClose: () => void;
   disablePreview?: boolean;
 }) => {
+  const { t } = useTranslation();
   const [savedLocally, setSavedLocally] = useState(false);
   const { pubkey: userPub, requestPubkey } = useProfileContext();
   const { saveToMyForms, inMyForms } = useMyForms();
@@ -88,9 +90,9 @@ export const FormDetails = ({
         <Card
           bordered={false}
           tabList={[
-            { key: "share", label: "Share" },
-            { key: "sdk", label: "Embed with SDK " },
-            { key: "embed", label: "Embed as iframe" },
+            { key: "share", label: t("builder.formDetails.share") },
+            { key: "sdk", label: t("builder.formDetails.embedWithSdk") },
+            { key: "embed", label: t("builder.formDetails.embedAsIframe") },
           ]}
           onTabChange={(key) => setActiveTab(key as "share" | "embed" | "sdk")}
           style={{
