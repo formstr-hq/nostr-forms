@@ -3,12 +3,14 @@ import { Button, Modal, message } from "antd";
 import { useState } from "react";
 import { useLocalForms } from "../../../provider/LocalFormsProvider";
 import { IDeleteFormsLocal, IDeleteFormsTrigger } from "./types";
+import { useTranslation } from "react-i18next";
 
 function DeleteConfirmationLocal({
   formKey,
   onCancel,
   onDeleted,
 }: IDeleteFormsLocal) {
+  const { t } = useTranslation();
   const { deleteLocalForm } = useLocalForms();
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +20,7 @@ function DeleteConfirmationLocal({
       await deleteLocalForm(formKey);
       onDeleted();
     } catch (e) {
-      message.error("Failed to delete form");
+      message.error(t("dashboardCards.delete.failed"));
     } finally {
       setLoading(false);
     }
@@ -26,13 +28,13 @@ function DeleteConfirmationLocal({
 
   return (
     <Modal
-      title={"Are you sure you want to delete this form from your device?"}
+      title={t("dashboardCards.delete.title")}
       open
       onOk={onDeleteForm}
       onCancel={onCancel}
       confirmLoading={loading}
     >
-      <p>This action is irreversible</p>
+      <p>{t("dashboardCards.delete.irreversible")}</p>
     </Modal>
   );
 }

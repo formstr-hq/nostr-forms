@@ -18,6 +18,7 @@ import { useProfileContext } from "../../../../../hooks/useProfileContext";
 import { ZapQRCodeModal } from "./zapQRModal";
 import { useNavigate } from "react-router-dom";
 import UniversalMarkdownModal from "../../../../../components/UniversalMarkdownModal";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -36,6 +37,7 @@ export const CustomSlugForm = ({
   showAccessWarning?: boolean;
   onEditClick?: () => void;
 }) => {
+  const { t } = useTranslation();
   const [slug, setSlug] = useState(formId?.toLocaleLowerCase().trim());
   const [checking, setChecking] = useState(false);
   const [available, setAvailable] = useState<boolean | null>(null);
@@ -84,7 +86,7 @@ export const CustomSlugForm = ({
       if (err.response?.status === 404) {
         setAvailable(true); // not found = available
       } else {
-        setError(err.response?.data?.error || "Server error");
+        setError(err.response?.data?.error || t("builder.formDetails.customSlug.serverError"));
       }
     } finally {
       setChecking(false);
@@ -130,7 +132,10 @@ export const CustomSlugForm = ({
       setInvoice(invoice);
       setHash(paymentHash);
     } catch (err: any) {
-      setError(err.response?.data?.error || `Payment error: ${err}`);
+      setError(
+        err.response?.data?.error ||
+          t("builder.formDetails.customSlug.paymentError", { error: err }),
+      );
     } finally {
       setPaying(false); // ✅ stop loading no matter what
     }
@@ -143,22 +148,24 @@ export const CustomSlugForm = ({
       {(serverAvailable === true || serverAvailable === null) && (
         <Card style={{ marginTop: 5 }}>
           <Typography.Title level={5}>
-            Custom URL for Your Form
+            {t("builder.formDetails.customSlug.title")}
           </Typography.Title>
           {serverAvailable === null && (
             <Typography.Paragraph type="secondary">
-              Checking server status...
+              {t("builder.formDetails.customSlug.checkingServer")}
             </Typography.Paragraph>
           )}
           {serverAvailable && (
             <>
               <Typography.Paragraph type="secondary">
-                Get a personalized form URL like{" "}
-                <Typography.Text code>/i/your-name</Typography.Text> for{" "}
+                {t("builder.formDetails.customSlug.introPrefix")}{" "}
+                <Typography.Text code>/i/your-name</Typography.Text>{" "}
+                {t("builder.formDetails.customSlug.introSuffix")}{" "}
                 <Typography.Text strong>{price} sats</Typography.Text>.
                 <br />
-                This one-time purchase is tied to your{" "}
-                <Typography.Text code>Nostr</Typography.Text> profile.
+                {t("builder.formDetails.customSlug.oneTimePurchase")}{" "}
+                <Typography.Text code>Nostr</Typography.Text>{" "}
+                {t("builder.formDetails.customSlug.nostrProfile")}
               </Typography.Paragraph>
               {!showCustomForm ? (
                 <Button
@@ -168,7 +175,9 @@ export const CustomSlugForm = ({
                   }
                   disabled={!userPub}
                 >
-                  {userPub ? "Claim Custom URL" : "Login to claim custom URL"}
+                  {userPub
+                    ? t("builder.formDetails.customSlug.claimCustomUrl")
+                    : t("builder.formDetails.customSlug.loginToClaim")}
                 </Button>
               ) : (
                 <>
@@ -180,14 +189,14 @@ export const CustomSlugForm = ({
                   >
                     {!isLoggedIn && (
                       <Alert
-                        message="You must be logged in with Nostr to claim a custom URL."
+                        message={t("builder.formDetails.customSlug.loginRequired")}
                         type="warning"
                         showIcon
                       />
                     )}
 
                     <Input
-                      placeholder="your-custom-slug"
+                      placeholder={t("builder.formDetails.customSlug.slugPlaceholder")}
                       value={slug}
                       onChange={(e) => {
                         setSlug(e.target.value.trim());
@@ -210,7 +219,7 @@ export const CustomSlugForm = ({
                           onClick={checkAvailability}
                           disabled={!slug || !isLoggedIn}
                         >
-                          Check Availability
+                          {t("builder.formDetails.customSlug.checkAvailability")}
                         </Button>
                       </Col>
                       <Col>
@@ -220,18 +229,18 @@ export const CustomSlugForm = ({
                           disabled={!available || !isLoggedIn || paying}
                           loading={paying}
                         >
-                          Pay to Claim
+                          {t("builder.formDetails.customSlug.payToClaim")}
                         </Button>
                       </Col>
                     </Row>
 
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                      By continuing, you agree to our{" "}
+                      {t("builder.formDetails.customSlug.termsIntro")}{" "}
                       <a
                         onClick={() => setShowTermsModal(true)}
                         style={{ textDecoration: "underline" }}
                       >
-                        Terms of Service and Privacy Policy
+                        {t("builder.formDetails.customSlug.termsLink")}
                       </a>
                       .
                     </Text>
@@ -258,12 +267,7 @@ export const CustomSlugForm = ({
                         message={
                           <>
                             <Text style={{ fontSize: 10 }}>
-                              Your current current form visitibilty is set to
-                              "Anyone with the link can access your form", if
-                              you proceed with customized links with this
-                              setting Formstr Inc will also be able to access
-                              this form. To change it, so that only fixed
-                              participants can access the form, please click
+                              {t("builder.formDetails.customSlug.accessWarning")}
                             </Text>
                             {onEditClick && (
                               <Button
@@ -275,7 +279,7 @@ export const CustomSlugForm = ({
                                 }}
                                 onClick={onEditClick}
                               >
-                                here
+                                {t("builder.formDetails.customSlug.here")}
                               </Button>
                             )}
                           </>
@@ -303,7 +307,7 @@ export const CustomSlugForm = ({
       <UniversalMarkdownModal
         visible={showTermsModal}
         onClose={() => setShowTermsModal(false)}
-        title="Terms & Privacy"
+        title={t("builder.formDetails.customSlug.termsTitle")}
         filePath="/docs/TermsOfUse.md"
       />
     </div>

@@ -4,6 +4,7 @@ import { InboxOutlined } from "@ant-design/icons";
 import { IAnswerSettings } from "../../AnswerSettings/types";
 import { DEFAULT_SERVERS, ServerInfo } from "../../AnswerSettings/settings/FileUploadSettings";
 import { pool } from "../../../../../pool";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 const { Dragger } = Upload;
@@ -24,6 +25,7 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
   answerSettings,
   handleAnswerSettings
 }) => {
+  const { t } = useTranslation();
   const [servers, setServers] = useState<ServerInfo[]>(
     DEFAULT_SERVERS.map((url) => ({ url, source: "default" as const }))
   );
@@ -100,9 +102,9 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
   const getSourceLabel = (source: string) => {
     switch (source) {
       case "relay":
-        return " (from relay)";
+        return t("builder.fileUploadSettings.sourceRelay");
       case "custom":
-        return " (custom)";
+        return t("builder.fileUploadSettings.sourceCustom");
       default:
         return "";
     }
@@ -114,16 +116,18 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
         <p className="ant-upload-drag-icon">
           <InboxOutlined />
         </p>
-        <p className="ant-upload-text">File upload field (users will upload here)</p>
+        <p className="ant-upload-text">
+          {t("builder.fileUploadSettings.uploadFieldHint")}
+        </p>
         <p className="ant-upload-hint">
-          Files will be encrypted and uploaded to Blossom server
+          {t("builder.fileUploadSettings.uploadFieldBody")}
         </p>
       </Dragger>
 
       {handleAnswerSettings && (
         <div>
           <Text type="secondary" style={{ fontSize: "12px", display: "block", marginBottom: 4 }}>
-            Blossom Server:
+            {t("builder.fileUploadSettings.blossomServer")}:
           </Text>
           <Select
             style={{ width: "100%" }}
@@ -142,7 +146,7 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
                       style={{ padding: 0 }}
                       size="small"
                     >
-                      + Add custom server
+                      + {t("builder.fileUploadSettings.addCustomServer")}
                     </Button>
                   ) : (
                     <Space.Compact style={{ width: "100%" }}>
@@ -153,7 +157,9 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
                         onPressEnter={handleAddCustomServer}
                         size="small"
                       />
-                      <Button onClick={handleAddCustomServer} size="small">Add</Button>
+                      <Button onClick={handleAddCustomServer} size="small">
+                        {t("builder.fileUploadSettings.add")}
+                      </Button>
                     </Space.Compact>
                   )}
                 </div>
@@ -172,15 +178,17 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
 
       <Space direction="vertical" size={0} style={{ width: "100%" }}>
         <Text type="secondary" style={{ fontSize: "12px" }}>
-          Max size: {maxFileSize} MB
+          {t("builder.fileUploadSettings.maxSize", { size: maxFileSize })}
         </Text>
         {allowedTypes.length > 0 && (
           <Text type="secondary" style={{ fontSize: "12px" }}>
-            Allowed types: {allowedTypes.join(", ")}
+            {t("builder.fileUploadSettings.allowedTypes", {
+              types: allowedTypes.join(", "),
+            })}
           </Text>
         )}
         <Text type="secondary" style={{ fontSize: "12px" }}>
-          Encryption: NIP-44 (always enabled)
+          {t("builder.fileUploadSettings.encryptionHint")}
         </Text>
       </Space>
     </Space>

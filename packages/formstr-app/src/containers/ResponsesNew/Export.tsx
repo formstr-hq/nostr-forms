@@ -1,22 +1,25 @@
 import React from "react";
 import { Dropdown, MenuProps } from "antd";
 import { DownOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 
 export const Export: React.FC<{
   responsesData: Array<{ [key: string]: string }>;
   formName: string;
 }> = ({ responsesData, formName }) => {
+  const { t } = useTranslation();
   const hasResponses = responsesData.length > 0;
 
   const onDownloadClick = async (type: "csv" | "excel") => {
     if (!hasResponses) {
-      alert("No responses to export");
+      alert(t("responses.export.noResponses"));
       return;
     }
 
     try {
       const XLSX = await import("xlsx");
-      const SheetName = `Responses for ${formName}`.substring(0, 16) + "...";
+      const SheetName =
+        t("responses.export.sheetName", { formName }).substring(0, 16) + "...";
       const workSheet = XLSX.utils.json_to_sheet(responsesData);
       const workBook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workBook, workSheet, `${SheetName}`);
@@ -28,34 +31,30 @@ export const Export: React.FC<{
         const errorMessage = error.message;
 
         if (errorMessage.includes("Cannot find module 'xlsx'")) {
-          alert("XLSX module not found. Please install the required package.");
+          alert(t("responses.export.moduleMissing"));
           console.error("Error exporting data:", error.message);
         } else if (errorMessage.includes("json_to_sheet")) {
-          alert(
-            "Failed to convert data to sheet. Please check the data format.",
-          );
+          alert(t("responses.export.convertFailed"));
         } else if (errorMessage.includes("writeFile")) {
-          alert(
-            "Failed to generate file. Please check your file system permissions.",
-          );
+          alert(t("responses.export.fileGenerationFailed"));
         } else {
           console.error("Unhandled export error:", error);
-          alert(`Export failed: ${errorMessage}`);
+          alert(t("responses.export.failed", { message: errorMessage }));
         }
       } else {
         console.error("Error exporting data:", error);
-        alert("An unknown error occurred. Please try again.");
+        alert(t("responses.export.unknownError"));
       }
     }
   };
 
   const items = [
     {
-      label: "Export as Excel",
+      label: t("responses.export.items.excel"),
       key: "excel",
     },
     {
-      label: "Export as CSV",
+      label: t("responses.export.items.csv"),
       key: "csv",
     },
   ];
@@ -81,7 +80,7 @@ export const Export: React.FC<{
       onClick={handleButtonClick}
       icon={<DownOutlined />}
     >
-      Export as excel
+      {t("responses.export.buttonExcel")}
     </Dropdown.Button>
   );
 };

@@ -6,6 +6,7 @@ import { makeFormNAddr, naddrUrl } from "../../../utils/utility";
 import { editPath, responsePath } from "../../../utils/formUtils";
 import { EditOutlined, MoreOutlined } from "@ant-design/icons";
 import SafeMarkdown from "../../../components/SafeMarkdown";
+import { useTranslation } from "react-i18next";
 
 interface LocalFormCardProps {
   form: ILocalForm;
@@ -17,6 +18,7 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
   form,
   onDeleted,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   let responseUrl = form.formId
     ? responsePath(
@@ -36,7 +38,7 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
   const menuItems: MenuProps["items"] = [
     {
       key: "edit",
-      label: "Edit",
+      label: t("common.actions.edit"),
       icon: <EditOutlined />,
       onClick: () =>
         navigate(
@@ -69,7 +71,7 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
             <Button
               type="text"
               style={{ color: "purple", marginRight: 14, cursor: "pointer" }}
-              aria-label="Quick actions"
+              aria-label={t("dashboardCards.quickActions")}
             >
               <MoreOutlined />
             </Button>
@@ -83,7 +85,7 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
           navigate(responseUrl);
         }}
       >
-        View Responses
+        {t("dashboardCards.viewResponses")}
       </Button>
       <Button
         onClick={(e: any) => {
@@ -94,7 +96,7 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
           marginLeft: "10px",
         }}
       >
-        Open Form
+        {t("dashboardCards.openForm")}
       </Button>
     </Card>
   );

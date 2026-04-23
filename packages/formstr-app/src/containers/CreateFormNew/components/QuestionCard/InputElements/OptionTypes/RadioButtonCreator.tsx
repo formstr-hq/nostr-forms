@@ -12,6 +12,7 @@ import {
 import { Choice, ChoiceSettings } from "./types";
 import { makeTag } from "../../../../../../utils/utility";
 import { ColorfulMarkdownTextarea } from "../../../../../../components/SafeMarkdown/ColorfulMarkdownInput";
+import { useTranslation } from "react-i18next";
 
 interface RadioButtonCreatorProps {
   initialValues?: Array<Choice>;
@@ -22,6 +23,7 @@ export const RadioButtonCreator: React.FC<RadioButtonCreatorProps> = ({
   initialValues,
   onValuesChange,
 }) => {
+  const { t } = useTranslation();
   const [choices, setChoices] = useState<Array<Choice>>(() =>
     normalizeChoices(initialValues),
   );
@@ -60,13 +62,13 @@ export const RadioButtonCreator: React.FC<RadioButtonCreatorProps> = ({
                 handleLabelChange(val, choiceId!, choices, handleNewChoices);
               }}
               value={label}
-              placeholder="Enter an option"
+              placeholder={t("builder.inputPreviews.optionPlaceholder")}
               className="choice-input"
               disabled={settings.isOther}
             />
             {settings.isOther && (
               <Input
-                placeholder="Respondent's custom answer..."
+                placeholder={t("builder.inputPreviews.customRespondentAnswer")}
                 disabled
                 style={{ maxWidth: 200 }}
                 className="choice-input"

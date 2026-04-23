@@ -7,6 +7,7 @@ import OllamaSettings from '../../../../components/OllamaSettings';
 import ModelSelector from '../../../../components/ModelSelector';
 import GenerationPanel from './GenerationPanel';
 import './styles.css';
+import { useTranslation } from "react-i18next";
 
 const FORM_GENERATION_SYSTEM_PROMPT = `You are an expert JSON generator. Based on the user's request, create a form structure.
 Here is the required JSON schema for the form:
@@ -50,6 +51,7 @@ For Example for output with one field:
 `;
 
 const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onClose, onFormGenerated }) => {
+    const { t } = useTranslation();
     const [prompt, setPrompt] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
@@ -74,7 +76,7 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
         const result = await ollamaService.testConnection();
         setLoading(false);
         if (result.success) {
-            message.success('Successfully connected to Ollama!');
+            message.success(t("builder.aiGenerator.connectionSuccess"));
             setConnectionStatus(true);
             fetchModels();
         } else {
@@ -82,19 +84,23 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
             if (result.error === 'EXTENSION_NOT_FOUND') {
                 message.error(
                     <>
-                        Ollama Web Companion extension not found. Please install it to use this feature.
+                        {t("builder.aiGenerator.extensionMissing")}
                         <Button
                             type="link"
                             href="https://github.com/ashu01304/Ollama_Web"
                             target="_blank"
                         >
-                            Get Extension
+                            {t("builder.aiGenerator.getExtension")}
                         </Button>
                     </>,
                     10
                 );
             } else {
-                message.error(`Connection failed: ${result.error}`);
+                message.error(
+                    t("builder.aiGenerator.connectionFailed", {
+                        error: result.error,
+                    }),
+                );
             }
         }
     }, [fetchModels]);
@@ -117,7 +123,7 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
 
     const handleGenerate = async () => {
         if (!prompt.trim()) {
-            message.error('Please enter a description for the form.');
+            message.error(t("builder.aiGenerator.promptRequired"));
             return;
         }
         setGenerating(true);
@@ -131,13 +137,16 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
             if (result.success && result.data?.response) {
                 const processedData = processOllamaFormData(JSON.parse(result.data.response));
                 onFormGenerated(processedData);
-                message.success('Form generated successfully!');
+                message.success(t("builder.aiGenerator.generatedSuccess"));
                 onClose();
             } else {
-                message.error(result.error || 'An unexpected error occurred during generation.');
+                message.error(
+                    result.error ||
+                      t("builder.aiGenerator.generationUnexpected"),
+                );
             }
         } catch (err: any) {
-            message.error(err.message || 'An unknown error occurred.');
+            message.error(err.message || t("builder.aiGenerator.generationUnknown"));
         } finally {
             setGenerating(false);
         }
@@ -155,14 +164,14 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
 
     return (
         <Modal
-            title="AI Form Generator"
+            title={t("builder.aiGenerator.title")}
             open={isOpen}
             onCancel={onClose}
             footer={null}
             width={800}
         >
             <Typography.Text type="secondary">
-                Powered by your local Ollama instance via the Formstr Companion extension.
+                {t("builder.aiGenerator.poweredBy")}
             </Typography.Text>
             <Divider className="ai-modal-divider" />
             <div className="ai-modal-controls-container">
@@ -181,7 +190,7 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
                     loading={loading}
                     {...getButtonProps()}
                 >
-                    Test Connection
+                    {t("builder.aiGenerator.testConnection")}
                 </Button>
             </div>
             <OllamaSettings />

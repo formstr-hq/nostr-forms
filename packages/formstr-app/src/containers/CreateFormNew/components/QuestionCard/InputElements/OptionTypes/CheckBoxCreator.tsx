@@ -11,6 +11,7 @@ import {
 } from "./utils";
 import { Choice, ChoiceSettings } from "./types";
 import { ColorfulMarkdownTextarea } from "../../../../../../components/SafeMarkdown/ColorfulMarkdownInput";
+import { useTranslation } from "react-i18next";
 
 interface CheckboxCreatorProps {
   initialValues?: Array<Choice>;
@@ -21,6 +22,7 @@ export const CheckboxCreator: React.FC<CheckboxCreatorProps> = ({
   initialValues,
   onValuesChange,
 }) => {
+  const { t } = useTranslation();
   const [choices, setChoices] = useState<Array<Choice>>(() =>
     normalizeChoices(initialValues),
   );
@@ -58,14 +60,14 @@ export const CheckboxCreator: React.FC<CheckboxCreatorProps> = ({
               onChange={(val) => {
                 handleLabelChange(val, choiceId!, choices, handleNewChoices);
               }}
-              placeholder="Enter an option"
+              placeholder={t("builder.inputPreviews.optionPlaceholder")}
               className="choice-input"
               disabled={settings.isOther}
               value={label}
             />
             {settings.isOther && (
               <Input
-                placeholder="Respondent's custom answer..."
+                placeholder={t("builder.inputPreviews.customRespondentAnswer")}
                 disabled
                 style={{ maxWidth: 200 }}
                 className="choice-input"

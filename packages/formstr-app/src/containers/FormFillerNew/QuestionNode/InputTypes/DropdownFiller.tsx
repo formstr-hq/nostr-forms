@@ -1,5 +1,6 @@
 import { Select } from "antd";
 import { Option } from "../../../../nostr/types";
+import { useTranslation } from "react-i18next";
 
 interface DropdownFillerProps {
   options: Option[];
@@ -16,6 +17,7 @@ export const DropdownFiller: React.FC<DropdownFillerProps> = ({
   disabled = false,
   testId = "dropdown-filler",
 }) => {
+  const { t } = useTranslation();
   return (
     <>
       <Select
@@ -25,7 +27,7 @@ export const DropdownFiller: React.FC<DropdownFillerProps> = ({
           return { value: choiceId, label: label };
         })}
         value={defaultValue}
-        placeholder="Select an option"
+        placeholder={t("filler.inputs.selectOption")}
         disabled={disabled}
         data-testid={`${testId}:select`}
       />

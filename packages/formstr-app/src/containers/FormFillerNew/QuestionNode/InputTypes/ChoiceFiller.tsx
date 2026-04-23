@@ -13,6 +13,7 @@ import ChoiceFillerStyle from "./choiceFiller.style";
 import { ChangeEvent, useState } from "react";
 import SafeMarkdown from "../../../../components/SafeMarkdown";
 import { AnswerTypes, Option } from "../../../../nostr/types";
+import { useTranslation } from "react-i18next";
 
 interface ChoiceFillerProps {
   answerType: AnswerTypes.checkboxes | AnswerTypes.radioButton;
@@ -31,7 +32,7 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
   disabled = false,
   testId = "choice-filler",
 }) => {
-  console.log("Received Options", options);
+  const { t } = useTranslation();
   const [otherMessage, setOtherMessage] = useState("");
 
   function handleChoiceChange(e: RadioChangeEvent): void;
@@ -98,7 +99,6 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
           {options.map((choice) => {
             let [choiceId, label, configString] = choice;
             let config = JSON.parse(configString || "{}");
-            console.log("choice is ", choiceId, label, choice);
             return (
               <ElementConfig.Element
                 key={choiceId}
@@ -109,7 +109,7 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
                 <SafeMarkdown>{label}</SafeMarkdown>
                 {config.isOther && (
                   <Input
-                    placeholder="Add an optional message..."
+                    placeholder={t("filler.inputs.optionalMessage")}
                     value={otherMessage}
                     onChange={handleMessage}
                     disabled={disabled || !isOtherSelected(choiceId)}
@@ -129,7 +129,7 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
             onClick={handleClear}
             style={{ padding: "4px 0", fontSize: "12px" }}
           >
-            Clear selection
+            {t("filler.inputs.clearSelection")}
           </Button>
         </div>
       )}
