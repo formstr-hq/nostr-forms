@@ -6,7 +6,7 @@ import StyledWrapper from "./index.style";
 import QuestionTextStyle from "./question.style";
 import { Choice } from "./InputElements/OptionTypes/types";
 import { normalizeChoices } from "./InputElements/OptionTypes/utils";
-import UploadImage from "./UploadImage";
+import UploadFile from "./UploadFile";
 import { AnswerSettings, AnswerTypes, Field } from "../../../../nostr/types";
 import { ColorfulMarkdownTextarea } from "../../../../components/SafeMarkdown/ColorfulMarkdownInput";
 import { useTranslation } from "react-i18next";
@@ -161,7 +161,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
               />
             </label>
           </QuestionTextStyle>
-          <UploadImage
+          <UploadFile
             onImageUpload={(markdownUrl) => {
               const currentDisplay = question[3] || "";
               const newDisplay = currentDisplay
