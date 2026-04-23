@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import { Modal, Button, Space } from "antd";
+import { useTranslation } from "react-i18next";
 
 interface SectionDeleteButtonProps {
   onDelete: () => void;
@@ -17,6 +18,7 @@ const SectionDeleteButton: React.FC<SectionDeleteButtonProps> = ({
   questionCount,
   sectionTitle,
 }) => {
+  const { t } = useTranslation();
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const handleDelete = () => {
@@ -38,14 +40,15 @@ const SectionDeleteButton: React.FC<SectionDeleteButtonProps> = ({
   const handleDeleteWithQuestions = () => {
     // Show confirmation for deleting questions too
     Modal.confirm({
-      title: "Delete Everything?",
+      title: t("builder.sectionDelete.deleteEverythingTitle"),
       icon: <ExclamationCircleOutlined />,
-      content: `This will permanently delete the section "${sectionTitle}" and all ${questionCount} question${
-        questionCount !== 1 ? "s" : ""
-      } in it. This action cannot be undone.`,
-      okText: "Delete All",
+      content: t("builder.sectionDelete.deleteEverythingBody", {
+        title: sectionTitle,
+        count: questionCount,
+      }),
+      okText: t("builder.sectionDelete.deleteAll"),
       okType: "danger",
-      cancelText: "Cancel",
+      cancelText: t("common.actions.cancel"),
       onOk: () => {
         onDeleteWithQuestions?.();
         setIsModalVisible(false);
@@ -69,7 +72,9 @@ const SectionDeleteButton: React.FC<SectionDeleteButtonProps> = ({
         title={
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <ExclamationCircleOutlined style={{ color: "#faad14" }} />
-            Delete Section "{sectionTitle}"?
+            {t("builder.sectionDelete.deleteSectionTitle", {
+              title: sectionTitle,
+            })}
           </div>
         }
         open={isModalVisible}
@@ -79,28 +84,28 @@ const SectionDeleteButton: React.FC<SectionDeleteButtonProps> = ({
       >
         <div style={{ marginBottom: "24px" }}>
           <p>
-            This section contains{" "}
             <strong>
-              {questionCount} question{questionCount !== 1 ? "s" : ""}
+              {t("builder.sectionDelete.containsQuestions", {
+                count: questionCount,
+              })}
             </strong>
-            .
           </p>
-          <p>What would you like to do?</p>
+          <p>{t("builder.sectionDelete.whatToDo")}</p>
         </div>
 
         <Space direction="vertical" style={{ width: "100%" }}>
           <Button type="primary" block onClick={handleMoveToUnsectioned}>
-            Delete Section Only (Move Questions to Unsectioned)
+            {t("builder.sectionDelete.deleteSectionOnly")}
           </Button>
 
           {onDeleteWithQuestions && (
             <Button danger block onClick={handleDeleteWithQuestions}>
-              Delete Section and All Questions
+              {t("builder.sectionDelete.deleteSectionAndQuestions")}
             </Button>
           )}
 
           <Button block onClick={handleCancel}>
-            Cancel
+            {t("common.actions.cancel")}
           </Button>
         </Space>
       </Modal>

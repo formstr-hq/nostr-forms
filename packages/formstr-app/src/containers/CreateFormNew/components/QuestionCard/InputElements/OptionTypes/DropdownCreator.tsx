@@ -6,6 +6,7 @@ import { AddOption } from "./AddOption";
 import { handleDelete, handleLabelChange, normalizeChoices } from "./utils";
 import { MenuItemType } from "antd/es/menu/hooks/useItems";
 import { Choice, ChoiceSettings } from "./types";
+import { useTranslation } from "react-i18next";
 
 interface RadioButtonCreatorProps {
   initialValues?: Array<Choice>;
@@ -16,6 +17,7 @@ export const DropdownCreator: React.FC<RadioButtonCreatorProps> = ({
   initialValues,
   onValuesChange,
 }) => {
+  const { t } = useTranslation();
   const [choices, setChoices] = useState<Array<Choice>>(() =>
     normalizeChoices(initialValues),
   );
@@ -46,7 +48,7 @@ export const DropdownCreator: React.FC<RadioButtonCreatorProps> = ({
                 );
               }}
               className="choice-input"
-              placeholder="Enter an option"
+              placeholder={t("builder.inputPreviews.optionPlaceholder")}
               disabled={settings.isOther}
             />
             <div>
@@ -75,8 +77,8 @@ export const DropdownCreator: React.FC<RadioButtonCreatorProps> = ({
         }}
       >
         <Button onClick={(e) => e.preventDefault()}>
-          Options {"( "}
-          {choices.length} {" )"} <CaretDownOutlined />
+          {t("builder.inputPreviews.optionsCount", { count: choices.length })}{" "}
+          <CaretDownOutlined />
         </Button>
       </Dropdown>
       <AddOption

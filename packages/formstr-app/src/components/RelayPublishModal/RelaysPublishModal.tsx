@@ -1,6 +1,7 @@
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { Button, Modal, Row, Spin, Typography } from "antd";
 import { normalizeURL } from "nostr-tools/utils";
+import { useTranslation } from "react-i18next";
 
 interface RelayPublishModalProps {
   relays: string[];
@@ -17,6 +18,7 @@ export const RelayPublishModal: React.FC<RelayPublishModalProps> = ({
   publishFailed,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const allRelaysAccepted =
     relays && relays.every((url) => acceptedRelays.includes(normalizeURL(url)));
 
@@ -61,7 +63,7 @@ export const RelayPublishModal: React.FC<RelayPublishModalProps> = ({
 
   return (
     <Modal
-      title="Publishing Form"
+      title={t("relayPublish.title")}
       open={isOpen}
       footer={
         canClose ? (
@@ -70,7 +72,9 @@ export const RelayPublishModal: React.FC<RelayPublishModalProps> = ({
             danger={publishFailed && acceptedRelays.length === 0}
             onClick={onClose}
           >
-            {publishFailed && acceptedRelays.length === 0 ? "Close" : "Done"}
+            {publishFailed && acceptedRelays.length === 0
+              ? t("common.actions.close")
+              : t("common.actions.done")}
           </Button>
         ) : null
       }
@@ -80,7 +84,8 @@ export const RelayPublishModal: React.FC<RelayPublishModalProps> = ({
     >
       <div>
         <Text strong style={{ display: "block", marginBottom: 16 }}>
-          Relays {allRelaysAccepted && "(Complete)"}
+          {t("relayPublish.relays")}{" "}
+          {allRelaysAccepted && `(${t("relayPublish.complete")})`}
         </Text>
         {renderRelays()}
         {publishFailed && acceptedRelays.length === 0 && (
@@ -88,8 +93,7 @@ export const RelayPublishModal: React.FC<RelayPublishModalProps> = ({
             type="danger"
             style={{ display: "block", marginTop: 16 }}
           >
-            No relays accepted the form. Please check your relay
-            configuration and try again.
+            {t("relayPublish.noRelaysAccepted")}
           </Text>
         )}
       </div>

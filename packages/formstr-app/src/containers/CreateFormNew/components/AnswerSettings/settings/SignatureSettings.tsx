@@ -1,6 +1,7 @@
 import { Input, InputNumber, Switch, Typography, Space } from "antd";
 import React from "react";
 import { IAnswerSettings } from "../types";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -13,6 +14,7 @@ export const SignatureSettings: React.FC<SignatureSettingsProps> = ({
   answerSettings,
   handleAnswerSettings,
 }) => {
+  const { t } = useTranslation();
   const sig = answerSettings.signature || {};
 
   const updateSignature = (key: string, value: any) => {
@@ -25,7 +27,9 @@ export const SignatureSettings: React.FC<SignatureSettingsProps> = ({
   return (
     <Space direction="vertical" style={{ width: "100%" }}>
       <div className="property-setting">
-        <Text className="property-name">Event Kind</Text>
+        <Text className="property-name">
+          {t("builder.signatureSettings.eventKind")}
+        </Text>
         <InputNumber
           min={0}
           value={sig.kind === 0 ? 0 : sig.kind || 22157}
@@ -34,7 +38,9 @@ export const SignatureSettings: React.FC<SignatureSettingsProps> = ({
       </div>
 
       <div className="property-setting">
-        <Text className="property-name">Editable Content</Text>
+        <Text className="property-name">
+          {t("builder.signatureSettings.editableContent")}
+        </Text>
         <Switch
           checked={sig.editableContent}
           onChange={(v) => updateSignature("editableContent", v)}
@@ -42,16 +48,20 @@ export const SignatureSettings: React.FC<SignatureSettingsProps> = ({
       </div>
 
       <div className="property-setting">
-        <Text className="property-name">Prefilled Content</Text>
+        <Text className="property-name">
+          {t("builder.signatureSettings.prefilledContent")}
+        </Text>
         <Input.TextArea
           rows={3}
           value={sig.prefilledContent}
           onChange={(e) => updateSignature("prefilledContent", e.target.value)}
-          placeholder="Default content to sign"
+          placeholder={t("builder.signatureSettings.prefilledPlaceholder")}
         />
       </div>
       <div className="property-setting">
-        <Text className="property-name">Editable Created At</Text>
+        <Text className="property-name">
+          {t("builder.signatureSettings.editableCreatedAt")}
+        </Text>
         <Switch
           checked={sig.editableCreatedAt}
           onChange={(v) => updateSignature("editableCreatedAt", v)}

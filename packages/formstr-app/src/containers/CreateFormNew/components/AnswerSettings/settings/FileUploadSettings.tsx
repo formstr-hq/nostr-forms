@@ -2,6 +2,7 @@ import { Input, InputNumber, Select, Typography, Space, Button, message } from "
 import React, { useState, useEffect } from "react";
 import { IAnswerSettings } from "../types";
 import { pool } from "../../../../../pool";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -31,6 +32,7 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
   answerSettings,
   handleAnswerSettings,
 }) => {
+  const { t } = useTranslation();
   const [servers, setServers] = useState<ServerInfo[]>(
     DEFAULT_SERVERS.map((url) => ({ url, source: "default" as const }))
   );
@@ -119,16 +121,20 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
         method: "OPTIONS", // Check CORS preflight
       });
       if (response.ok || response.status === 204) {
-        message.success("Upload endpoint accessible!");
+        message.success(t("builder.fileUploadSettings.uploadEndpointAccessible"));
       } else {
-        message.warning(`Server responded with status ${response.status}. Upload may not work.`);
+        message.warning(
+          t("builder.fileUploadSettings.uploadEndpointStatus", {
+            status: response.status,
+          }),
+        );
       }
     } catch (e: any) {
       console.error("Connection test failed:", e);
       if (e instanceof TypeError || e.message?.includes("Failed to fetch")) {
-        message.error("CORS error: This server blocks uploads from this origin. Choose a different server.");
+        message.error(t("builder.fileUploadSettings.connectionCorsError"));
       } else {
-        message.error("Failed to connect. Server may be unreachable.");
+        message.error(t("builder.fileUploadSettings.connectionFailed"));
       }
     } finally {
       setTestingConnection(false);
@@ -138,29 +144,29 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
   const getSourceLabel = (source: string) => {
     switch (source) {
       case "relay":
-        return " (from relay)";
+        return t("builder.fileUploadSettings.sourceRelay");
       case "custom":
-        return " (custom)";
+        return t("builder.fileUploadSettings.sourceCustom");
       default:
         return "";
     }
   };
 
   const commonMimeTypes = [
-    { label: "Images (image/*)", value: "image/*" },
-    { label: "PDFs (application/pdf)", value: "application/pdf" },
-    { label: "Documents (application/msword, .docx)", value: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
-    { label: "Spreadsheets (.xlsx)", value: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
-    { label: "Videos (video/*)", value: "video/*" },
-    { label: "Audio (audio/*)", value: "audio/*" },
-    { label: "Text files (text/*)", value: "text/*" },
+    { label: t("builder.fileUploadSettings.mimeTypes.images"), value: "image/*" },
+    { label: t("builder.fileUploadSettings.mimeTypes.pdfs"), value: "application/pdf" },
+    { label: t("builder.fileUploadSettings.mimeTypes.documents"), value: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+    { label: t("builder.fileUploadSettings.mimeTypes.spreadsheets"), value: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
+    { label: t("builder.fileUploadSettings.mimeTypes.videos"), value: "video/*" },
+    { label: t("builder.fileUploadSettings.mimeTypes.audio"), value: "audio/*" },
+    { label: t("builder.fileUploadSettings.mimeTypes.text"), value: "text/*" },
   ];
 
   return (
     <Space direction="vertical" style={{ width: "100%" }} size="middle">
       <div>
         <Text className="property-name" style={{ display: "block", marginBottom: 8 }}>
-          Blossom Server
+          {t("builder.fileUploadSettings.blossomServer")}
         </Text>
         <Select
           style={{ width: "100%" }}
@@ -177,7 +183,7 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
                     onClick={() => setShowCustomInput(true)}
                     style={{ padding: 0 }}
                   >
-                    + Add custom server
+                    + {t("builder.fileUploadSettings.addCustomServer")}
                   </Button>
                 ) : (
                   <Space.Compact style={{ width: "100%" }}>
@@ -187,7 +193,9 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
                       onChange={(e) => setCustomUrl(e.target.value)}
                       onPressEnter={handleAddCustomServer}
                     />
-                    <Button onClick={handleAddCustomServer}>Add</Button>
+                    <Button onClick={handleAddCustomServer}>
+                      {t("builder.fileUploadSettings.add")}
+                    </Button>
                   </Space.Compact>
                 )}
               </div>
@@ -208,11 +216,13 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
         loading={testingConnection}
         style={{ width: "100%" }}
       >
-        Test Connection
+        {t("builder.fileUploadSettings.testConnection")}
       </Button>
 
       <div className="property-setting">
-        <Text className="property-name">Max File Size (MB)</Text>
+        <Text className="property-name">
+          {t("builder.fileUploadSettings.maxFileSize")}
+        </Text>
         <InputNumber
           min={1}
           max={100}
@@ -223,12 +233,12 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
 
       <div>
         <Text className="property-name" style={{ display: "block", marginBottom: 8 }}>
-          Allowed File Types (optional)
+          {t("builder.fileUploadSettings.allowedFileTypes")}
         </Text>
         <Select
           mode="multiple"
           style={{ width: "100%" }}
-          placeholder="Leave empty to allow all types"
+          placeholder={t("builder.fileUploadSettings.allowAllTypes")}
           value={allowedTypes}
           onChange={(v) => updateSetting("allowedTypes", v)}
         >
@@ -241,7 +251,7 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
       </div>
 
       <Text type="secondary" style={{ fontSize: "12px", display: "block" }}>
-        Files will be encrypted with NIP-44 before upload
+        {t("builder.fileUploadSettings.filesEncrypted")}
       </Text>
     </Space>
   );

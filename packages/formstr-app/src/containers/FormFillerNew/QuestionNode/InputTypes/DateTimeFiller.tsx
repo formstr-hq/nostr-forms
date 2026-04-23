@@ -1,6 +1,7 @@
 import { DatePicker } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 interface IAnswerSettings {
   defaultValue?: string | number | Date;
@@ -21,6 +22,7 @@ export const DateTimeFiller: React.FC<DateTimeFillerProps> = ({
   disabled = false,
   testId = "datetime-filler",
 }) => {
+  const { t } = useTranslation();
   // Initialize date from default value if valid
   
   const getInitialDate = (): Dayjs | null => {
@@ -81,7 +83,7 @@ export const DateTimeFiller: React.FC<DateTimeFillerProps> = ({
         showTime
         style={{ marginBottom: 8, width: "100%" }}
         disabled={disabled}
-        placeholder="Pick Date & Time"
+        placeholder={t("filler.inputs.pickDateTime")}
         data-testid={`${testId}:picker`}
       />
     </div>

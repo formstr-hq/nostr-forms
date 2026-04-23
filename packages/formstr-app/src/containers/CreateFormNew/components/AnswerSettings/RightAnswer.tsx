@@ -5,6 +5,7 @@ import {
   AnswerTypes,
   GridOptions,
 } from "../../../../nostr/types";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -21,6 +22,7 @@ export const RightAnswer: React.FC<RightAnswerProps> = ({
   choices,
   onChange,
 }) => {
+  const { t } = useTranslation();
   // Parse choices - only for option-based questions
   let parsedChoices = [];
   try {
@@ -44,9 +46,11 @@ export const RightAnswer: React.FC<RightAnswerProps> = ({
     }
 
     return (
-      <Tooltip title="Select the correct answer for each row in this quiz grid">
+      <Tooltip title={t("builder.rightAnswer.gridTooltip")}>
         <div className="right-answer">
-          <Text className="property-name">Right answers</Text>
+          <Text className="property-name">
+            {t("builder.rightAnswer.label_other")}
+          </Text>
           <InputFiller
             defaultValue={answerSettings?.validationRules?.match?.answer}
             options={parsedChoices}
@@ -71,13 +75,19 @@ export const RightAnswer: React.FC<RightAnswerProps> = ({
 
   return (
     <Tooltip
-      title={`Select the correct answer${
-        isMultipleChoice ? "s" : ""
-      } for this quiz question`}
+      title={t(
+        isMultipleChoice
+          ? "builder.rightAnswer.tooltip_other"
+          : "builder.rightAnswer.tooltip_one",
+      )}
     >
       <div className="right-answer">
         <Text className="property-name">
-          Right answer{isMultipleChoice ? "s" : ""}
+          {t(
+            isMultipleChoice
+              ? "builder.rightAnswer.label_other"
+              : "builder.rightAnswer.label_one",
+          )}
         </Text>
         <InputFiller
           defaultValue={answerSettings?.validationRules?.match?.answer}

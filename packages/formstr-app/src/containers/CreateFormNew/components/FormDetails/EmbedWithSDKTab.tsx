@@ -1,6 +1,7 @@
 import { Typography } from "antd";
 import { CopyButton } from "../../../../components/CopyButton";
 import { makeFormNAddr } from "../../../../utils/utility";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -15,6 +16,7 @@ export const EmbedWithSDKTab = ({
   relays: string[];
   viewKey?: string;
 }) => {
+  const { t } = useTranslation();
   const naddr = makeFormNAddr(pubKey, formId, relays);
   const isPrivate = Boolean(viewKey);
 
@@ -83,9 +85,9 @@ export const EmbedWithSDKTab = ({
             marginBottom: 6,
           }}
         >
-          Styling & customization
+          {t("builder.formDetails.sdk.stylingTitle")}
         </Text>
-        <Text>Start by copying the below snippet into your html!</Text>
+        <Text>{t("builder.formDetails.sdk.intro")}</Text>
       </div>
 
       {/* Copy button */}
@@ -118,11 +120,10 @@ export const EmbedWithSDKTab = ({
         }}
       >
         <li>
-          The SDK renders neutral HTML — you control layout and appearance via
-          CSS.
+          {t("builder.formDetails.sdk.neutralHtml")}
         </li>
         <li>
-          You can style the form by targeting CSS classes like these:
+          {t("builder.formDetails.sdk.classesIntro")}
           <ul style={{ marginTop: 4, paddingLeft: 16 }}>
             <li>
               <code>.form-body</code> – main form wrapper
@@ -148,13 +149,13 @@ export const EmbedWithSDKTab = ({
           </ul>
         </li>
         <li>
-          For detailed explanation, see the{" "}
+          {t("builder.formDetails.sdk.docsIntro")}{" "}
           <a
             href="https://github.com/abh3po/nostr-forms/blob/master/packages/formstr-sdk/README.md"
             target="_blank"
             rel="noreferrer"
           >
-            Formstr SDK documentation
+            {t("builder.formDetails.sdk.docsLink")}
           </a>
           .
         </li>

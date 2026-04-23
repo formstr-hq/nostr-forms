@@ -27,6 +27,7 @@ import { FormDetails } from "../../CreateFormNew/components/FormDetails";
 import SafeMarkdown from "../../../components/SafeMarkdown";
 import { IFormSettings } from "../../CreateFormNew/components/FormSettings/types";
 import { Tag } from "../../../nostr/types";
+import { useTranslation } from "react-i18next";
 
 interface FormEventCardProps {
   event: Event;
@@ -44,6 +45,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
   viewKey,
   shortLink,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const publicForm = event.content === "";
   const [tags, setTags] = useState<Tag[]>([]);
@@ -66,7 +68,11 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
     .filter((tag: Tag) => tag[0] === "relay")
     .map((t) => t[1]);
   if (!formId) {
-    return <Card title="Invalid Form Event">{JSON.stringify(event)}</Card>;
+    return (
+      <Card title={t("dashboardCards.invalidFormEvent")}>
+        {JSON.stringify(event)}
+      </Card>
+    );
   }
   const formKey = `${pubKey}:${formId}`;
   let settings: IFormSettings = {};
@@ -129,13 +135,13 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
     ? [
         {
           key: "download",
-          label: "Download",
+          label: t("common.actions.download"),
           icon: <DownloadOutlined />,
           onClick: downloadForm,
         },
         {
           key: "edit",
-          label: "Edit",
+          label: t("common.actions.edit"),
           icon: <EditOutlined />,
           onClick: () =>
             navigate(
@@ -153,13 +159,13 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
         },
         {
           key: "duplicate",
-          label: "Duplicate",
+          label: t("common.actions.duplicate"),
           icon: <CopyOutlined />,
           onClick: handleDuplicate,
         },
         {
           key: "details",
-          label: "Details",
+          label: t("dashboardCards.details"),
           icon: <InfoCircleOutlined />,
           onClick: () => setShowFormDetails(true),
         },
@@ -167,13 +173,13 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
     : [
         {
           key: "download",
-          label: "Download",
+          label: t("common.actions.download"),
           icon: <DownloadOutlined />,
           onClick: downloadForm,
         },
         {
           key: "details",
-          label: "Details",
+          label: t("dashboardCards.details"),
           icon: <InfoCircleOutlined />,
           onClick: () => setShowFormDetails(true),
         },
@@ -183,7 +189,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
     <Card
       title={
         <SafeMarkdown forceColor="#0000">
-          {name[1] || "Hidden Form"}
+          {name[1] || t("dashboardCards.hiddenForm")}
         </SafeMarkdown>
       }
       className="form-card"
@@ -203,7 +209,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
             <Button
               type="text"
               style={{ color: "purple", marginRight: 4, cursor: "pointer" }}
-              aria-label="Quick actions"
+              aria-label={t("dashboardCards.quickActions")}
             >
               <MoreOutlined />
             </Button>
@@ -242,7 +248,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
         <SafeMarkdown forceColor="#0000">
           {settings.description
             ? settings.description?.trim().substring(0, 200) + "..."
-            : "Encrypted Content"}
+            : t("dashboardCards.encryptedContent")}
         </SafeMarkdown>
       </div>
       <Divider />
@@ -272,7 +278,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
               borderColor: "purple",
             }}
           >
-            View Responses
+            {t("dashboardCards.viewResponses")}
           </Button>
           <Button
             onClick={(e: any) => {
@@ -297,7 +303,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
             }}
             type="dashed"
           >
-            Open Form
+            {t("dashboardCards.openForm")}
           </Button>
         </div>
         <div style={{ margin: 7 }}>

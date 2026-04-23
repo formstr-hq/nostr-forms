@@ -4,6 +4,7 @@ import { Modal, Typography, Button, Tooltip, message, Spin, Alert } from "antd";
 import * as QRCode from "qrcode.react";
 import { CopyOutlined } from "@ant-design/icons";
 import { appConfig } from "../../../../../config";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 const MAX_TIME = 300;
@@ -23,6 +24,7 @@ export const ZapQRCodeModal = ({
   onSuccess: () => void;
   onClose: () => void;
 }) => {
+  const { t } = useTranslation();
   const [paymentStatus, setPaymentStatus] = useState<
     "pending" | "paid" | "error"
   >("pending");
@@ -83,7 +85,7 @@ export const ZapQRCodeModal = ({
   const copyInvoice = () => {
     navigator.clipboard.writeText(invoice).then(() => {
       setCopied(true);
-      message.success("Invoice copied to clipboard!");
+      message.success(t("builder.formDetails.zapQr.invoiceCopied"));
       setTimeout(() => setCopied(false), 2000);
     });
   };
@@ -101,11 +103,11 @@ export const ZapQRCodeModal = ({
       open={open}
       onCancel={onClose}
       footer={null}
-      title="Scan to Pay"
+      title={t("builder.formDetails.zapQr.title")}
       centered
       bodyStyle={{ textAlign: "center", padding: 24 }}
     >
-      <Text>Scan the QR code with your lightning wallet:</Text>
+      <Text>{t("builder.formDetails.zapQr.scanHelp")}</Text>
 
       <div style={{ marginTop: 16 }}>
         <QRCode.QRCodeSVG value={invoice} size={220} />
@@ -134,8 +136,16 @@ export const ZapQRCodeModal = ({
           >
             {invoice}
           </pre>
-          <div> Amount: {amount} sats</div>
-          <Tooltip title={copied ? "Copied!" : "Copy invoice"}>
+          <div>
+            {t("builder.formDetails.zapQr.amount", { amount })}
+          </div>
+          <Tooltip
+            title={
+              copied
+                ? t("builder.formDetails.zapQr.copied")
+                : t("builder.formDetails.zapQr.copyInvoice")
+            }
+          >
             <Button
               icon={<CopyOutlined />}
               size="small"
@@ -157,15 +167,19 @@ export const ZapQRCodeModal = ({
             }}
           >
             <Spin />
-            <Text>Waiting for payment...</Text>
-            <Text type="secondary">Expires in: {formatTime(timeLeft)}</Text>
+            <Text>{t("builder.formDetails.zapQr.waiting")}</Text>
+            <Text type="secondary">
+              {t("builder.formDetails.zapQr.expiresIn", {
+                time: formatTime(timeLeft),
+              })}
+            </Text>
           </div>
         )}
 
         {paymentStatus === "error" && (
           <Alert
             type="error"
-            message="Error connecting to payment server. Please try again."
+            message={t("builder.formDetails.zapQr.serverError")}
             style={{ marginTop: 24 }}
           />
         )}

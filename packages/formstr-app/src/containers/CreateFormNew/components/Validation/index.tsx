@@ -4,10 +4,12 @@ import { IProps } from "./validation.type";
 import { ANSWER_TYPE_RULES_MENU, RULE_CONFIG } from "../../configs/config";
 import StyleWrapper from "./validation.style";
 import { ValidationRuleTypes } from "../../../../nostr/types";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
 function Validation(props: IProps) {
+  const { t } = useTranslation();
   const { answerType, answerSettings, handleAnswerSettings } = props;
   const validationRules = answerSettings.validationRules ?? {};
   const defaultSelected = Object.keys(validationRules) as ValidationRuleTypes[];
@@ -37,15 +39,23 @@ function Validation(props: IProps) {
   let rules = ANSWER_TYPE_RULES_MENU[answerType].filter(
     (rule) => !selected.includes(rule.value),
   );
+  const translatedRules = rules.map((rule) => ({
+    ...rule,
+    label: t(rule.labelKey),
+  }));
 
   return (
     <StyleWrapper className="input-property">
       <div className="header">
         <div>
-          <Text className="property-title">Validation</Text>
+          <Text className="property-title">{t("builder.validation.title")}</Text>
         </div>
         {!!rules.length && (
-          <Select value="Select" options={rules} onChange={onRuleSelect} />
+          <Select
+            value={t("builder.validation.selectPlaceholder")}
+            options={translatedRules}
+            onChange={onRuleSelect}
+          />
         )}
       </div>
       {!!selected.length &&
