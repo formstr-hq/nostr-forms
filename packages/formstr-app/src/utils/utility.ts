@@ -1,7 +1,10 @@
 import { DEVICE_TYPE, DEVICE_WIDTH } from "../constants/index";
 import { getItem, LOCAL_STORAGE_KEYS, setItem } from "./localStorage";
-import { nip19 } from "nostr-tools";
-import { encodeNKeys } from "./nkeys";
+import {
+  constructDraftUrl as buildDraftUrl,
+  makeFormNAddr as buildFormNAddr,
+  naddrUrl as buildNaddrUrl,
+} from "./formLinks";
 
 export function makeTag(length: number) {
   let result = "";
@@ -36,12 +39,7 @@ export const makeFormNAddr = (
   formId: string,
   relaysEncode?: string[],
 ) => {
-  return nip19.naddrEncode({
-    pubkey: publicKey,
-    identifier: formId,
-    relays: relaysEncode || ["wss://relay.damus.io"],
-    kind: 30168,
-  });
+  return buildFormNAddr(publicKey, formId, relaysEncode);
 };
 
 export const naddrUrl = (
@@ -51,35 +49,19 @@ export const naddrUrl = (
   viewKey?: string | null,
   disablePreview = false,
 ) => {
-  const base = `/f/${makeFormNAddr(
+  return buildNaddrUrl(
     publicKey,
     formId,
-    relaysEncode || ["wss://relay.damus.io"],
-  )}`;
-
-  // OLD behavior
-  if (!disablePreview) {
-    return viewKey ? `${base}?viewKey=${viewKey}` : base;
-  }
-
-  // NEW behavior: encode hash
-  if (!viewKey) return base;
-
-  const nkey = encodeNKeys({ viewKey });
-  return `${base}#${nkey}`;
+    relaysEncode,
+    viewKey,
+    disablePreview,
+  );
 };
 
 export function constructDraftUrl(
   draft: { formSpec: unknown; tempId: string } | null,
 ) {
-  if (!draft) {
-    return;
-  }
-  let draftHash = window.btoa(encodeURIComponent(JSON.stringify(draft)));
-  draftHash = window.encodeURIComponent(draftHash);
-  const hostname = window.location.host;
-
-  return `http://${hostname}/drafts/${draftHash}`;
+  return buildDraftUrl(draft);
 }
 
 export function constructResponseUrl(privateKey: string | null) {
