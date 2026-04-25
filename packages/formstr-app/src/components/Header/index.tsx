@@ -33,6 +33,7 @@ import ThemedUniversalModal from "../UniversalMarkdownModal";
 import { nip19 } from "nostr-tools";
 import { useTranslation } from "react-i18next";
 import { changeAppLanguage, normalizeLocale, SUPPORTED_LOCALES } from "../../i18n";
+import { SupportUsButton, SupportUsModal } from "@formstr/support-us-button";
 
 const { Text, Paragraph } = Typography;
 
@@ -58,6 +59,7 @@ export const NostrHeader = () => {
   } = useLocalForms();
   const [isFAQModalVisible, setIsFAQModalVisible] = useState(false);
   const [showEncryptionModal, setShowEncryptionModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const [encryptionLoading, setEncryptionLoading] = useState(false);
   const [languageLoading, setLanguageLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string[]>([]);
@@ -303,7 +305,7 @@ export const NostrHeader = () => {
     }
 
     if (key === "support-us") {
-      window.open("https://geyser.fund/project/formstr", "_blank");
+      setShowSupportModal(true);
       return;
     }
 
@@ -412,6 +414,7 @@ export const NostrHeader = () => {
       </div>
     ),
   };
+
   const newHeaderMenu = [...getHeaderMenu(t), User];
   return (
     <>
@@ -422,13 +425,13 @@ export const NostrHeader = () => {
           borderBottom: "1px solid #ddd",
         }}
       >
-        <Row className="header-row" justify="space-between">
+        <Row className="header-row" justify="space-between" align="middle">
           <Col>
             <Link className="app-link" to="/">
               <Logo />
             </Link>
           </Col>
-          <Col md={12} xs={10} sm={2}>
+          <Col md={12} xs={10} sm={2} style={{ display: "flex", alignItems: "center" }}>
             <Menu
               mode="horizontal"
               theme="light"
@@ -437,6 +440,11 @@ export const NostrHeader = () => {
               overflowedIndicator={<MenuOutlined />}
               items={newHeaderMenu}
               onClick={onMenuClick}
+              style={{ flex: 1 }}
+            />
+            <SupportUsButton
+              type="text"
+              style={{ flexShrink: 0, marginLeft: 4 }}
             />
           </Col>
         </Row>
@@ -458,6 +466,11 @@ export const NostrHeader = () => {
       >
         {renderEncryptionModalContent()}
       </Modal>
+      <SupportUsModal
+        open={showSupportModal}
+        npub="npub1qu7dsd44275lms4x9snnwvnnmgx926nsppmr7lcw9dlj36n4fltqgs7p98"
+        onClose={() => setShowSupportModal(false)}
+      />
     </>
   );
 };
