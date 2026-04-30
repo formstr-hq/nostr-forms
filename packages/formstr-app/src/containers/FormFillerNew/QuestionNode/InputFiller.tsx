@@ -176,7 +176,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
       ),
       [AnswerTypes.rating]: (
         <RatingFiller
-          defaultValue={defaultValue as number}
+          defaultValue={defaultValue as string}
           disabled={disabled}
           onChange={handleValueChange}
           maxStars={fieldConfig.maxStars || 5}

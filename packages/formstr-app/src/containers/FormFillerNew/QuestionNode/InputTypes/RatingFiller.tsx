@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
 interface RatingFillerProps {
-  defaultValue?: number;
-  onChange: (value: number, message?: string) => void;
+  defaultValue?: string;
+  onChange: (value: string, message?: string) => void;
   disabled?: boolean;
   maxStars?: number;
 }
@@ -14,13 +14,49 @@ export const RatingFiller: React.FC<RatingFillerProps> = ({
   maxStars = 5,
 }) => {
   const [hovered, setHovered] = useState<number>(0);
-  const active = hovered || defaultValue || 0;
+  const clampedMax = Math.max(3, Math.min(maxStars, 10));
 
-  const handleSelect = (n: number) => {
-    onChange(n);
+  const normalizeStoredRating = (value: string): number => {
+    if (!value) return 0;
+
+    const parseStars = (storedValue: number): number => {
+      if (!Number.isFinite(storedValue)) return 0;
+      if (storedValue >= 0 && storedValue <= 1) {
+        return Math.round(storedValue * clampedMax);
+      }
+      return Math.round(storedValue);
+    };
+
+    try {
+      const parsed = JSON.parse(value);
+      if (typeof parsed === "object" && parsed !== null) {
+        if (typeof parsed.normalizedValue === "number") {
+          return parseStars(Math.max(0, Math.min(parsed.normalizedValue, 1)));
+        }
+        if (typeof parsed.value === "number") {
+          if (typeof parsed.maxStars === "number" && parsed.maxStars > 0) {
+            return Math.round((parsed.value / parsed.maxStars) * clampedMax);
+          }
+          return parseStars(parsed.value);
+        }
+      }
+    } catch (e) {
+      // Fall through to numeric fallback.
+    }
+
+    const numeric = parseFloat(value);
+    return parseStars(numeric);
   };
 
-  const clampedMax = Math.max(3, Math.min(maxStars, 10));
+  const displayValue = normalizeStoredRating(defaultValue || "");
+  const active = hovered || displayValue || 0;
+
+  const handleSelect = (n: number) => {
+    const ratingData = {
+      normalizedValue: n / clampedMax,
+    };
+    onChange(JSON.stringify(ratingData));
+  };
 
   return (
     <div style={{ marginBottom: "1rem" }}>
@@ -30,7 +66,7 @@ export const RatingFiller: React.FC<RatingFillerProps> = ({
             key={n}
             type="button"
             role="radio"
-            aria-checked={n === defaultValue}
+            aria-checked={n === displayValue}
             aria-label={`${n} star`}
             disabled={disabled}
             onClick={() => handleSelect(n)}
