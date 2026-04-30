@@ -389,7 +389,67 @@ export const Response = () => {
         dataIndex: fieldId,
         width: 150,
       };
+      
+      // Add custom render for rating fields
+      if (fieldType === "rating") {
+        const answerSettings = JSON.parse(field[5] || '{"maxStars": 5}');
+        const currentMaxStars = Math.min(answerSettings.maxStars || 5, 10);
 
+        const normalizeStoredRating = (value: string): number => {
+          if (!value) return 0;
+
+          const parseStars = (storedValue: number): number => {
+            if (!Number.isFinite(storedValue)) return 0;
+            if (storedValue >= 0 && storedValue <= 1) {
+              return Math.round(storedValue * currentMaxStars);
+            }
+            return Math.round(storedValue);
+          };
+
+          try {
+            const parsed = JSON.parse(value);
+            if (typeof parsed === "object" && parsed !== null) {
+              if (typeof parsed.normalizedValue === "number") {
+                return parseStars(Math.max(0, Math.min(parsed.normalizedValue, 1)));
+              }
+              if (typeof parsed.value === "number") {
+                if (typeof parsed.maxStars === "number" && parsed.maxStars > 0) {
+                  return Math.round((parsed.value / parsed.maxStars) * currentMaxStars);
+                }
+                return parseStars(parsed.value);
+              }
+            }
+          } catch (e) {
+            // Fall through to numeric fallback.
+          }
+
+          const numeric = parseFloat(value);
+          return parseStars(numeric);
+        };
+
+        column.render = (data: string) => {
+          if (!data) return <span>-</span>;
+
+          const displayValue = normalizeStoredRating(data);
+
+          return (
+            <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+              {Array.from({ length: currentMaxStars }, (_, i) => i + 1).map((n) => (
+                <svg key={n} width={20} height={20} viewBox="0 0 28 28">
+                  <polygon
+                    points="14,3 17.5,10.5 26,11.5 20,17.5 21.5,26 14,22 6.5,26 8,17.5 2,11.5 10.5,10.5"
+                    fill={n <= displayValue ? "#EF9F27" : "none"}
+                    stroke={n <= displayValue ? "#EF9F27" : "#B4B2A9"}
+                    strokeWidth={1.5}
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ))}
+            </div>
+          );
+        };
+      }
+      
       // Add custom render for file upload fields
       if (fieldType === "file") {
         column.render = (data: string, record: any) => {
