@@ -80,7 +80,7 @@ const NpubListItem: FC<{
         alignItems: "center",
         justifyContent: "space-between",
         padding: "8px 0",
-        borderBottom: "1px solid #f0f0f0",
+        borderBottom: "1px solid var(--app-color-border-soft)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

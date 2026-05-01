@@ -57,7 +57,7 @@ function DeleteFormTrigger({
         onClick={(e) => {
           updateDeleteConfirmationOpen(true);
         }}
-        style={{ color: "red" }}
+        style={{ color: "var(--app-color-error)" }}
       >
         <DeleteOutlined />
       </Button>

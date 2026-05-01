@@ -170,7 +170,7 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
           dropdownRender={(menu) => (
             <>
               {menu}
-              <div style={{ padding: "8px", borderTop: "1px solid #f0f0f0" }}>
+              <div style={{ padding: "8px", borderTop: "1px solid var(--app-color-border-soft)" }}>
                 {!showCustomInput ? (
                   <Button
                     type="link"

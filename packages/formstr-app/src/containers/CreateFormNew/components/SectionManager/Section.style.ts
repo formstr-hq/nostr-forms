@@ -21,7 +21,7 @@ export const SectionWrapper = styled.div`
     margin-bottom: 8px;
   }
   .section-description {
-    color: rgba(0, 0, 0, 0.65);
+    color: var(--app-color-text-secondary);
     width: 100%;
   }
   .section-content {
@@ -34,7 +34,7 @@ export const SectionWrapper = styled.div`
   }
   .collapsed-indicator {
     margin-left: 8px;
-    color: rgba(0, 0, 0, 0.45);
+    color: var(--app-color-text-muted);
   }
   .drop-indicator {
     position: absolute;
@@ -43,7 +43,7 @@ export const SectionWrapper = styled.div`
     right: 0;
     bottom: 0;
     background-color: rgba(24, 144, 255, 0.1);
-    border: 2px dashed #1890ff;
+    border: 2px dashed var(--app-color-info);
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -82,7 +82,7 @@ export const StyledCard = styled(Card)`
 
 export const OrangeStrip = styled.div`
   height: 12px;
-  background: #ff5733;
+  background: var(--app-color-primary);
   margin-bottom: 0;
   border-radius: 0 9px 0px 0px;
   z-index: 1;
@@ -90,7 +90,7 @@ export const OrangeStrip = styled.div`
 `;
 
 export const SectionLabel = styled.div`
-  background: #ff5733;
+  background: var(--app-color-primary);
   color: white;
   padding: 2px 16px;
   border-radius: 6px 6px 0 0;

@@ -14,25 +14,25 @@
 }
 
 .ai-modal-button-success {
-    background-color: #52c41a;
-    color: white;
-    border-color: #52c41a;
+    background-color: var(--app-color-success);
+    color: var(--app-color-bg-surface);
+    border-color: var(--app-color-success);
 }
 
 .ai-modal-button-success:hover, .ai-modal-button-success:focus {
-    background-color: #389e0d;
-    color: white !important;
-    border-color: #389e0d !important;
+    background-color: var(--app-color-success-active);
+    color: var(--app-color-bg-surface) !important;
+    border-color: var(--app-color-success-active) !important;
 }
 
 .ai-modal-button-danger {
-    background-color: #f5222d;
-    color: white;
-    border-color: #f5222d;
+    background-color: var(--app-color-error);
+    color: var(--app-color-bg-surface);
+    border-color: var(--app-color-error);
 }
 
 .ai-modal-button-danger:hover, .ai-modal-button-danger:focus {
-    background-color: #cf1322;
-    color: white !important;
-    border-color: #cf1322 !important;
+    background-color: var(--app-color-error-active);
+    color: var(--app-color-bg-surface) !important;
+    border-color: var(--app-color-error-active) !important;
 }

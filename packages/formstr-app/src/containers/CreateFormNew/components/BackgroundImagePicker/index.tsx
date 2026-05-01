@@ -29,7 +29,7 @@ const Controls = styled.div`
 const SelectableCard = styled(Card)<{ $selected?: boolean }>`
   cursor: pointer;
   border: ${(props) =>
-    props.$selected ? "2px solid #1890ff" : "2px solid transparent"};
+    props.$selected ? "2px solid var(--app-color-info)" : "2px solid transparent"};
   transition: border 0.2s ease;
   img {
     width: 100%;

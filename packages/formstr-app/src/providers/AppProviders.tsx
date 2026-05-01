@@ -1,22 +1,19 @@
 import { ConfigProvider } from "antd";
-import React from "react";
+import React, { useEffect } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import i18n, { getAntdLocaleForLanguage } from "../i18n";
-
-const theme = {
-  token: {
-    fontFamily: "Anek Devanagari, ui-serif, Inter, ui-sans-serif",
-    colorPrimary: "#FF5733",
-    colorLink: "#FF5733",
-  },
-};
+import { antThemeConfig, applyThemeCssVariables } from "../theme/themeConfig";
 
 const ThemedProviders = ({ children }: { children: React.ReactNode }) => {
   const { i18n: instance } = useTranslation();
 
+  useEffect(() => {
+    applyThemeCssVariables();
+  }, []);
+
   return (
     <ConfigProvider
-      theme={theme}
+      theme={antThemeConfig}
       locale={getAntdLocaleForLanguage(instance.language)}
     >
       {children}

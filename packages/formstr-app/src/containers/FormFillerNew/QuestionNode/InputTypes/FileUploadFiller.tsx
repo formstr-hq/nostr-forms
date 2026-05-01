@@ -358,7 +358,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
         >
           <Space direction="vertical" size={8} style={{ width: "100%" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 20 }} />
+              <CheckCircleOutlined style={{ color: "var(--app-color-success)", fontSize: 20 }} />
               <Text strong style={{ fontSize: 16 }}>
                 File Uploaded
               </Text>

@@ -234,7 +234,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
           <Progress
             percent={Math.round(progress)}
             showInfo={false}
-            strokeColor="#FF5733"
+            strokeColor="var(--app-color-primary)"
           />
           <Text type="secondary" style={{ fontSize: "12px" }}>
             {t("common.labels.step", {

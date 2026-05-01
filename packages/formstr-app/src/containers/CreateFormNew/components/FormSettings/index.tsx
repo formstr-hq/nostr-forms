@@ -24,6 +24,7 @@ import { SketchPicker, ColorResult } from "react-color";
 import { useState } from "react";
 import { ThankYouScreenImageSetting } from "./ThankYouImage";
 import { IColorSettings } from "./types";
+import { appThemeVariables } from "../../../../theme/themeConfig";
 
 const { Text } = Typography;
 const { Panel } = Collapse;
@@ -65,7 +66,7 @@ function ColorSwatch({
               <Button
                 size="small"
                 onClick={() => {
-                  onChange("#000000");
+                  onChange(appThemeVariables.colorTextDefault);
                   setOpen(false);
                 }}
               >
@@ -86,19 +87,24 @@ function ColorSwatch({
             height: 32,
             borderRadius: "50%",
             background: value,
-            boxShadow: "0 0 0 2px #fff, 0 0 0 3px #d9d9d9",
+            boxShadow:
+              "0 0 0 2px var(--app-color-bg-surface), 0 0 0 3px var(--app-color-border)",
             cursor: "pointer",
             transition: "box-shadow 0.15s",
           }}
           onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 2px #fff, 0 0 0 3px #1677ff";
+            (e.currentTarget as HTMLElement).style.boxShadow =
+              "0 0 0 2px var(--app-color-bg-surface), 0 0 0 3px var(--app-color-info)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 2px #fff, 0 0 0 3px #d9d9d9";
+            (e.currentTarget as HTMLElement).style.boxShadow =
+              "0 0 0 2px var(--app-color-bg-surface), 0 0 0 3px var(--app-color-border)";
           }}
         />
       </Popover>
-      <Text style={{ fontSize: 11, color: "#8c8c8c" }}>{label}</Text>
+      <Text style={{ fontSize: 11, color: "var(--app-color-text-muted)" }}>
+        {label}
+      </Text>
     </div>
   );
 }
@@ -211,7 +217,7 @@ function FormSettings() {
                 key={key}
                 colorKey={key}
                 label={t(COLOR_LABELS[key])}
-                value={colors[key] || "#000000"}
+                value={colors[key] || appThemeVariables.colorTextDefault}
                 onChange={(hex) => updateColor(key, hex)}
               />
             ))}

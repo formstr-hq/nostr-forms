@@ -104,7 +104,9 @@ const Section: React.FC<SectionProps> = ({
 
         <CardContainer
           style={{
-            border: isDropTarget ? "1px solid #1890ff" : "1.5px dashed #000000",
+            border: isDropTarget
+              ? "1px solid var(--app-color-info)"
+              : "1.5px dashed var(--app-color-text-default)",
           }}
         >
           <StyledCard

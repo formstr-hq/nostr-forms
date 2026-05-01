@@ -199,7 +199,7 @@ export const CustomSlugForm = ({
                         checking ? (
                           <LoadingOutlined />
                         ) : available ? (
-                          <CheckCircleOutlined style={{ color: "green" }} />
+                          <CheckCircleOutlined style={{ color: "var(--app-color-success)" }} />
                         ) : null
                       }
                       disabled={!isLoggedIn}

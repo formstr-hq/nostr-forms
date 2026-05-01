@@ -143,7 +143,7 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
           {existingSignature.content && (
             <div
               style={{
-                backgroundColor: "#f0f0f0",
+                backgroundColor: "var(--app-color-border-soft)",
                 padding: "12px",
                 borderRadius: 4,
                 marginBottom: 8,

@@ -7,11 +7,11 @@ export const ChatWrapper = styled.div`
   .ant-card {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
     border-radius: 8px;
-    border: 1px solid #f0f0f0;
+    border: 1px solid var(--app-color-border-soft);
   }
 
   .ant-card-head {
-    background-color: #fafafa;
+    background-color: var(--app-color-bg-subtle);
   }
   
   .chat-footer-controls {
@@ -31,35 +31,35 @@ export const ChatWrapper = styled.div`
     left: 0;
     right: 0;
     min-width: 400px;
-    background-color: #ffffff;
-    border: 1px solid #f0f0f0;
+    background-color: var(--app-color-bg-surface);
+    border: 1px solid var(--app-color-border-soft);
     z-index: 10;
     border-radius: 8px;
     box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
   }
 
   .ai-chat-button-success {
-      background-color: #00796b;
-      color: white;
-      border-color: #00796b;
+      background-color: var(--app-color-success);
+      color: var(--app-color-bg-surface);
+      border-color: var(--app-color-success);
   }
 
   .ai-chat-button-success:hover {
-      background-color: #004d40;
-      color: white !important;
-      border-color: #004d40 !important;
+      background-color: var(--app-color-success-active);
+      color: var(--app-color-bg-surface) !important;
+      border-color: var(--app-color-success-active) !important;
   }
 
   .ai-chat-button-danger {
-      background-color: #d32f2f;
-      color: white;
-      border-color: #d32f2f;
+      background-color: var(--app-color-error);
+      color: var(--app-color-bg-surface);
+      border-color: var(--app-color-error);
   }
 
   .ai-chat-button-danger:hover {
-      background-color: #c62828;
-      color: white !important;
-      border-color: #c62828 !important;
+      background-color: var(--app-color-error-active);
+      color: var(--app-color-bg-surface) !important;
+      border-color: var(--app-color-error-active) !important;
   }
 `;
 
@@ -79,8 +79,11 @@ export const MessageItem = styled.div<{ sender: 'user' | 'ai' }>`
     padding: 8px 12px;
     border-radius: 18px;
     max-width: 80%;
-    background-color: ${props => (props.sender === 'user' ? '#FF5733' : '#f0f0f0')};
-    color: ${props => (props.sender === 'user' ? 'white' : 'black')};
+    background-color: ${props => (props.sender === 'user' ? 'var(--app-color-primary)' : 'var(--app-color-border-soft)')};
+    color: ${props =>
+      props.sender === 'user'
+        ? 'var(--app-color-bg-surface)'
+        : 'var(--app-color-text-default)'};
     word-wrap: break-word;
   }
 `;

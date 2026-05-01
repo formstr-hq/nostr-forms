@@ -37,7 +37,7 @@ export const RelayPublishModal: React.FC<RelayPublishModalProps> = ({
           {isAccepted ? (
             <CheckCircleOutlined
               style={{
-                color: "#52c41a",
+                color: "var(--app-color-success)",
                 marginRight: 8,
                 fontSize: "16px",
               }}
@@ -45,7 +45,7 @@ export const RelayPublishModal: React.FC<RelayPublishModalProps> = ({
           ) : showFailed ? (
             <CloseCircleOutlined
               style={{
-                color: "#ff4d4f",
+                color: "var(--app-color-error)",
                 marginRight: 8,
                 fontSize: "16px",
               }}

@@ -6,10 +6,10 @@ interface StyledRelayStatusDotProps {
 }
 
 const statusColors: Record<RelayStatus, string> = {
-  connected: '#52c41a', // green
-  pending: '#faad14',   // yellow
-  error: '#f5222d',     // red
-  unknown: '#d9d9d9',   // grey
+  connected: 'var(--app-color-success)',
+  pending: 'var(--app-color-warning)',
+  error: 'var(--app-color-error)',
+  unknown: 'var(--app-color-border)',
 };
 
 const StyledRelayStatusDot = styled.span<StyledRelayStatusDotProps>`

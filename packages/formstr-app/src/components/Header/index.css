@@ -9,14 +9,12 @@
 }
 
 .ant-menu-item-selected {
-  color: rgb(255, 42, 0) !important;
+  color: var(--app-color-primary-gradient-end) !important;
 }
 
 .header-style {
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 
-    0 1px 6px -1px rgba(0, 0, 0, 0.02), 
-    0 2px 4px 0 rgba(0, 0, 0, 0.02);
-  opacity: "0.88";
+  box-shadow: var(--app-shadow-header);
+  opacity: 0.88;
 }
 
 .header-row {

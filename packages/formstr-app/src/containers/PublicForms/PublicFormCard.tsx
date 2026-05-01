@@ -42,7 +42,7 @@ export default function PublicFormCard({ event }: { event: Event }) {
           }
           .ant-card-hoverable:hover {
             transform: scale(1.02);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
           }
         `}
       </style>
@@ -75,7 +75,7 @@ export default function PublicFormCard({ event }: { event: Event }) {
           style={{
             position: "relative",
             zIndex: 2,
-            background: "rgba(0,0,0,0.3)",
+            background: "var(--app-color-overlay-soft)",
             borderRadius: 8,
             padding: 20,
           }}
@@ -83,32 +83,34 @@ export default function PublicFormCard({ event }: { event: Event }) {
           <Typography.Title
             level={4}
             style={{
-              color: "white",
+              color: "var(--app-color-bg-surface)",
               margin: 0,
-              textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
+              textShadow: "2px 2px 4px var(--app-color-overlay-strong)",
             }}
           >
             <SafeMarkdown>{name}</SafeMarkdown>
           </Typography.Title>
-          <Divider style={{ borderColor: "rgba(255,255,255,0.2)" }} />
+          <Divider style={{ borderColor: "var(--app-color-overlay-light)" }} />
           <div
             style={{
-              color: "white",
+              color: "var(--app-color-bg-surface)",
               opacity: "80%",
-              textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
+              textShadow: "2px 2px 4px var(--app-color-overlay-strong)",
             }}
           >
             <SafeMarkdown>{truncatedDescription}</SafeMarkdown>
           </div>
-          <Divider style={{ borderColor: "rgba(255,255,255,0.2)" }} />
+          <Divider style={{ borderColor: "var(--app-color-overlay-light)" }} />
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
-              textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
+              textShadow: "2px 2px 4px var(--app-color-overlay-strong)",
             }}
           >
-            <Typography.Text style={{ color: "white", marginTop: 5 }}>
+            <Typography.Text
+              style={{ color: "var(--app-color-bg-surface)", marginTop: 5 }}
+            >
               {formatLocalizedDate(event.created_at * 1000)}
             </Typography.Text>
           </div>

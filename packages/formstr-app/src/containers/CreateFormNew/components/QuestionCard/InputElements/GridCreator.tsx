@@ -28,7 +28,7 @@ const GridTable = styled.table`
   td {
     padding: 8px;
     text-align: center;
-    border: 1px solid #d9d9d9;
+    border: 1px solid var(--app-color-border);
     position: relative;
   }
 
@@ -57,7 +57,7 @@ const GridTable = styled.table`
     padding: 0;
 
     &:focus {
-      outline: 2px solid #1890ff;
+      outline: 2px solid var(--app-color-info);
       outline-offset: -2px;
       background: white;
     }
@@ -73,14 +73,14 @@ const GridTable = styled.table`
     padding: 2px;
 
     &:hover {
-      color: #ff4d4f;
+      color: var(--app-color-error);
     }
   }
 
   .add-column-cell {
     background: #fafafa;
     cursor: pointer;
-    color: #ff4d4f;
+    color: var(--app-color-error);
 
     &:hover {
       background: #e6f7ff;
