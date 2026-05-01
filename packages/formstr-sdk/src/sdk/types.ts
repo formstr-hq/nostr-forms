@@ -103,16 +103,54 @@ export interface FormsSigner {
   nip44Decrypt(pubkey: string, ciphertext: string): Promise<string>;
 }
 
+export type RenderElement =
+  | "shortText"
+  | "paragraph"
+  | "number"
+  | "radioButton"
+  | "checkboxes"
+  | "dropdown"
+  | "date"
+  | "time"
+  | "datetime"
+  | "signature"
+  | "fileUpload"
+  | "label";
+
+export interface FormField {
+  label: string;
+  type: RenderElement;
+  options?: string[];
+  required?: boolean;
+}
+
 export interface CreateFormOptions {
   relays?: string[];
   /** Provide to save the ephemeral keys in the user's encrypted MyForms list (kind 14083). */
   signer?: FormsSigner;
+  /** Encrypt form fields into NIP-44 content. Defaults to true. Set to false to create a public form. */
+  encrypt?: boolean;
+}
+
+export interface RelayPublishResult {
+  accepted: string[];
+  rejected: string[];
 }
 
 export interface CreateFormResult {
   naddr: string;
   signingKeyHex: string;
-  acceptedRelays: string[];
+  /** Present only for encrypted forms; hex-encoded view key used to decrypt content. */
+  viewKeyHex?: string;
+  /** The signed kind-30168 form event — use to rebroadcast to rejected relays. */
+  formEvent: import("nostr-tools").Event;
+  /** Per-relay publish result for the kind-30168 form event. */
+  formRelays: RelayPublishResult;
+  /** Signed kind-14083 event. Present when a signer was provided. Client can cache
+   *  this and republish if myFormsRelays shows failures. */
+  myFormsEvent?: import("nostr-tools").Event;
+  /** Per-relay publish result for the kind-14083 MyForms event. */
+  myFormsRelays?: RelayPublishResult;
 }
 
 export interface MyFormSummary {

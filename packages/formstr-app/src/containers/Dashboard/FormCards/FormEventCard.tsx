@@ -59,7 +59,9 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
     };
     initialize();
   }, []);
-  const name = event.tags.find((tag: Tag) => tag[0] === "name") || [];
+  const name = tags.find((tag: Tag) => tag[0] === "name")
+    || event.tags.find((tag: Tag) => tag[0] === "name")
+    || [];
   const pubKey = event.pubkey;
   const formId = event.tags.find((tag: Tag) => tag[0] === "d")?.[1];
   const relays = event.tags

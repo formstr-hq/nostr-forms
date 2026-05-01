@@ -5,18 +5,21 @@ import {
   generateSecretKey,
   getPublicKey,
   nip19,
+  nip44,
 } from "nostr-tools";
-import { bytesToHex } from "@noble/hashes/utils";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import {
   CreateFormOptions,
   CreateFormResult,
   FormBlock,
+  FormField,
   FormSettings,
   FormsSigner,
   GridOptions,
   MyFormSummary,
   NormalizedField,
   NormalizedForm,
+  RelayPublishResult,
   SectionBlock,
   Tag,
 } from "./types.js";
@@ -346,16 +349,19 @@ export class FormstrSDK {
   }
 
   /**
-   * Publish a new public form (kind 30168) using an ephemeral keypair.
+   * Publish a new form (kind 30168) using an ephemeral keypair.
+   * If `options.encrypt` is true, fields are NIP-44 encrypted into `content`
+   * and only the `d` tag is included (no `t` tag). Otherwise a public form
+   * is created with fields in tags and `["t", "public"]`.
    * If `options.signer` is provided, the ephemeral keys are saved to the
-   * user's encrypted MyForms list (kind 14083) using the same format as
-   * the nostr-forms app.
+   * user's encrypted MyForms list (kind 14083).
    */
   async createForm(
     name: string,
-    fields: Tag[],
+    fields: FormField[],
     options: CreateFormOptions = {},
   ): Promise<CreateFormResult> {
+    const rawFields = fields.map(formFieldToTag);
     const relays = options.relays?.length ? options.relays : getDefaultRelays();
 
     const signingKey = generateSecretKey();
@@ -364,47 +370,80 @@ export class FormstrSDK {
 
     const formId = makeRandomId(6);
 
-    const tags: Tag[] = [
-      ["d", formId],
-      ["name", name],
-      ...fields,
-      ["t", "public"],
-      ...relays.map((r) => ["relay", r]),
-    ];
+    let tags: Tag[];
+    let content: string;
+    let viewKeyHex: string | undefined;
+
+    if (options.encrypt !== false) {
+      const viewKey = generateSecretKey();
+      viewKeyHex = bytesToHex(viewKey);
+      const conversationKey = nip44.v2.utils.getConversationKey(bytesToHex(signingKey), getPublicKey(viewKey));
+      content = nip44.v2.encrypt(JSON.stringify([["name", name], ...rawFields]), conversationKey);
+      tags = [
+        ["d", formId],
+        ...relays.map((r) => ["relay", r]),
+      ];
+    } else {
+      content = "";
+      tags = [
+        ["d", formId],
+        ["name", name],
+        ...rawFields,
+        ["t", "public"],
+        ...relays.map((r) => ["relay", r]),
+      ];
+    }
 
     const event: EventTemplate = {
       kind: KIND_FORM,
       created_at: Math.floor(Date.now() / 1000),
       tags,
-      content: "",
+      content,
     };
 
     const signed = finalizeEvent(event, signingKey);
-    const acceptedRelays: string[] = [];
+    const formRelays: RelayPublishResult = { accepted: [], rejected: [] };
     await Promise.allSettled(
       pool.publish(relays, signed).map((p, i) =>
-        p.then(() => acceptedRelays.push(relays[i])).catch(() => {}),
+        p
+          .then(() => formRelays.accepted.push(relays[i]))
+          .catch(() => formRelays.rejected.push(relays[i])),
       ),
     );
 
     const naddr = nip19.naddrEncode({
       pubkey: formPubkey,
       identifier: formId,
-      relays: acceptedRelays.length ? acceptedRelays : relays,
+      relays: formRelays.accepted.length ? formRelays.accepted : relays,
       kind: KIND_FORM,
     });
 
+    let myFormsEvent: Event | undefined;
+    let myFormsRelays: RelayPublishResult | undefined;
     if (options.signer) {
-      await this.saveToMyForms(
-        formPubkey,
-        signingKeyHex,
-        formId,
-        relays,
-        options.signer,
-      );
+      const secretData = viewKeyHex ? `${signingKeyHex}:${viewKeyHex}` : signingKeyHex;
+      try {
+        ({ event: myFormsEvent, relays: myFormsRelays } = await this.saveToMyForms(
+          formPubkey,
+          secretData,
+          formId,
+          relays,
+          options.signer,
+        ));
+      } catch {
+        myFormsRelays = { accepted: [], rejected: relays };
+      }
     }
 
-    return { naddr, signingKeyHex, acceptedRelays };
+    return {
+      naddr,
+      signingKeyHex,
+      ...(viewKeyHex && { viewKeyHex }),
+      formEvent: signed,
+      formRelays,
+      myFormsEvent,
+      myFormsRelays,
+    };
   }
 
   /**
@@ -421,7 +460,7 @@ export class FormstrSDK {
     formId: string,
     relays: string[],
     signer: FormsSigner,
-  ): Promise<void> {
+  ): Promise<{ event: Event; relays: RelayPublishResult }> {
     const userPub = await signer.getPublicKey();
 
     // Chain this write onto any in-flight write for the same user.
@@ -430,7 +469,7 @@ export class FormstrSDK {
     const next = prev.then(() =>
       this._writeToMyForms(userPub, formAuthorPub, formAuthorSecretHex, formId, relays, signer),
     );
-    this.myFormsWriteQueue.set(userPub, next.catch(() => {}));
+    this.myFormsWriteQueue.set(userPub, next.catch(() => {}) as Promise<void>);
     return next;
   }
 
@@ -441,7 +480,7 @@ export class FormstrSDK {
     formId: string,
     relays: string[],
     signer: FormsSigner,
-  ): Promise<void> {
+  ): Promise<{ event: Event; relays: RelayPublishResult }> {
     const targetRelays = relays.length ? relays : getDefaultRelays();
 
     // Always re-fetch inside the queue so we read the result of the previous
@@ -453,14 +492,18 @@ export class FormstrSDK {
 
     let forms: Tag[] = [];
     if (existing) {
-      const decrypted = await signer.nip44Decrypt(userPub, existing.content);
-      forms = JSON.parse(decrypted);
+      try {
+        const decrypted = await signer.nip44Decrypt(userPub, existing.content);
+        forms = JSON.parse(decrypted);
+      } catch {
+        forms = [];
+      }
     }
 
     const key = `${formAuthorPub}:${formId}`;
-    if (forms.some((f) => f[1] === key)) return;
-
-    forms.push(["f", key, targetRelays[0], formAuthorSecretHex]);
+    if (!forms.some((f) => f[1] === key)) {
+      forms.push(["f", key, targetRelays[0], formAuthorSecretHex]);
+    }
 
     const encrypted = await signer.nip44Encrypt(userPub, JSON.stringify(forms));
 
@@ -471,7 +514,13 @@ export class FormstrSDK {
       content: encrypted,
     });
 
-    await Promise.allSettled(pool.publish(targetRelays, listEvent));
+    const publishResults = await Promise.allSettled(pool.publish(targetRelays, listEvent));
+    const relayResult: RelayPublishResult = { accepted: [], rejected: [] };
+    publishResults.forEach((r, i) => {
+      if (r.status === "fulfilled") relayResult.accepted.push(targetRelays[i]);
+      else relayResult.rejected.push(targetRelays[i]);
+    });
+    return { event: listEvent, relays: relayResult };
   }
 
   /**
@@ -551,6 +600,33 @@ export class FormstrSDK {
     return summaries;
   }
 }
+const RENDER_ELEMENT_TO_PRIMITIVE: Record<string, string> = {
+  shortText: "text",
+  paragraph: "text",
+  date: "text",
+  time: "text",
+  datetime: "text",
+  signature: "text",
+  fileUpload: "text",
+  number: "number",
+  label: "label",
+  radioButton: "option",
+  checkboxes: "option",
+  dropdown: "option",
+  multipleChoiceGrid: "grid",
+  checkboxGrid: "grid",
+};
+
+function formFieldToTag(field: FormField): Tag {
+  const id = makeRandomId(8);
+  const primitive = RENDER_ELEMENT_TO_PRIMITIVE[field.type] ?? "text";
+  const optionsJson = field.options?.length
+    ? JSON.stringify(field.options.map((o) => [makeRandomId(4), o]))
+    : "[]";
+  const config = JSON.stringify({ renderElement: field.type, required: field.required ?? false });
+  return ["field", id, primitive, field.label, optionsJson, config];
+}
+
 function makeRandomId(length: number): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
