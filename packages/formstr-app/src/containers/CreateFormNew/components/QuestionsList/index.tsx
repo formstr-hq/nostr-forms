@@ -4,16 +4,85 @@ import FormTitle from "../FormTitle";
 import StyleWrapper from "./style";
 import DescriptionStyle from "./description.style";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
-import React, { ChangeEvent, useRef } from "react";
+import React, { ChangeEvent, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { Field } from "../../../../nostr/types";
 import AIFormGeneratorModal from "../AIFormGeneratorModal";
 import Section from "../SectionManager/Section";
 import { ColorfulMarkdownTextarea } from "../../../../components/SafeMarkdown/ColorfulMarkdownInput";
+import { AIContextField, AIFormContext } from "../AIFormGeneratorModal/types";
 import GoogleFormImportModal from "../GoogleFormImportModal";
 
 const { Text } = Typography;
+
+const mapRenderElementToAIType = (
+  renderElement?: string,
+  label?: string,
+): string => {
+  if (!renderElement) return "ShortText";
+
+  switch (renderElement) {
+    case "paragraph":
+      return "LongText";
+    case "number":
+      return "Number";
+    case "radioButton":
+      return "SingleChoice";
+    case "checkboxes":
+      return "Checkbox";
+    case "dropdown":
+      return "Dropdown";
+    case "date":
+      return "Date";
+    case "time":
+      return "Time";
+    case "label":
+      return "Label";
+    case "shortText":
+    default:
+      if (label?.toLowerCase().includes("email")) return "Email";
+      return "ShortText";
+  }
+};
+
+const mapQuestionToAIContextField = (question: Field): AIContextField => {
+  let parsedConfig: { renderElement?: string; required?: boolean } = {};
+  let optionLabels: string[] = [];
+
+  try {
+    const config = JSON.parse(question[5] || "{}");
+    parsedConfig = {
+      renderElement: config?.renderElement,
+      required: Boolean(config?.required),
+    };
+  } catch (error) {
+    parsedConfig = {};
+  }
+
+  try {
+    const parsedOptions = JSON.parse(question[4] || "[]");
+    if (Array.isArray(parsedOptions)) {
+      optionLabels = parsedOptions
+        .map((option) => (Array.isArray(option) ? option[1] : ""))
+        .filter((label) => typeof label === "string" && label.trim().length > 0);
+    }
+  } catch (error) {
+    optionLabels = [];
+  }
+
+  const aiField: AIContextField = {
+    type: mapRenderElementToAIType(parsedConfig.renderElement, question[3]),
+    label: question[3] || "Untitled Field",
+    required: Boolean(parsedConfig.required),
+  };
+
+  if (optionLabels.length > 0) {
+    aiField.options = optionLabels;
+  }
+
+  return aiField;
+};
 
 interface FloatingButtonProps {
   onClick: () => void;
@@ -96,6 +165,7 @@ export const QuestionsList = () => {
 
   const {
     formSettings,
+    formName,
     questionsList,
     editQuestion,
     setQuestionIdInFocus,
@@ -111,6 +181,15 @@ export const QuestionsList = () => {
     sections,
     getSectionForQuestion,
   } = useFormBuilderContext();
+
+  const currentFormContext: AIFormContext = useMemo(
+    () => ({
+      title: formName,
+      description: formSettings.description || "",
+      fields: questionsList.map(mapQuestionToAIContextField),
+    }),
+    [formName, formSettings.description, questionsList],
+  );
 
   const handleDescriptionChange = (newDescr: string) => {
     updateFormSetting({ description: newDescr });
@@ -274,6 +353,7 @@ export const QuestionsList = () => {
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
         onFormGenerated={handleAIFormGenerated}
+        currentFormContext={currentFormContext}
       />
       <GoogleFormImportModal
         isOpen={isImportModalVisible}
