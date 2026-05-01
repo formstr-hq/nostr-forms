@@ -107,8 +107,8 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
       return initialValue.columns;
     }
     return [
-      [makeTag(6), "Column 1", "{}"],
-      [makeTag(6), "Column 2", "{}"],
+      [makeTag(6), "", "{}"],
+      [makeTag(6), "", "{}"],
     ];
   });
 
@@ -121,8 +121,8 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
       return initialValue.rows;
     }
     return [
-      [makeTag(6), "Row 1", "{}"],
-      [makeTag(6), "Row 2", "{}"],
+      [makeTag(6), "", "{}"],
+      [makeTag(6), "", "{}"],
     ];
   });
 
@@ -140,11 +140,7 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
 
   const handleColumnAdd = () => {
     if (columns.length >= 10) return;
-    const newColumn: GridItem = [
-      makeTag(6),
-      `Column ${columns.length + 1}`,
-      "{}",
-    ];
+    const newColumn: GridItem = [makeTag(6), "", "{}"];
     setColumns([...columns, newColumn]);
   };
 
@@ -163,7 +159,7 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
 
   const handleRowAdd = () => {
     if (rows.length >= 10) return;
-    const newRow: GridItem = [makeTag(6), `Row ${rows.length + 1}`, "{}"];
+    const newRow: GridItem = [makeTag(6), "", "{}"];
     setRows([...rows, newRow]);
   };
 
