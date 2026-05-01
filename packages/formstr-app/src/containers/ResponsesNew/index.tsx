@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Event, getPublicKey, nip19 } from "nostr-tools";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -77,14 +77,7 @@ export const Response = () => {
     useState<Tag[] | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isChatVisible, setIsChatVisible] = useState(false);
-  const chatRef = useRef<HTMLDivElement>(null);
   const [isFormSpecLoading, setIsFormSpecLoading] = useState(true);
-
-  useEffect(() => {
-    if (isChatVisible && chatRef.current) {
-      chatRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-    }
-  }, [isChatVisible]);
 
   const handleResponseEvent = (event: Event) => {
     setResponses((prev: Event[] | undefined) => {
@@ -488,7 +481,6 @@ export const Response = () => {
           height: "80vh",
         }}
       >
-        <Spin size="large" tip="Loading form details..." />
         <Spin size="large" tip={t("responses.loadingDetails")} />
       </div>
     );
@@ -507,75 +499,81 @@ export const Response = () => {
 
   return (
     <div>
-      <SummaryStyle>
-        <div className="summary-container">
-          <Card>
-            <Text className="heading">
-              <SafeMarkdown components={{ p: "span" }}>
-                {getFormName()}
-              </SafeMarkdown>
-            </Text>
-            <Divider />
-            <div className="response-count-container">
-              <Text className="response-count">
-                {responses === undefined ? t("common.status.searching") : getResponderCount()}{" "}
-              </Text>
-              <Text className="response-count-label">
-                {t("responses.responderLabel")}
-              </Text>
-            </div>
-          </Card>
-        </div>
-      </SummaryStyle>
       <ResponseWrapper>
-        <ResponseHeader
-          hasResponses={!!hasResponses}
-          onAiAnalysisClick={() => setIsChatVisible(true)}
-          responsesData={getData(true) || []}
-          formName={getFormName()}
-        />
-        <Tabs
-          defaultActiveKey="responses"
-          style={{ padding: "0 16px" }}
-          items={[
-            {
-              key: "responses",
-              label: t("responses.responsesTab"),
-              children: (
-                <div style={{ overflow: "scroll", marginBottom: 60 }}>
-                  <Table
-                    columns={getColumns()}
-                    dataSource={getData()}
-                    pagination={{ pageSize: 10 }}
-                    loading={{
-                      spinning: responses === undefined,
-                      tip: t("responses.lookingForResponses"),
-                    }}
-                    scroll={{ x: isMobile() ? 900 : 1500, y: "calc(65% - 400px)" }}
-                  />
-                </div>
-              ),
-            },
-            {
-              key: "analytics",
-              label: t("responses.analyticsTab"),
-              children: formSpec ? (
-                <FormAnalytics
-                  responsesData={getData(true)}
-                  formSpec={formSpec}
-                />
-              ) : null,
-            },
-          ]}
-        />
-        <div ref={chatRef}>
+        <div className={`responses-layout ${isChatVisible ? "chat-open" : ""}`}>
+          <div className="responses-main-panel">
+            <SummaryStyle>
+              <div className="summary-container">
+                <Card>
+                  <Text className="heading">
+                    <SafeMarkdown components={{ p: "span" }}>
+                      {getFormName()}
+                    </SafeMarkdown>
+                  </Text>
+                  <Divider />
+                  <div className="response-count-container">
+                    <Text className="response-count">
+                      {responses === undefined
+                        ? t("common.status.searching")
+                        : getResponderCount()}{" "}
+                    </Text>
+                    <Text className="response-count-label">
+                      {t("responses.responderLabel")}
+                    </Text>
+                  </div>
+                </Card>
+              </div>
+            </SummaryStyle>
+            <ResponseHeader
+              hasResponses={!!hasResponses}
+              onAiAnalysisClick={() => setIsChatVisible(true)}
+              responsesData={getData(true) || []}
+              formName={getFormName()}
+            />
+            <Tabs
+              defaultActiveKey="responses"
+              style={{ padding: "0 16px" }}
+              items={[
+                {
+                  key: "responses",
+                  label: t("responses.responsesTab"),
+                  children: (
+                    <div style={{ overflow: "scroll", marginBottom: 60 }}>
+                      <Table
+                        columns={getColumns()}
+                        dataSource={getData()}
+                        pagination={{ pageSize: 10 }}
+                        loading={{
+                          spinning: responses === undefined,
+                          tip: t("responses.lookingForResponses"),
+                        }}
+                        scroll={{ x: isMobile() ? 900 : 1500, y: "calc(65% - 400px)" }}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: "analytics",
+                  label: t("responses.analyticsTab"),
+                  children: formSpec ? (
+                    <FormAnalytics
+                      responsesData={getData(true)}
+                      formSpec={formSpec}
+                    />
+                  ) : null,
+                },
+              ]}
+            />
+          </div>
           {isChatVisible && formSpec && (
+            <div className="responses-chat-panel">
             <AIAnalysisChat
               isVisible={isChatVisible}
               onClose={() => setIsChatVisible(false)}
               responsesData={getData(true)}
               formSpec={formSpec}
             />
+            </div>
           )}
         </div>
       </ResponseWrapper>

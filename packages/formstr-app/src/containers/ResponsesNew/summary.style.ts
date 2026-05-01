@@ -3,7 +3,6 @@ import { MEDIA_QUERY_MOBILE } from "../../utils/css";
 
 export default styled.div`
   margin: 10px;
-  max-height: 20%;
 
   .summary-container {
     display: flex;
@@ -23,7 +22,6 @@ export default styled.div`
   .response-count-container {
     display: flex;
     flex-direction: column;
-    max-height: 10%;
   }
 
   .response-count {

@@ -19,3 +19,8 @@
 .settings-final-paragraph {
     margin-top: 0 !important;
 }
+
+.settings-content-wrapper {
+    max-width: 360px;
+    padding: 4px 2px;
+}

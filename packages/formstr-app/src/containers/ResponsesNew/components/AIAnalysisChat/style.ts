@@ -2,12 +2,24 @@ import styled from 'styled-components';
 
 export const ChatWrapper = styled.div`
   width: 100%;
-  margin-top: 8px;
+  height: 100%;
   
   .ant-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
     border-radius: 8px;
     border: 1px solid #f0f0f0;
+  }
+
+  .ant-card-body {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
   .ant-card-head {
@@ -16,26 +28,9 @@ export const ChatWrapper = styled.div`
   
   .chat-footer-controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-  }
-
-  .footer-help-section {
-    flex-grow: 1;
-    position: relative;
-  }
-
-  .footer-help-section .ant-collapse-content {
-    position: absolute;
-    bottom: calc(100%); /* Position above the header */
-    left: 0;
-    right: 0;
-    min-width: 400px;
-    background-color: #ffffff;
-    border: 1px solid #f0f0f0;
-    z-index: 10;
-    border-radius: 8px;
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+    margin-top: 4px;
   }
 
   .ai-chat-button-success {
@@ -64,10 +59,31 @@ export const ChatWrapper = styled.div`
 `;
 
 export const MessageList = styled.div`
-  height: 300px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   margin-bottom: 0px;
   padding-right: 8px;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(120, 120, 120, 0.4);
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(120, 120, 120, 0.6);
+  }
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 120, 120, 0.5) transparent;
 `;
 
 export const MessageItem = styled.div<{ sender: 'user' | 'ai' }>`

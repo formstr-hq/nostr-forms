@@ -4,12 +4,17 @@ import {
   Card,
   Input,
   List,
+  Popover,
   Space,
   Spin,
   message,
-  Collapse,
 } from "antd";
-import { CloseOutlined, RobotOutlined, SendOutlined } from "@ant-design/icons";
+import {
+  CloseOutlined,
+  InfoCircleOutlined,
+  RobotOutlined,
+  SendOutlined,
+} from "@ant-design/icons";
 import { AIAnalysisChatProps, Message } from "./types";
 import { ChatWrapper, MessageItem, MessageList } from "./style";
 import { ollamaService, OllamaModel } from "../../../../services/ollamaService";
@@ -173,7 +178,21 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
           </Space>
         }
         extra={
-          <Button type="text" icon={<CloseOutlined />} onClick={onClose} />
+          <Space size={4}>
+            <Popover
+              trigger="click"
+              placement="bottomRight"
+              overlayInnerStyle={{ maxHeight: "70vh", overflowY: "auto" }}
+              content={<OllamaSettings mode="content" />}
+            >
+              <Button
+                type="text"
+                icon={<InfoCircleOutlined />}
+                aria-label="Connection Help & Instructions"
+              />
+            </Popover>
+            <Button type="text" icon={<CloseOutlined />} onClick={onClose} />
+          </Space>
         }
         bodyStyle={{ paddingTop: 4, paddingBottom: 0 }}
       >
@@ -222,9 +241,6 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
           </Space.Compact>
         </div>
         <div className="chat-footer-controls">
-          <div className="footer-help-section">
-            <OllamaSettings />
-          </div>
           <Space>
             <ModelSelector
               model={selectedModel}
