@@ -31,6 +31,7 @@ export interface LocalFormsContextType {
   // Operations
   refreshForms: () => Promise<void>;
   saveLocalForm: (form: ILocalForm) => Promise<void>;
+  saveManyLocalForms: (forms: ILocalForm[]) => Promise<void>;
   deleteLocalForm: (formKey: string) => Promise<void>;
 
   // Encryption management
@@ -134,6 +135,35 @@ export const LocalFormsProvider: React.FC<LocalFormsProviderProps> = ({
     [localForms, pubkey],
   );
 
+  // Save many forms at once — reads current list once, merges all, writes once
+  // (avoids stale-closure bug when calling saveLocalForm in a loop)
+  const saveManyLocalForms = useCallback(
+    async (newForms: ILocalForm[]) => {
+      let updatedForms = [...localForms];
+      for (const form of newForms) {
+        const idx = updatedForms.findIndex((f) => f.key === form.key);
+        if (idx >= 0) {
+          updatedForms[idx] = form;
+        } else {
+          updatedForms.push(form);
+        }
+      }
+
+      let signer = null;
+      if (pubkey) {
+        try {
+          signer = await signerManager.getSigner();
+        } catch {
+          // No signer — setLocalForms handles unencrypted fallback
+        }
+      }
+      const { error } = await setLocalForms(updatedForms, signer, pubkey);
+      if (error) throw new Error(error.message);
+      setLocalFormsState(updatedForms);
+    },
+    [localForms, pubkey],
+  );
+
   // Force a re-render to pick up encryption state changes from localStorage
   // without triggering a full decrypt cycle via refreshForms
   const [, forceUpdate] = useState(0);
@@ -210,6 +240,7 @@ export const LocalFormsProvider: React.FC<LocalFormsProviderProps> = ({
     encryptionError,
     refreshForms,
     saveLocalForm,
+    saveManyLocalForms,
     deleteLocalForm,
     enableEncryption,
     disableEncryption,

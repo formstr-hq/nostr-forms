@@ -21,6 +21,14 @@ type FormEventMetadata = {
   relay: string;
 };
 
+type FormToSync = {
+  formAuthorPub: string;
+  formAuthorSecret: string;
+  formId: string;
+  relays: string[];
+  viewKey?: string;
+};
+
 type MyFormsContextValue = {
   formEvents: Map<string, FormEventMetadata>;
   refreshing: boolean;
@@ -34,6 +42,7 @@ type MyFormsContextValue = {
     viewKey?: string,
     callback?: (state: "saving" | "saved" | null) => void,
   ) => Promise<void>;
+  saveManyToMyForms: (forms: FormToSync[]) => Promise<void>;
   inMyForms: (formPubkey: string, formId: string) => boolean;
 };
 
@@ -163,6 +172,59 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Batch sync: read once, append all missing, publish once, refresh once.
+  // Calling saveToMyForms in a loop causes a race — each call re-fetches from
+  // relay before the previous publish has propagated, overwriting prior saves.
+  const saveManyToMyForms = async (formsToSync: FormToSync[]) => {
+    if (!userPub || formsToSync.length === 0) return;
+
+    const targetRelays = getDefaultRelays();
+    const signer = await signerManager.getSigner();
+    if (!signer.nip44Encrypt || !signer.nip44Decrypt) {
+      throw new Error("Signer does not support NIP-44 encryption");
+    }
+
+    const existing = await pool.get(targetRelays, {
+      kinds: [KINDS.myFormsList],
+      authors: [userPub],
+    });
+
+    let forms: Tag[] = [];
+    if (existing) {
+      try {
+        const decrypted = await signer.nip44Decrypt(userPub, existing.content);
+        forms = JSON.parse(decrypted);
+      } catch (decryptErr) {
+        console.warn("Could not decrypt existing forms list, starting fresh:", decryptErr);
+        forms = [];
+      }
+    }
+
+    let added = false;
+    for (const { formAuthorPub, formAuthorSecret, formId, relays, viewKey } of formsToSync) {
+      const key = `${formAuthorPub}:${formId}`;
+      if (forms.some((f) => f[1] === key)) continue;
+      const formRelays = relays.length ? relays : targetRelays;
+      let secrets = formAuthorSecret;
+      if (viewKey) secrets += `:${viewKey}`;
+      forms.push(["f", key, formRelays[0], secrets]);
+      added = true;
+    }
+
+    if (!added) return;
+
+    const encrypted = await signer.nip44Encrypt(userPub, JSON.stringify(forms));
+    const event = await signer.signEvent({
+      kind: KINDS.myFormsList,
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [],
+      content: encrypted,
+    });
+    if (!event) throw new Error("Signing was cancelled or returned empty");
+    await Promise.allSettled(pool.publish(targetRelays, event));
+    await refreshForms(true);
+  };
+
   const refreshForms = async (force = false) => {
     if (!userPub) return;
     // Non-forced calls bail if a refresh is already running or data is fresh
@@ -268,6 +330,7 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
         refreshForms,
         deleteForm,
         saveToMyForms,
+        saveManyToMyForms,
         inMyForms,
       }}
     >
