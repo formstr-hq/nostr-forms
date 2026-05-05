@@ -4,17 +4,7 @@ import { Tag } from "../../../nostr/types";
 import { DeleteOutlined } from "@ant-design/icons";
 import { deleteDraft } from "../../../utils/utility";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
-export function constructDraftUrl(
-  draft: { formSpec: unknown; tempId: string },
-  host: string,
-) {
-  if (!draft) return;
-  let draftHash = window.btoa(encodeURIComponent(JSON.stringify(draft)));
-  draftHash = window.encodeURIComponent(draftHash);
-  return `${host}/drafts/${draftHash}`;
-}
+import { constructDraftUrl } from "../../../utils/formLinks";
 
 export const Drafts = () => {
   type Draft = { formSpec: Tag[]; tempId: string };

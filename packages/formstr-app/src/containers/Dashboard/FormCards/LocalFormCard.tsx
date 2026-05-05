@@ -1,9 +1,13 @@
-import { Button, Card, Typography, Dropdown, MenuProps } from "antd";
+import { Button, Card, Dropdown, MenuProps } from "antd";
 import { ILocalForm } from "../../CreateFormNew/providers/FormBuilder/typeDefs";
 import { useNavigate } from "react-router-dom";
 import DeleteFormTrigger from "./DeleteForm";
-import { makeFormNAddr, naddrUrl } from "../../../utils/utility";
-import { editPath, responsePath } from "../../../utils/formUtils";
+import {
+  editPath,
+  makeFormNAddr,
+  naddrUrl,
+  responsePath,
+} from "../../../utils/formLinks";
 import { EditOutlined, MoreOutlined } from "@ant-design/icons";
 import SafeMarkdown from "../../../components/SafeMarkdown";
 
@@ -12,7 +16,6 @@ interface LocalFormCardProps {
   onDeleted: () => void;
 }
 
-const { Text } = Typography;
 export const LocalFormCard: React.FC<LocalFormCardProps> = ({
   form,
   onDeleted,
@@ -24,9 +27,9 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
         makeFormNAddr(
           form.publicKey,
           form.formId,
-          form.relays && form.relays.length !== 0 ? form.relays : [form.relay]
+          form.relays && form.relays.length !== 0 ? form.relays : [form.relay],
         ),
-        form.viewKey
+        form.viewKey,
       )
     : `/response/${form.privateKey}`;
   let formUrl =
@@ -45,10 +48,10 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
             makeFormNAddr(
               form.publicKey,
               form.formId,
-              form.relays?.length ? form.relays : undefined
+              form.relays?.length ? form.relays : undefined,
             ),
-            form.viewKey
-          )
+            form.viewKey,
+          ),
         ),
     },
   ];

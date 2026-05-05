@@ -1,4 +1,4 @@
-import { Modal, Card, Divider, Typography, Button, Alert } from "antd";
+import { Modal, Card, Divider } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import FormDetailsStyle from "./FormDetails.style";
@@ -7,14 +7,14 @@ import {
   constructFormUrl,
   constructNewResponseUrl,
   editPath,
-} from "../../../../utils/formUtils";
+  makeFormNAddr,
+} from "../../../../utils/formLinks";
 import { ShareTab } from "./ShareTab";
 import { EmbedTab } from "./EmbedTab";
 import { SaveStatus } from "./SaveStatus";
 import { saveToDevice } from "./utils/saveHelpers";
 import { CustomSlugForm } from "./payments/customSlugForm";
 import { useNavigate } from "react-router-dom";
-import { makeFormNAddr } from "../../../../utils/utility";
 import { useMyForms } from "../../../../provider/MyFormsProvider";
 import { EmbedWithSDKTab } from "./EmbedWithSDKTab";
 

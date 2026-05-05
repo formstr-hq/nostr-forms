@@ -1,6 +1,6 @@
 import { Typography } from "antd";
 import { CopyButton } from "../../../../components/CopyButton";
-import { makeFormNAddr } from "../../../../utils/utility";
+import { makeFormNAddr } from "../../../../utils/formLinks";
 
 const { Text } = Typography;
 

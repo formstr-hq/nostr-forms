@@ -1,5 +1,5 @@
 import { Card, Divider, Typography } from "antd";
-import { naddrUrl } from "../../utils/utility";
+import { naddrUrl } from "../../utils/formLinks";
 import { useNavigate } from "react-router-dom";
 import { getDefaultRelays } from "../../nostr/common";
 import { Event } from "nostr-tools";

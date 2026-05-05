@@ -1,22 +1,20 @@
 import { FormTemplate } from "../templates";
-import { makeFormNAddr, makeTag } from "./utility";
-import {
-  nip44,
-  Event,
-  UnsignedEvent,
-  nip19,
-  getPublicKey,
-} from "nostr-tools";
+import { makeTag } from "./utility";
+import { nip44, Event, UnsignedEvent, nip19 } from "nostr-tools";
 import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
 import { sha256 } from "@noble/hashes/sha256";
-import { naddrUrl } from "./utility";
 import { AddressPointer } from "nostr-tools/nip19";
 import { fetchFormTemplate } from "../nostr/fetchFormTemplate";
 import { signerManager } from "../signer";
-import { encodeNKeys } from "./nkeys";
 import { getDefaultRelays } from "../nostr/common";
 import { Tag } from "../nostr/types";
 import { pool } from "../pool";
+import {
+  constructFormUrl as buildFormUrl,
+  constructNewResponseUrl as buildResponseUrl,
+  editPath as buildEditPath,
+  responsePath as buildResponsePath,
+} from "./formLinks";
 
 export const createFormSpecFromTemplate = (
   template: FormTemplate,
@@ -141,9 +139,7 @@ export const constructFormUrl = (
   viewKey?: string,
   disablePreview: boolean = false,
 ) => {
-  const naddr = naddrUrl(pubkey, formId, relays, viewKey, disablePreview);
-  const baseUrl = `${window.location.origin}${naddr}`;
-  return baseUrl;
+  return buildFormUrl(pubkey, formId, relays, viewKey, disablePreview);
 };
 
 export const editPath = (
@@ -152,22 +148,7 @@ export const editPath = (
   viewKey?: string | null,
   disablePreview = true,
 ) => {
-  const base = `/edit/${naddr}`;
-
-  if (!disablePreview) {
-    const params = new URLSearchParams();
-    if (viewKey) params.set("viewKey", viewKey);
-    const query = params.toString() ? `?${params}` : "";
-    return `${base}${query}#${formSecret}`;
-  }
-
-  // NEW: private links
-  const nkey = encodeNKeys({
-    ...(viewKey && { viewKey }),
-    secretKey: formSecret,
-  });
-
-  return `${base}#${nkey}`;
+  return buildEditPath(formSecret, naddr, viewKey, disablePreview);
 };
 
 export const responsePath = (
@@ -176,22 +157,7 @@ export const responsePath = (
   viewKey?: string | null,
   disablePreview = false, // true -> server-visible
 ) => {
-  const base = `/s/${naddr}`;
-
-  if (!disablePreview) {
-    const params = new URLSearchParams();
-    if (viewKey) params.set("viewKey", viewKey);
-    const query = params.toString() ? `?${params.toString()}` : "";
-    return `${base}${query}#${secretKey}`;
-  }
-
-  // Private: encode into nkeys
-  const nkey = encodeNKeys({
-    ...(viewKey ? { viewKey } : {}),
-    secretKey,
-  });
-
-  return `${base}#${nkey}`;
+  return buildResponsePath(secretKey, naddr, viewKey, disablePreview);
 };
 
 export const constructNewResponseUrl = (
@@ -201,14 +167,7 @@ export const constructNewResponseUrl = (
   viewKey?: string,
   disablePreview: boolean = false,
 ) => {
-  const baseUrl = `${window.location.origin}`;
-  const responsePart = responsePath(
-    secretKey,
-    makeFormNAddr(getPublicKey(hexToBytes(secretKey)), formId, relays),
-    viewKey,
-    disablePreview,
-  );
-  return `${baseUrl}${responsePart}`;
+  return buildResponseUrl(secretKey, formId, relays, viewKey, disablePreview);
 };
 
 export const getFormData = async (naddr: string) => {
@@ -217,9 +176,14 @@ export const getFormData = async (naddr: string) => {
   const formId = decodedData?.identifier;
   const relays = decodedData?.relays;
   return new Promise((resolve) => {
-    fetchFormTemplate(pubKey, formId, (event: Event) => {
-      resolve(event);
-    }, relays);
+    fetchFormTemplate(
+      pubKey,
+      formId,
+      (event: Event) => {
+        resolve(event);
+      },
+      relays,
+    );
   });
 };
 
