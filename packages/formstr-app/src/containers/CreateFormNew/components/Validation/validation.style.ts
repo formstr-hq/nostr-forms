@@ -28,3 +28,18 @@ export const InputStyle = styled.div`
     border-radius: 10px;
   }
 `;
+
+export const ColumnInputStyle = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  width: 100%;
+
+  .property-name {
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+`;

@@ -1,60 +1,157 @@
-import { useEffect, useState } from "react";
+import { useMemo, useCallback } from "react";
 import { Typography, Select } from "antd";
 import { IProps } from "./validation.type";
-import { ANSWER_TYPE_RULES_MENU, RULE_CONFIG } from "../../configs/config";
+import {
+  ANSWER_TYPE_RULES_MENU,
+  RULE_CONFIG,
+  NUMBER_RULE_OPTIONS,
+} from "../../configs/config";
 import StyleWrapper from "./validation.style";
-import { ValidationRuleTypes } from "../../../../nostr/types";
+import {
+  ValidationRuleTypes,
+  AnswerTypes,
+  NumberValidationRule,
+  NumberValidationType,
+} from "../../../../nostr/types";
+import NumberRule from "./NumberRule";
 
 const { Text } = Typography;
 
 function Validation(props: IProps) {
   const { answerType, answerSettings, handleAnswerSettings } = props;
   const validationRules = answerSettings.validationRules ?? {};
-  const defaultSelected = Object.keys(validationRules) as ValidationRuleTypes[];
 
-  const [selected, setSelected] =
-    useState<ValidationRuleTypes[]>(defaultSelected);
+  const selected = useMemo(
+    () => Object.keys(validationRules) as ValidationRuleTypes[],
+    [validationRules]
+  );
 
-  useEffect(() => {
-    setSelected(defaultSelected);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [answerType]);
+  const onRuleSelect = useCallback(
+    (val: ValidationRuleTypes) => {
+      handleAnswerSettings({
+        validationRules: {
+          ...validationRules,
+          [val]: {},
+        },
+      });
+    },
+    [validationRules, handleAnswerSettings]
+  );
 
-  if (!selected.length && !ANSWER_TYPE_RULES_MENU[answerType].length)
+  const onSettingChange = useCallback(
+    (ruleType: ValidationRuleTypes, val: unknown) => {
+      handleAnswerSettings({
+        validationRules: {
+          ...validationRules,
+          [ruleType]: val,
+        },
+      });
+    },
+    [validationRules, handleAnswerSettings]
+  );
+
+  const rules = useMemo(
+    () =>
+      (ANSWER_TYPE_RULES_MENU as any)[answerType]?.filter(
+        (rule: any) => !selected.includes(rule.value)
+      ) || [],
+    [answerType, selected]
+  );
+
+  if (!selected.length && !ANSWER_TYPE_RULES_MENU[answerType]?.length)
     return null;
 
-  const onRuleSelect = (val: any) => {
-    const newSelected = [...selected, val];
-    setSelected(newSelected);
-  };
+  if (answerType === AnswerTypes.number) {
+    let currentRuleType = validationRules.numberRule?.type;
+    let fallbackValues: NumberValidationRule | undefined;
 
-  const onSettingChange = (ruleType: ValidationRuleTypes, val: any) => {
-    handleAnswerSettings({
-      validationRules: { ...validationRules, [ruleType]: val },
-    });
-  };
+    /**
+     * Backward compatibility for legacy "range" rules.
+     * If a form has an old 'range' rule but no new 'numberRule',
+     * we map it to the "between" logic automatically.
+     */
+    if (!currentRuleType && validationRules.range) {
+      currentRuleType = "between" as NumberValidationType;
+      fallbackValues = {
+        type: "between",
+        value1: (validationRules.range as any).min,
+        value2: (validationRules.range as any).max,
+      } as NumberValidationRule;
+    }
 
-  let rules = ANSWER_TYPE_RULES_MENU[answerType].filter(
-    (rule) => !selected.includes(rule.value),
-  );
+    const activeNumberRule = validationRules.numberRule || fallbackValues;
+    const selectValue = currentRuleType ?? "none";
+
+    const handleNumberRuleChange = (val: string) => {
+      const { range, numberRule, ...rest } = validationRules;
+
+      if (val === "none") {
+        handleAnswerSettings({ validationRules: rest });
+        return;
+      }
+
+      const typedVal = val as NumberValidationType;
+
+      handleAnswerSettings({
+        validationRules: {
+          ...rest,
+          numberRule: {
+            ...activeNumberRule,
+            type: typedVal,
+            errorMessage: activeNumberRule?.errorMessage || "",
+          },
+        },
+      });
+    };
+
+    return (
+      <StyleWrapper className="input-property">
+        <div className="header">
+          <Text className="property-title">Validation</Text>
+
+          <Select
+            value={selectValue}
+            options={NUMBER_RULE_OPTIONS}
+            onChange={handleNumberRuleChange}
+            style={{ width: "60%" }}
+          />
+        </div>
+
+        {selectValue !== "none" && (
+          <NumberRule
+            rule={(activeNumberRule as NumberValidationRule) || undefined}
+            onChange={(_: ValidationRuleTypes, ruleObj: NumberValidationRule) => {
+              const { range, ...rest } = validationRules; // Safeguard: Strip old range rule on update
+
+              handleAnswerSettings({
+                validationRules: {
+                  ...rest,
+                  numberRule: ruleObj,
+                },
+              });
+            }}
+          />
+        )}
+      </StyleWrapper>
+    );
+  }
 
   return (
     <StyleWrapper className="input-property">
       <div className="header">
-        <div>
-          <Text className="property-title">Validation</Text>
-        </div>
+        <Text className="property-title">Validation</Text>
+
         {!!rules.length && (
-          <Select value="Select" options={rules} onChange={onRuleSelect} />
+          <Select placeholder="Select" options={rules} onChange={onRuleSelect} />
         )}
       </div>
       {!!selected.length &&
         selected.map((ruleType) => {
-          let { key, component: Component } = RULE_CONFIG[ruleType];
+          const { key, component: Component } = (RULE_CONFIG as any)[ruleType];
+
           return (
             <Component
               key={key}
-              //@ts-ignore
               rule={validationRules[ruleType]}
               onChange={onSettingChange}
             />

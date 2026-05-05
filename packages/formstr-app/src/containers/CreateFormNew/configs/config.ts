@@ -1,15 +1,18 @@
 import { isGreaterThanOrEqual, isLessThanOrEqual, getNumValue } from "../utils";
+import { validateNumberValidationRule } from "../../../utils/validationUtils";
 import RangeComponent from "../components/Validation/Range";
 import MaxComponent from "../components/Validation/Max";
 import MinComponent from "../components/Validation/Min";
 import RegexComponent from "../components/Validation/Regex";
 import MatchComponent from "../components/Validation/Match";
+import NumberRuleComponent from "../components/Validation/NumberRule";
 import {
   AnswerTypes,
   MaxRule,
   MinRule,
   RangeRule,
   ValidationRuleTypes,
+  NumberValidationRule,
 } from "../../../nostr/types";
 
 export const RULE_CONFIG = {
@@ -52,6 +55,14 @@ export const RULE_CONFIG = {
       return null;
     },
   },
+  [ValidationRuleTypes.numberRule]: {
+    key: ValidationRuleTypes.numberRule,
+    component: NumberRuleComponent,
+    validator: (val: any, rule: NumberValidationRule) => {
+      const numVal = Number(val);
+      return validateNumberValidationRule(numVal, rule);
+    },
+  },
 };
 
 const REGEX_RULE_ITEM = {
@@ -64,6 +75,26 @@ const RANGE_RULE_ITEM = {
   key: ValidationRuleTypes.range,
   value: ValidationRuleTypes.range,
   label: "Range",
+};
+
+export const NUMBER_RULE_OPTIONS = [
+  { value: "none", label: "No Validation" },
+  { value: "greaterThan", label: "Greater than" },
+  { value: "greaterThanOrEqual", label: "Greater than or equal to" },
+  { value: "lessThan", label: "Less than" },
+  { value: "lessThanOrEqual", label: "Less than or equal to" },
+  { value: "equalTo", label: "Equal to" },
+  { value: "notEqualTo", label: "Not equal to" },
+  { value: "between", label: "Between" },
+  { value: "notBetween", label: "Not between" },
+  { value: "isNumber", label: "Is number" },
+  { value: "wholeNumber", label: "Whole number" },
+];
+
+const NUMBER_RULE_ITEM = {
+  key: ValidationRuleTypes.numberRule,
+  value: ValidationRuleTypes.numberRule,
+  label: "Number Validation",
 };
 
 const MIN_RULE_ITEM = {
@@ -81,7 +112,7 @@ const MAX_RULE_ITEM = {
 type ANSWER_TYPE_RULES_MENU_TYPE = { [key in AnswerTypes]: any[] };
 
 export const ANSWER_TYPE_RULES_MENU: ANSWER_TYPE_RULES_MENU_TYPE = {
-  [AnswerTypes.number]: [RANGE_RULE_ITEM],
+  [AnswerTypes.number]: [NUMBER_RULE_ITEM],
   [AnswerTypes.paragraph]: [MIN_RULE_ITEM, MAX_RULE_ITEM, REGEX_RULE_ITEM],
   [AnswerTypes.shortText]: [MIN_RULE_ITEM, MAX_RULE_ITEM, REGEX_RULE_ITEM],
   [AnswerTypes.checkboxes]: [],

@@ -1,4 +1,8 @@
 import { Rule } from "antd/es/form";
+import { 
+  validateNumberValidationRule,
+  getDefaultErrorMessage
+} from "../../../utils/validationUtils";
 import {
   AnswerSettings,
   AnswerTypes,
@@ -10,6 +14,7 @@ import {
   RangeRule,
   RegexRule,
   ValidationRuleTypes,
+  NumberValidationRule,
 } from "../../../nostr/types";
 
 //TODO: Find a method better than "any" with overloads for dynamic types
@@ -139,12 +144,33 @@ function Match(rule: MatchRule, answerType?: AnswerTypes): Rule {
   };
 }
 
+function NumberRuleValidator(rule: any): Rule;
+function NumberRuleValidator(rule: NumberValidationRule): Rule {
+  return {
+    validator: (_: any, value: any) => {
+      if (!value || value.length === 0 || value[0] === "" || value[0] === null) return Promise.resolve();
+      
+      let numVal = Number(value[0]);
+      if (isNaN(numVal)) {
+          return Promise.reject(rule.errorMessage || "Please enter a valid number");
+      }
+
+      if (!validateNumberValidationRule(numVal, rule)) {
+        return Promise.reject(rule.errorMessage || getDefaultErrorMessage(rule));
+      }
+      
+      return Promise.resolve();
+    }
+  }
+}
+
 const RuleValidatorMap = {
   [ValidationRuleTypes.range]: NumRange,
   [ValidationRuleTypes.max]: MaxLength,
   [ValidationRuleTypes.min]: MinLength,
   [ValidationRuleTypes.regex]: Regex,
   [ValidationRuleTypes.match]: Match,
+  [ValidationRuleTypes.numberRule]: NumberRuleValidator,
 };
 
 function createRule(
