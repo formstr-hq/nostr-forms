@@ -11,6 +11,7 @@ import { ThankYouScreen } from "./ThankYouScreen";
 import { ROUTES } from "../../constants/routes";
 import { appConfig } from "../../config";
 import { Response, Tag } from "../../nostr/types";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -27,6 +28,7 @@ interface FormMetadata {
 }
 
 export const CustomUrlForm: React.FC<CustomUrlFormProps> = ({ formSpec }) => {
+  const { t } = useTranslation();
   const { formSlug } = useParams();
   const [searchParams] = useSearchParams();
 
@@ -86,11 +88,11 @@ export const CustomUrlForm: React.FC<CustomUrlFormProps> = ({ formSpec }) => {
   }
 
   if (!formSpec && !formSlug) {
-    return <Text> Not enough data to render this form. </Text>;
+    return <Text>{t("filler.customUrl.notEnoughData")}</Text>;
   }
 
   if (!metadata && !isPreview) {
-    return <Text>Could not load form metadata.</Text>;
+    return <Text>{t("filler.customUrl.metadataLoadFailed")}</Text>;
   }
 
   if (
@@ -101,8 +103,8 @@ export const CustomUrlForm: React.FC<CustomUrlFormProps> = ({ formSpec }) => {
   ) {
     return (
       <>
-        <Text>This form is access-controlled and requires login.</Text>
-        <Button onClick={requestPubkey}>Login</Button>
+        <Text>{t("filler.customUrl.accessControlled")}</Text>
+        <Button onClick={requestPubkey}>{t("common.actions.login")}</Button>
       </>
     );
   }

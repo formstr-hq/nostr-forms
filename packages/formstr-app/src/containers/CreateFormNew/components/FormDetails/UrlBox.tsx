@@ -2,6 +2,7 @@ import { Button, Tooltip, Typography } from "antd";
 import { CopyOutlined, LinkOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { isMobile } from "../../../../utils/utility";
+import { useTranslation } from "react-i18next";
 
 export const UrlBox = ({
   label,
@@ -16,6 +17,7 @@ export const UrlBox = ({
   maxWidth?: number;
   warning?: string;
 }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -84,7 +86,7 @@ export const UrlBox = ({
 
         {/* Buttons beside the URL box */}
         <div style={{ display: "flex", gap: 4 }}>
-          <Tooltip title="Copy">
+          <Tooltip title={t("common.actions.copy")}>
             <Button
               type="text"
               icon={<CopyOutlined />}
@@ -92,7 +94,7 @@ export const UrlBox = ({
               size="small"
             />
           </Tooltip>
-          <Tooltip title="Open in new tab">
+          <Tooltip title={t("builder.formDetails.urlBox.openInNewTab")}>
             <Button
               type="text"
               icon={<LinkOutlined />}
@@ -105,7 +107,11 @@ export const UrlBox = ({
         </div>
       </div>
 
-      {copied && <div style={{ fontSize: 12, marginTop: 4 }}>Copied ✅</div>}
+      {copied && (
+        <div style={{ fontSize: 12, marginTop: 4 }}>
+          {t("builder.formDetails.urlBox.copied")} {"\u2705"}
+        </div>
+      )}
     </div>
   );
 };

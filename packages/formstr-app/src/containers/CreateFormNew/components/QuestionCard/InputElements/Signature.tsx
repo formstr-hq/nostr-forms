@@ -1,6 +1,7 @@
 import React from "react";
 import { Input, Button, Typography, Space } from "antd";
 import { IAnswerSettings } from "../../AnswerSettings/types";
+import { useTranslation } from "react-i18next";
 
 const { Text, Paragraph } = Typography;
 
@@ -9,6 +10,7 @@ interface SignatureInputProps {
 }
 
 const SignatureInput: React.FC<SignatureInputProps> = ({ answerSettings }) => {
+  const { t } = useTranslation();
   const sig = answerSettings.signature ?? {};
 
   return (
@@ -17,7 +19,7 @@ const SignatureInput: React.FC<SignatureInputProps> = ({ answerSettings }) => {
         // Case 1: Editable content
         <Input.TextArea
           value={sig.prefilledContent}
-          placeholder="Edit content to sign"
+          placeholder={t("builder.inputPreviews.editContentToSign")}
           rows={4}
           disabled={true}
         />
@@ -37,12 +39,12 @@ const SignatureInput: React.FC<SignatureInputProps> = ({ answerSettings }) => {
       ) : (
         // Case 3: No prefilled content and not editable
         <Text type="secondary">
-          No content to sign. Please configure this field in the form builder.
+          {t("builder.inputPreviews.noContentToSign")}
         </Text>
       )}
 
       <Button type="primary" onClick={() => {}}>
-        Attach Signature
+        {t("builder.inputPreviews.attachSignature")}
       </Button>
     </Space>
   );

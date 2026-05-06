@@ -1,12 +1,14 @@
 import { Input } from "antd";
+import { useTranslation } from "react-i18next";
 
 interface ShortTextProps {}
 
 const shortText: React.FC<ShortTextProps> = () => {
+  const { t } = useTranslation();
   return (
     <>
       <Input
-        placeholder="Type your answer here"
+        placeholder={t("builder.inputPreviews.shortTextPlaceholder")}
         bordered={false}
         disabled
         style={{

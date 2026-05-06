@@ -15,12 +15,14 @@ import {
   fetchKind0Events,
 } from "../../../../../nostr/common";
 import { nip19 } from "nostr-tools";
+import { useTranslation } from "react-i18next";
 
 const { Text, Paragraph, Link } = Typography;
 
 const { Panel } = Collapse;
 
 export default function Automations() {
+  const { t } = useTranslation();
   const { formSettings, relayList, updateFormSetting } =
     useFormBuilderContext();
 
@@ -61,7 +63,7 @@ export default function Automations() {
         setAvailableServers(parsed);
       } catch (err) {
         console.error("Failed to fetch NRPC servers", err);
-        message.error("Failed to fetch available NRPC servers");
+        message.error(t("builder.automations.fetchServersFailed"));
       } finally {
         setLoadingServers(false);
       }
@@ -97,8 +99,8 @@ export default function Automations() {
         console.error("Failed to fetch NRPC methods", err);
         const msg =
           err.message === "Introspection timed out"
-            ? "The NRPC server did not respond within 10 seconds."
-            : "Failed to fetch NRPC methods.";
+            ? t("builder.automations.timedOut")
+            : t("builder.automations.methodsFailed");
         setIntrospectionError(msg);
         message.warning(msg);
       } finally {
@@ -121,10 +123,12 @@ export default function Automations() {
           alignItems: "flex-start",
         }}
       >
-        <Text className="property-text">Select an Existing NRPC Server</Text>
+        <Text className="property-text">
+          {t("builder.automations.selectExistingServer")}
+        </Text>
         <Select
           showSearch
-          placeholder="Search or select NRPC server"
+          placeholder={t("builder.automations.searchServer")}
           optionFilterProp="label"
           loading={loadingServers}
           value={formSettings.nrpcPubkey || undefined}
@@ -145,9 +149,11 @@ export default function Automations() {
           alignItems: "flex-start",
         }}
       >
-        <Text className="property-text">Or enter NRPC server pubkey</Text>
+        <Text className="property-text">
+          {t("builder.automations.enterServerPubkey")}
+        </Text>
         <Input
-          placeholder="npub1..."
+          placeholder={t("builder.automations.npubPlaceholder")}
           value={
             formSettings.nrpcPubkey
               ? (() => {
@@ -167,7 +173,7 @@ export default function Automations() {
             }
 
             if (!val.startsWith("npub1")) {
-              message.warning("Please enter a valid npub1 key");
+              message.warning(t("builder.automations.validNpub"));
               return;
             }
 
@@ -176,10 +182,10 @@ export default function Automations() {
               if (type === "npub") {
                 updateFormSetting({ nrpcPubkey: data as string });
               } else {
-                message.warning("Invalid npub key format");
+                message.warning(t("builder.automations.invalidNpubFormat"));
               }
             } catch {
-              message.error("Could not decode npub key");
+              message.error(t("builder.automations.decodeFailed"));
             }
           }}
           style={{ width: "100%" }}
@@ -195,9 +201,11 @@ export default function Automations() {
           alignItems: "flex-start",
         }}
       >
-        <Text className="property-text">Method to Call</Text>
+        <Text className="property-text">
+          {t("builder.automations.methodToCall")}
+        </Text>
         <Select
-          placeholder="Select method"
+          placeholder={t("builder.automations.selectMethod")}
           value={formSettings.nrpcMethod}
           style={{ width: "100%" }}
           loading={loadingMethods}
@@ -220,7 +228,9 @@ export default function Automations() {
         className="property-setting"
         style={{ flexDirection: "row", gap: 8, marginTop: 16 }}
       >
-        <Text className="property-text">Require Webhook to Pass</Text>
+        <Text className="property-text">
+          {t("builder.automations.requireWebhookPass")}
+        </Text>
         <Switch
           checked={formSettings.requireWebhookPass}
           onChange={(checked) =>
@@ -232,39 +242,37 @@ export default function Automations() {
         type="secondary"
         style={{ fontSize: 12, marginTop: 12, display: "block" }}
       >
-        After form submission, Formstr will send an NRPC request to the
-        configured server with the form responses.
+        {t("builder.automations.afterSubmission")}
         {formSettings.requireWebhookPass &&
-          " Submissions will only be accepted if the server responds successfully."}
+          t("builder.automations.requireWebhookSuffix")}
       </Text>
       <Collapse ghost style={{ textAlign: "left", marginTop: 8 }}>
-        <Panel header="💡 Learn more" key="1">
+        <Panel header={`💡 ${t("builder.automations.learnMore")}`} key="1">
           <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 0 }}>
-            NRPC (Nostr Remote Procedure Calls) lets you connect your form to
-            your own nostr based server. You can:
+            {t("builder.automations.description")}
           </Paragraph>
           <ul style={{ fontSize: 12, paddingLeft: 20, marginTop: 8 }}>
             <li>
-              Read the{" "}
+              {t("builder.automations.readSpec")}{" "}
               <Link
                 href="https://github.com/nostr-protocol/nips/blob/9deb067debca268a79c60bff50b42dcf090f2745/N1.md"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                NRPC specification
+                {t("builder.automations.specification")}
               </Link>{" "}
-              to understand the protocol.
+              {t("builder.automations.understandProtocol")}
             </li>
             <li>
-              Try running a{" "}
+              {t("builder.automations.tryRunning")}{" "}
               <Link
                 href="https://github.com/abh3po/nrpc_server"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                demo NRPC server
+                {t("builder.automations.demoServer")}
               </Link>{" "}
-              to tinker with locally.
+              {t("builder.automations.tinkerLocally")}
             </li>
           </ul>
         </Panel>

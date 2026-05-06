@@ -1,14 +1,16 @@
 import { Typography } from "antd";
 import { InputStyle } from "./validation.style";
 import { RangeRule, ValidationRuleTypes } from "../../../../nostr/types";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
 function Range({ rule, onChange }: { rule?: RangeRule; onChange: Function }) {
+  const { t } = useTranslation();
   return (
     <>
       <InputStyle>
-        <Text className="property-name">Min num:</Text>
+        <Text className="property-name">{t("builder.validation.minNumber")}</Text>
         <input
           className="number-input"
           type="number"
@@ -22,7 +24,7 @@ function Range({ rule, onChange }: { rule?: RangeRule; onChange: Function }) {
         />
       </InputStyle>
       <InputStyle>
-        <Text className="property-name">Max num:</Text>
+        <Text className="property-name">{t("builder.validation.maxNumber")}</Text>
         <input
           className="number-input"
           type="number"

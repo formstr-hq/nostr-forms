@@ -1,35 +1,39 @@
 import React from 'react';
 import { Typography, Collapse } from 'antd';
 import './style.css';
+import { useTranslation } from "react-i18next";
 
 const { Panel } = Collapse;
 
 const OllamaSettings: React.FC = () => {
+    const { t } = useTranslation();
     return (
         <Collapse ghost>
-            <Panel header="Connection Help & Instructions" key="1">
+            <Panel header={t("ollama.helpTitle")} key="1">
                 <Typography.Title level={5} className="settings-title">
-                    Step 1: Install the Companion Extension
+                    {t("ollama.step1Title")}
                 </Typography.Title>
                 <Typography.Paragraph className="settings-paragraph">
-                    This feature requires the Ollama Web <a href="https://github.com/ashu01304/Ollama_Web" target="_blank" rel="noopener noreferrer">
-                    Companion browser extension
-                    </a> to communicate with your local Ollama instance.
+                    {t("ollama.step1Intro")}{" "}
+                    <a href="https://github.com/ashu01304/Ollama_Web" target="_blank" rel="noopener noreferrer">
+                    {t("ollama.companionExtension")}
+                    </a>{" "}
+                    {t("ollama.step1Outro")}
                 </Typography.Paragraph>
 
                 <Typography.Title level={5} className="settings-title">
-                    Step 2: Allow This Website
+                    {t("ollama.step2Title")}
                 </Typography.Title>
                 <Typography.Paragraph className="settings-paragraph-tight">
-                    You must explicitly grant this website permission to use the extension.
+                    {t("ollama.step2Intro")}
                     <ol className="settings-list">
-                        <li>Open the extension's settings/popup.</li>
-                        <li>Find the "Allowed Domains" list.</li>
-                        <li>Add the web domain of the website or click on "Add Current".</li>
+                        <li>{t("ollama.allowedDomains1")}</li>
+                        <li>{t("ollama.allowedDomains2")}</li>
+                        <li>{t("ollama.allowedDomains3")}</li>
                     </ol>
                 </Typography.Paragraph>
                  <Typography.Paragraph strong className="settings-final-paragraph">
-                    After completing these steps, click the "Test Connection" button above.
+                    {t("ollama.finalHint")}
                 </Typography.Paragraph>
             </Panel>
         </Collapse>

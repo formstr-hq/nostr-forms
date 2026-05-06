@@ -11,6 +11,7 @@ import {
   OrangeStrip,
   SectionLabel,
 } from "./Section.style";
+import { useTranslation } from "react-i18next";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -28,6 +29,7 @@ const Section: React.FC<SectionProps> = ({
   sectionIndex = 1, 
   totalSections = 1 
 }) => {
+  const { t } = useTranslation();
   const {
     updateSection,
     removeSection,
@@ -85,7 +87,10 @@ const Section: React.FC<SectionProps> = ({
   return (
     <div style={{ marginBottom: '24px' }}>
       <SectionLabel>
-        Section {sectionIndex} of {totalSections}
+        {t("builder.sectionsUi.label", {
+          current: sectionIndex,
+          total: totalSections,
+        })}
       </SectionLabel>
       
       <OrangeStrip />
@@ -98,7 +103,7 @@ const Section: React.FC<SectionProps> = ({
       >
         {isDropTarget && (
           <div className="drop-indicator">
-            <Text strong>Drop question here</Text>
+            <Text strong>{t("builder.sectionsUi.dropHere")}</Text>
           </div>
         )}
 
@@ -132,7 +137,7 @@ const Section: React.FC<SectionProps> = ({
                     className="section-title-input"
                     value={section.title || ""}
                     onChange={handleTitleChange}
-                    placeholder="Section title"
+                    placeholder={t("builder.sectionsUi.titlePlaceholder")}
                     onClick={(e) => e.stopPropagation()}
                     bordered={false}
                   />
@@ -142,7 +147,7 @@ const Section: React.FC<SectionProps> = ({
                       className="section-description"
                       value={section.description || ""}
                       onChange={handleDescriptionChange}
-                      placeholder="Click to edit section description"
+                      placeholder={t("builder.defaults.sectionDescription")}
                       autoSize
                       bordered={false}
                       onClick={(e) => e.stopPropagation()}
