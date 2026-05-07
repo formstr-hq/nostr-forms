@@ -25,7 +25,7 @@ const decryptFormEvent = (event: Event, nkeys?: string) => {
   const { viewKey } = decodeNKeys(nkeys);
   if (!viewKey) return null;
   const conversationKey = nip44.v2.utils.getConversationKey(
-    viewKey,
+    hexToBytes(viewKey) as unknown as string,
     event.pubkey,
   );
   return nip44.v2.decrypt(event.content, conversationKey);
@@ -68,7 +68,6 @@ const _doFetch = async (
     throw Error(
       `Event not found on given relays: ${JSON.stringify(relayList)}`,
     );
-  console.log("Nostr Event content is", nostrEvent?.tags);
   if (nostrEvent?.content === "") {
     const returnTags = [...nostrEvent.tags, ["pubkey", nostrEvent.pubkey]];
     return returnTags;

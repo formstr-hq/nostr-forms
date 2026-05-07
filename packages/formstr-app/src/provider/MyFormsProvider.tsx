@@ -16,15 +16,18 @@ import { pool } from "../pool";
 /* ----------------------------- Types ----------------------------- */
 
 type FormEventMetadata = {
-  event: Event;
+  event: Event | null;
   secrets: { secretKey: string; viewKey?: string };
   relay: string;
+  formPubkey: string;
+  formId: string;
 };
 
 type MyFormsContextValue = {
   formEvents: Map<string, FormEventMetadata>;
   refreshing: boolean;
   refreshForms: (force?: boolean) => Promise<void>;
+  retryForm: (formId: string) => Promise<void>;
   deleteForm: (formId: string, formPubkey: string) => Promise<void>;
   saveToMyForms: (
     formAuthorPub: string,
@@ -64,42 +67,85 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
   const [refreshing, setRefreshing] = useState(false);
   const isRefreshingRef = useRef(false);
   const loadedForPubRef = useRef<string | null>(null);
+  const fetchSubRef = useRef<{ close: () => void } | null>(null);
 
-  const fetchFormEvents = async (forms: Tag[]) => {
-    const dTags = forms.map((f) => f[1].split(":")[1]);
-    const pubkeys = forms.map((f) => f[1].split(":")[0]);
+  const fetchFormEvents = (forms: Tag[]) => {
+    fetchSubRef.current?.close();
 
-    const filter = {
-      kinds: [30168],
-      "#d": dTags,
-      authors: pubkeys,
-    };
-
-    const events = await pool.querySync(getDefaultRelays(), filter);
-    const next = new Map<string, FormEventMetadata>();
-
+    const initial = new Map<string, FormEventMetadata>();
+    const formLookup = new Map<string, string>();
     forms.forEach((formTag) => {
       const [, formData, relay, secretData] = formTag;
       const [formPubkey, formId] = formData.split(":");
       const [secretKey, viewKey] = secretData.split(":");
-
-      const event = events.find((e) => e.pubkey === formPubkey);
-      if (!event) return;
-
-      next.set(formId, {
-        event,
+      initial.set(formId, {
+        event: null,
         secrets: { secretKey, viewKey },
         relay,
+        formPubkey,
+        formId,
       });
+      formLookup.set(`${formPubkey}:${formId}`, formId);
     });
+    setFormEvents(initial);
 
-    setFormEvents(next);
+    const dTags = forms.map((f) => f[1].split(":")[1]);
+    const pubkeys = forms.map((f) => f[1].split(":")[0]);
+
+    fetchSubRef.current = pool.subscribeMany(
+      getDefaultRelays(),
+      [{ kinds: [30168], "#d": dTags, authors: pubkeys }],
+      {
+        onevent(event) {
+          const dTag = event.tags.find((t) => t[0] === "d")?.[1];
+          if (!dTag) return;
+          const formId = formLookup.get(`${event.pubkey}:${dTag}`);
+          if (!formId) return;
+          setFormEvents((prev) => {
+            const existing = prev.get(formId);
+            if (!existing) return prev;
+            const next = new Map(prev);
+            next.set(formId, { ...existing, event });
+            return next;
+          });
+        },
+      },
+    );
   };
 
   const inMyForms = (formPubkey: string, formId: string) => {
     const entry = formEvents.get(formId);
     if (!entry) return false;
-    return entry.event.pubkey === formPubkey;
+    return entry.formPubkey === formPubkey;
+  };
+
+  const retryForm = async (formId: string) => {
+    const entry = formEvents.get(formId);
+    if (!entry) return;
+
+    const { formPubkey, relay } = entry;
+    const relaysToTry = relay
+      ? [...new Set([relay, ...getDefaultRelays()])]
+      : getDefaultRelays();
+
+    const events = await pool.querySync(relaysToTry, {
+      kinds: [30168],
+      "#d": [formId],
+      authors: [formPubkey],
+    });
+
+    const event =
+      events.find(
+        (e) =>
+          e.pubkey === formPubkey &&
+          e.tags.some((t) => t[0] === "d" && t[1] === formId),
+      ) ?? null;
+
+    setFormEvents((prev) => {
+      const next = new Map(prev);
+      next.set(formId, { ...entry, event });
+      return next;
+    });
   };
 
   const saveToMyForms = async (
@@ -185,10 +231,8 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
         loadedForPubRef.current = userPub;
         return;
       }
-
       const decrypted = await signer.nip44Decrypt!(userPub, list.content);
-
-      await fetchFormEvents(JSON.parse(decrypted));
+      fetchFormEvents(JSON.parse(decrypted));
       loadedForPubRef.current = userPub;
     } catch (err) {
       console.error("Error loading forms:", err);
@@ -242,6 +286,8 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  useEffect(() => () => { fetchSubRef.current?.close(); }, []);
+
   // Refresh when userPub changes
   useEffect(() => {
     refreshForms();
@@ -266,6 +312,7 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
         formEvents,
         refreshing,
         refreshForms,
+        retryForm,
         deleteForm,
         saveToMyForms,
         inMyForms,
