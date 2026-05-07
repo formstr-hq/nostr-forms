@@ -408,7 +408,7 @@ export const NostrHeader = () => {
               <Logo />
             </Link>
           </Col>
-          <Col md={12} xs={10} sm={2} style={{ display: "flex", alignItems: "center" }}>
+          <Col md={12} xs={10} sm={2}>
             <Menu
               mode="horizontal"
               theme="light"
@@ -417,7 +417,6 @@ export const NostrHeader = () => {
               overflowedIndicator={<MenuOutlined />}
               items={newHeaderMenu}
               onClick={onMenuClick}
-              style={{ flex: 1 }}
             />
           </Col>
         </Row>
