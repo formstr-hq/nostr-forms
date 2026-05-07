@@ -49,7 +49,7 @@ export class FormstrSDK {
 
   attachSubmitListener(
     form: NormalizedForm,
-    signer?: (event: any) => Promise<any>,
+    signer?: FormsSigner,
     callbacks?: {
       onSuccess?: (result: { event: Event; relays: string[] }) => void;
       onError?: (error: unknown) => void;
@@ -59,7 +59,7 @@ export class FormstrSDK {
       `form-${form.id}`,
     ) as HTMLFormElement;
     if (!formEl)
-      return console.warn(`[FormstrSDK] Form element not found: ${form.id}`);
+      return;
 
     formEl.addEventListener("submit", async (e) => {
       e.preventDefault(); // prevent page reload
@@ -68,8 +68,6 @@ export class FormstrSDK {
       const formData = new FormData(formEl);
       const values: Record<string, any> = {};
       formData.forEach((v, k) => (values[k] = v));
-
-      console.log(`[FormstrSDK] Submitting values:`, values);
 
       try {
         const result = await this.submit(form, values, signer);
@@ -310,40 +308,45 @@ export class FormstrSDK {
     return form;
   }
 
-  /** Submit response back to relays */
+  /** Submit response back to relays, NIP-44 encrypted to the form's pubkey */
   async submit(
     form: NormalizedForm,
     values: Record<string, any>,
-    signer?: (event: EventTemplate) => Promise<Event>,
+    signer?: FormsSigner,
   ) {
-    const finalSigner = signer ?? createEphemeralSigner();
-    const tags = Object.entries(values).map(([fieldId, value]) => {
+    const responseTags: Tag[] = Object.entries(values).map(([fieldId, value]) => {
       const field = form.fields[fieldId];
-
-      // Handle grid responses
       if (field?.type === "grid") {
-        // value is already a JSON object from grid filler
         const jsonValue = typeof value === "string" ? value : JSON.stringify(value);
         return ["response", fieldId, jsonValue, "{}"];
       }
-
-      // Handle multi-select (existing logic)
       if (Array.isArray(value)) value = value.join(";");
-
       return ["response", fieldId, value, "{}"];
     });
 
-    const event = {
+    let content: string;
+    let signerFn: (event: EventTemplate) => Promise<Event>;
+
+    if (signer) {
+      // Identified submission: encrypt with the caller's NIP-44 key
+      content = await signer.nip44Encrypt(form.pubkey, JSON.stringify(responseTags));
+      signerFn = (event) => signer.signEvent(event);
+    } else {
+      // Anonymous submission: ephemeral key used for both signing and encryption
+      // so the form owner can derive the conversation key from the event pubkey
+      const ephSk = generateSecretKey();
+      const conversationKey = nip44.v2.utils.getConversationKey(ephSk as unknown as string, form.pubkey);
+      content = nip44.v2.encrypt(JSON.stringify(responseTags), conversationKey);
+      signerFn = (event) => Promise.resolve(finalizeEvent(event, ephSk));
+    }
+
+    const event: EventTemplate = {
       kind: 1069,
-      content: "",
-      tags: [["a", `30168:${form.pubkey}:${form.id}`], ...tags],
+      content,
+      tags: [["a", `30168:${form.pubkey}:${form.id}`]],
       created_at: Math.floor(Date.now() / 1000),
     };
-    console.log(
-      `submitting response, ${JSON.stringify(event)} to relays`,
-      form.relays,
-    );
-    const signed = await finalSigner(event);
+    const signed = await signerFn(event);
     await Promise.allSettled(pool.publish(form.relays, signed));
     return signed;
   }
@@ -377,7 +380,7 @@ export class FormstrSDK {
     if (options.encrypt !== false) {
       const viewKey = generateSecretKey();
       viewKeyHex = bytesToHex(viewKey);
-      const conversationKey = nip44.v2.utils.getConversationKey(bytesToHex(signingKey), getPublicKey(viewKey));
+      const conversationKey = nip44.v2.utils.getConversationKey(signingKey as unknown as string, getPublicKey(viewKey));
       content = nip44.v2.encrypt(JSON.stringify([["name", name], ...rawFields]), conversationKey);
       tags = [
         ["d", formId],
