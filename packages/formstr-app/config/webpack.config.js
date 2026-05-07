@@ -335,6 +335,7 @@ module.exports = function getWebpackConfig(webpackEnv, {inlineScripts, entry, ou
           babelRuntimeEntry,
           babelRuntimeEntryHelpers,
           babelRuntimeRegenerator,
+          path.resolve(__dirname, '../../formstr-support-us-button/src'),
         ]),
       ],
     },
@@ -407,7 +408,11 @@ module.exports = function getWebpackConfig(webpackEnv, {inlineScripts, entry, ou
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
-              include: paths.appSrc,
+              include: [
+                paths.appSrc,
+                // Also transpile our local monorepo package which ships raw TSX
+                path.resolve(__dirname, '../../formstr-support-us-button/src'),
+              ],
               loader: require.resolve('babel-loader'),
               options: {
                 customize: require.resolve(
