@@ -73,8 +73,8 @@ const _doFetch = async (
     return returnTags;
   }
   const decryptedEvent = decryptFormEvent(nostrEvent, nkeys);
-  const nameTag = nostrEvent.tags.find((t) => t[0] === "name");
   const relayTags = nostrEvent.tags.filter((t) => t[0] === "relay");
+  const dTag = nostrEvent.tags.find((t) => t[0] === "d");
   if (!decryptedEvent)
     throw Error(`Could not decrypt form with supplied keys: ${nkeys}`);
   let decryptedTags: Tag[];
@@ -83,6 +83,7 @@ const _doFetch = async (
   } catch {
     throw Error("Malformed Form Event, could not parse");
   }
+  if (dTag) decryptedTags.push(dTag);
   decryptedTags.push(...relayTags, ["pubkey", nostrEvent.pubkey]);
   return decryptedTags;
 };
