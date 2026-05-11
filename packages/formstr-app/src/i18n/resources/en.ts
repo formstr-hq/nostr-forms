@@ -708,8 +708,10 @@ const resources = {
     },
     aiGenerator: {
       title: "AI Form Generator",
-      poweredBy:
-        "Powered by your local Ollama instance via the Formstr Companion extension.",
+      provider: "AI Provider",
+      chooseModel: "Choose the model source for generation.",
+      poweredByLocal: "Powered by your local Ollama instance.",
+      poweredByWeb: "Local AI, right in your browser",
       testConnection: "Test Connection",
       connectionSuccess: "Successfully connected to Ollama!",
       extensionMissing:
@@ -731,6 +733,9 @@ const resources = {
         "The AI will attempt to create fields based on your description. Review and adjust the generated form afterwards.",
       generating: "Generating...",
       generateForm: "Generate Form",
+      webLlmInstruction: "Run LLMs locally in your browser with WebGPU. Your data stays on your device.",
+      download: "Download",
+      delete: "Delete",
     },
     automations: {
       selectExistingServer: "Select an Existing NRPC Server",

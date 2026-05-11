@@ -225,9 +225,9 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
         >
             <div className="ai-provider-header">
                 <div className="ai-provider-label">
-                    <Typography.Text strong>AI Provider</Typography.Text>
+                    <Typography.Text strong>{t("builder.aiGenerator.provider")}</Typography.Text>
                     <Typography.Text type="secondary" className="provider-subtitle">
-                        Choose the model source for generation.
+                        {t("builder.aiGenerator.chooseModel")}
                     </Typography.Text>
                 </div>
                 <Select
@@ -244,15 +244,15 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
 
             <Typography.Text type="secondary" className="ai-powered-by">
                 {provider === LLMProvider.OLLAMA
-                    ? 'Powered by your local Ollama instance.'
-                    : 'Local AI, right in your browser'}
+                    ? t("builder.aiGenerator.poweredByLocal")
+                    : t("builder.aiGenerator.poweredByWeb")}
             </Typography.Text>
 
             <Divider className="ai-modal-divider" />
 
             {provider === LLMProvider.WEB_LLM && (
                 <Typography.Paragraph className="web-llm-instruction">
-                    Run LLMs locally in your browser with WebGPU. Your data stays on your device.
+                    {t("builder.aiGenerator.webLlmInstruction")}
                 </Typography.Paragraph>
             )}
 
@@ -265,7 +265,6 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
                         fetching={fetchingModels}
                         disabled={provider === LLMProvider.OLLAMA && !connectionStatus}
                         style={{ width: '100%' }}
-                        placeholder={provider === LLMProvider.WEB_LLM ? "Select a WebLLM model" : "Select an Ollama model"}
                     />
                 </div>
                 {provider === LLMProvider.OLLAMA ? (
@@ -283,10 +282,10 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
                             onClick={handleDownload}
                             loading={downloading}
                         >
-                            Download/Initialize
+                            {t("builder.aiGenerator.download")}
                         </Button>
                         <Button danger ghost onClick={handleDelete}>
-                            Delete
+                            {t("builder.aiGenerator.delete")}
                         </Button>
                     </div>
                 )}
