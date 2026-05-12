@@ -1,16 +1,58 @@
 .ai-modal-divider {
-    margin: 12px 0 !important;
+    margin: 16px 0 !important;
+}
+
+.ai-provider-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.ai-provider-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.provider-subtitle {
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.45);
+}
+
+.ai-powered-by {
+    display: block;
+    font-size: 13px;
+    color: rgba(0, 0, 0, 0.65);
+    margin-bottom: 14px;
+}
+
+.web-llm-instruction {
+    font-weight: 500;
+    margin-bottom: 14px;
+    color: #262626;
 }
 
 .ai-modal-controls-container {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .ai-modal-model-selector-wrapper {
     flex: 1;
+    min-width: 220px;
+}
+
+.web-llm-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .ai-modal-button-success {
@@ -19,20 +61,35 @@
     border-color: #52c41a;
 }
 
-.ai-modal-button-success:hover, .ai-modal-button-success:focus {
+.ai-modal-button-success:hover {
     background-color: #389e0d;
-    color: white !important;
-    border-color: #389e0d !important;
+    border-color: #389e0d;
 }
 
-.ai-modal-button-danger {
-    background-color: #f5222d;
+.ai-modal-button-orange {
+    background-color: #fa8c16;
     color: white;
-    border-color: #f5222d;
+    border-color: #fa8c16;
 }
 
-.ai-modal-button-danger:hover, .ai-modal-button-danger:focus {
-    background-color: #cf1322;
-    color: white !important;
-    border-color: #cf1322 !important;
+.ai-modal-button-orange:hover {
+    background-color: #d46b08;
+    border-color: #d46b08;
+}
+
+.ai-provider-select {
+    min-width: 240px;
+}
+
+.ai-generator-modal .ant-modal-content {
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.ai-generator-modal .ant-modal-body {
+    padding: 24px 32px;
+}
+
+.download-progress {
+    margin-bottom: 16px;
 }
