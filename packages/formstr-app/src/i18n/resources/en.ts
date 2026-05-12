@@ -734,7 +734,11 @@ const resources = {
       generating: "Generating...",
       generateForm: "Generate Form",
       webLlmInstruction: "Run LLMs locally in your browser with WebGPU. Your data stays on your device.",
-      download: "Download",
+      modelGuideTitle: "Model size guide",
+      modelGuideHigh: "Large (> 8B params): Best for a good PC with a GPU.",
+      modelGuideMid: "Medium (1–4B params): Good for laptops and low-end PCs using CPU compute.",
+      modelGuideLow: "Small (< 1B params): Suitable for mobile phones and very light devices.",
+      download: "Download/Instialise",
       delete: "Delete",
     },
     automations: {

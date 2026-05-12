@@ -37,7 +37,9 @@ Here is the required JSON schema for the form:
 }
 CRITICAL RULES:
 - Your response MUST be ONLY the JSON object that validates against the schema above.
-- Do NOT include any extra text, explanations, or markdown formatting like \`\`\`json.
+- Start with { and end with }
+- Ensure all strings are properly quoted and all braces/brackets are balanced.
+- Do NOT include any extra text, explanations, comments or markdown formatting like \`\`\`json.
 
 For Example for output with one field:
 "{
@@ -131,7 +133,6 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
         setConnectionStatus(null);
         const nextConfig = llmService.activeService.getConfig?.() || { modelName: '' };
         setConfig(nextConfig);
-        testConnection();
     };
 
     const handleDownload = async () => {
@@ -254,6 +255,18 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
                 <Typography.Paragraph className="web-llm-instruction">
                     {t("builder.aiGenerator.webLlmInstruction")}
                 </Typography.Paragraph>
+            )}
+            {provider === LLMProvider.WEB_LLM && (
+                <div className="web-llm-model-guide">
+                    <Typography.Text strong>
+                        {t("builder.aiGenerator.modelGuideTitle")}
+                    </Typography.Text>
+                    <ul>
+                        <li>{t("builder.aiGenerator.modelGuideHigh")}</li>
+                        <li>{t("builder.aiGenerator.modelGuideMid")}</li>
+                        <li>{t("builder.aiGenerator.modelGuideLow")}</li>
+                    </ul>
+                </div>
             )}
 
             <div className="ai-modal-controls-container">
