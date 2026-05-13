@@ -14,10 +14,12 @@ export function createLocalSigner(privkey: string): NostrSigner {
     },
 
     encrypt: async (peerPubkey: string, plaintext: string) => {
+      // Use NIP-04 for backwards compatibility with older clients
       return nip04.encrypt(privkey, peerPubkey, plaintext);
     },
 
     decrypt: async (peerPubkey: string, ciphertext: string) => {
+      // Use NIP-04 for backwards compatibility with older clients
       return nip04.decrypt(privkey, peerPubkey, ciphertext);
     },
 
