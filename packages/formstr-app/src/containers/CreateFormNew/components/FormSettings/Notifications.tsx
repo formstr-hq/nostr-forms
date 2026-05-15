@@ -1,4 +1,4 @@
-import { Modal, Tooltip, Typography } from "antd";
+import { Button, Modal, Tooltip, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 import { isMobile } from "../../../../utils/utility";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
@@ -19,6 +19,11 @@ export const Notifications = () => {
   };
 
   const hasNpubs = (formSettings.notifyNpubs || []).length > 0;
+  const isNip44 = formSettings.notificationEncryption === "nip44";
+
+  const handleUpgradeToNip44 = () => {
+    updateFormSetting({ notificationEncryption: "nip44" });
+  };
 
   return (
     <>
@@ -43,18 +48,26 @@ export const Notifications = () => {
           ListHeader={t("builder.notifications.recipients")}
         />
         {hasNpubs && (
-          <Text className="warning-text">
-            {t("builder.notifications.warningPrefix")}
-            <a
-              href="https://github.com/nostr-protocol/nips/blob/master/04.md"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {" "}
-              nip-04{" "}
-            </a>
-            {t("builder.notifications.warningSuffix")}
-          </Text>
+          isNip44 ? (
+            <Text type="success">
+              {t("builder.notifications.nip44Active")}
+            </Text>
+          ) : (
+            <>
+              <Text className="warning-text">
+                {t("builder.notifications.upgradeDescription")}
+              </Text>
+              <br />
+              <Button
+                type="primary"
+                size="small"
+                style={{ marginTop: 8 }}
+                onClick={handleUpgradeToNip44}
+              >
+                {t("builder.notifications.upgradeLabel")}
+              </Button>
+            </>
+          )
         )}
       </Modal>
     </>

@@ -644,6 +644,10 @@ const resources = {
       recipients: "Notification Recipients",
       warningPrefix: "These npubs will receive",
       warningSuffix: "encrypted notifications.",
+      upgradeLabel: "Upgrade to NIP-44",
+      upgradeDescription:
+        "This form uses NIP-04 (deprecated). Upgrade to NIP-44 for stronger encryption.",
+      nip44Active: "These npubs will receive NIP-44 encrypted notifications.",
     },
     save: {
       noRelaysAccepted: "No relays accepted the form. Please try again.",
