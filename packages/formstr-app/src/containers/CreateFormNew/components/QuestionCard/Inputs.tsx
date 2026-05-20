@@ -9,6 +9,7 @@ import SignatureInput from "./InputElements/Signature";
 import { GridCreator } from "./InputElements/GridCreator";
 import FileUploadBuilder from "./InputElements/FileUploadBuilder";
 import { Rating } from "./InputElements/Rating";
+import { useTranslation } from "react-i18next";
 
 interface InputsProps {
   inputType: string;
@@ -25,6 +26,7 @@ const Inputs: React.FC<InputsProps> = ({
   answerSettingsHandler,
   optionsHandler,
 }) => {
+  const { t } = useTranslation();
   const updateAnswerSettings = (settingKey: string, property: unknown) => {
     let newAnswerSettings = { ...answerSettings, [settingKey]: property };
     answerSettingsHandler(newAnswerSettings);
@@ -71,7 +73,12 @@ const Inputs: React.FC<InputsProps> = ({
       case AnswerTypes.signature:
         return <SignatureInput answerSettings={answerSettings} />;
       case AnswerTypes.datetime:
-        return <DatePicker disabled={true} placeholder="Pick Date & Time" />;
+        return (
+          <DatePicker
+            disabled={true}
+            placeholder={t("builder.inputPreviews.dateTimePlaceholder")}
+          />
+        );
       case AnswerTypes.fileUpload:
         return <FileUploadBuilder answerSettings={answerSettings} handleAnswerSettings={answerSettingsHandler} />;
       case AnswerTypes.multipleChoiceGrid:

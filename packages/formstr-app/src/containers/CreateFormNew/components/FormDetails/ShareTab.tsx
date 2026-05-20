@@ -1,5 +1,9 @@
 import { UrlBox } from "./UrlBox";
 import { ReactComponent as Success } from "../../../../Images/success.svg";
+import { Typography } from "antd";
+import { SupportUsButton } from "@formstr/support-us-button";
+
+const { Text } = Typography;
 
 export const ShareTab = ({
   formUrl,
@@ -25,6 +29,18 @@ export const ShareTab = ({
           </>
         )}
       </div>
+
+      <Text
+        type="secondary"
+        style={{ display: "block", marginTop: 20, fontSize: 12 }}
+      >
+        Enjoying Formstr?{" "}
+        <SupportUsButton
+          buttonText="Support Us"
+          type="link"
+          style={{ fontSize: 12, padding: 0, height: "auto" }}
+        />
+      </Text>
     </div>
   );
 };

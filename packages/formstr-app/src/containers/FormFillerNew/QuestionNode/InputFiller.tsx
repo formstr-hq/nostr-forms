@@ -11,6 +11,7 @@ import { GridFiller } from "./InputTypes/GridFiller";
 import { FileUploadFiller } from "./InputTypes/FileUploadFiller";
 import { AnswerTypes, GridOptions, Option } from "../../../nostr/types";
 import { RatingFiller } from "./InputTypes/RatingFiller";
+import { useTranslation } from "react-i18next";
 
 interface InputFillerProps {
   fieldConfig: any;
@@ -39,6 +40,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
   responderSecretKey,
   uploaderPubkey,
 }) => {
+  const { t } = useTranslation();
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -56,7 +58,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
         <Input
           value={defaultValue as string}
           onChange={handleInputChange}
-          placeholder="Please enter your response"
+          placeholder={t("filler.inputs.responsePlaceholder")}
           disabled={disabled}
           data-testid={`${testId}:text-input`}
         />
@@ -65,7 +67,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
         <TextArea
           value={defaultValue as string}
           onChange={handleInputChange}
-          placeholder="Please enter your response"
+          placeholder={t("filler.inputs.responsePlaceholder")}
           disabled={disabled}
           data-testid={`${testId}:text-area`}
         />
@@ -75,7 +77,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
           value={defaultValue as string}
           onChange={handleValueChange}
           style={{ width: "100%" }}
-          placeholder="Please enter your response"
+          placeholder={t("filler.inputs.responsePlaceholder")}
           disabled={disabled}
           data-testid={`${testId}:number-input`}
         />
@@ -134,7 +136,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
         />
       ),
       [AnswerTypes.fileUpload]: !responderSecretKey && !disabled ? (
-        <div>Error: responderSecretKey required for file uploads</div>
+        <div>{t("filler.inputs.fileUploadKeyRequired")}</div>
       ) : (
         <FileUploadFiller
           defaultValue={defaultValue as string}

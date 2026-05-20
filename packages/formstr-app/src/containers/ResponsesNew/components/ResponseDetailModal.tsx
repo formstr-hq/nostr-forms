@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Descriptions, Typography, Button, Space, Form } from "antd";
+import { Modal, Typography, Button, Space, Form } from "antd";
 import { Event, nip19, getPublicKey } from "nostr-tools";
 import { hexToBytes } from "nostr-tools/utils";
 import { Tag } from "../../../nostr/types";
-import {
-  getResponseLabels,
-  DisplayableAnswerDetail,
-} from "../../../utils/ResponseUtils";
 import { FormRenderer } from "../../FormFillerNew/FormRenderer";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -34,6 +31,7 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
   formstrBranding,
   editKey,
 }) => {
+  const { t } = useTranslation();
   const [metaData, setMetaData] = useState<{
     author?: string;
     timestamp?: string;
@@ -78,19 +76,20 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
     <Modal
       title={
         <Space direction="vertical" size="small">
-          <Text strong>Response Details</Text>
+          <Text strong>{t("responses.detail.title")}</Text>
           <Text type="secondary" style={{ fontSize: "0.9em" }}>
-            By:{" "}
+            {t("responses.detail.by")}:{" "}
             <Typography.Link
               href={`https://njump.me/${metaData.author}`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              {metaData.author || "Unknown"}
+              {metaData.author || t("responses.detail.unknownAuthor")}
             </Typography.Link>
           </Text>
           <Text type="secondary" style={{ fontSize: "0.8em" }}>
-            Submitted: {metaData.timestamp || "N/A"}
+            {t("responses.detail.submitted")}:{" "}
+            {metaData.timestamp || t("responses.detail.unavailable")}
           </Text>
         </Space>
       }
@@ -98,7 +97,7 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
       onCancel={onClose}
       footer={[
         <Button key="close" onClick={onClose}>
-          Close
+          {t("common.actions.close")}
         </Button>,
       ]}
       width={900}
@@ -117,9 +116,7 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
           uploaderPubkey={responseMetadataEvent?.pubkey}
         />
       ) : (
-        <Typography.Text>
-          Waiting for form details or response data...
-        </Typography.Text>
+        <Typography.Text>{t("responses.detail.waiting")}</Typography.Text>
       )}
     </Modal>
   );

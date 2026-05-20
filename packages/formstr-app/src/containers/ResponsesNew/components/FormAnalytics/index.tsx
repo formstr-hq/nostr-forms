@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Card, Col, Row, Typography } from "antd";
+import { useTranslation } from "react-i18next";
 import { Tag } from "../../../../nostr/types";
 import {
   computeAnalytics,
@@ -53,6 +54,7 @@ interface Props {
 }
 
 export const FormAnalytics: React.FC<Props> = ({ responsesData, formSpec }) => {
+  const { t } = useTranslation();
   const stats = useMemo(
     () => computeSummaryStats(responsesData, formSpec),
     [responsesData, formSpec]
@@ -66,7 +68,7 @@ export const FormAnalytics: React.FC<Props> = ({ responsesData, formSpec }) => {
   if (!responsesData.length) {
     return (
       <div style={{ textAlign: "center", padding: 48, color: "#9ca3af" }}>
-        No responses yet to analyze.
+        {t("responses.analytics.noResponses")}
       </div>
     );
   }
@@ -76,28 +78,28 @@ export const FormAnalytics: React.FC<Props> = ({ responsesData, formSpec }) => {
       <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
         <Col xs={12} sm={8}>
           <StatCard
-            title="Total Submissions"
+            title={t("responses.analytics.totalSubmissions")}
             value={stats.totalSubmissions}
           />
         </Col>
         <Col xs={12} sm={8}>
           <StatCard
-            title="Unique Responders"
+            title={t("responses.analytics.uniqueResponders")}
             value={stats.uniqueResponders}
           />
         </Col>
         <Col xs={24} sm={8}>
           <StatCard
-            title="Fields Answered"
+            title={t("responses.analytics.fieldsAnswered")}
             value={`${stats.answeredFields} / ${stats.totalFields}`}
-            subtitle="at least one response"
+            subtitle={t("responses.analytics.answeredSubtitle")}
           />
         </Col>
       </Row>
 
       {fieldAnalytics.length === 0 && (
         <div style={{ textAlign: "center", padding: 32, color: "#9ca3af" }}>
-          No chart-able fields found (e.g. choice, number, or text questions).
+          {t("responses.analytics.noChartableFields")}
         </div>
       )}
 

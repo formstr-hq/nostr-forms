@@ -7,6 +7,7 @@ import { Event, generateSecretKey } from "nostr-tools";
 import { Response, Tag } from "../../../nostr/types";
 import { getFormSettings } from "./utils";
 import { useProfileContext } from "../../../hooks/useProfileContext";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -30,11 +31,12 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   onSubmit,
   formEvent,
   disabled = false,
-  disabledMessage = "disabled",
+  disabledMessage,
   relays,
   formTemplate,
   responderSecretKey,
 }) => {
+  const { t } = useTranslation();
   const { pubkey: userPubKey, requestPubkey } = useProfileContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
@@ -72,7 +74,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   const saveResponse = async (anonymous: boolean) => {
     let formId = formEvent.tags.find((t) => t[0] === "d")?.[1];
     if (!formId) {
-      alert("FORM ID NOT FOUND");
+      alert(t("filler.submit.formIdNotFound"));
       return;
     }
 
@@ -111,26 +113,26 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       setIsValidating(false);
 
       if (!nrpcResponse) {
-        setErrorMessage("No response from webhook");
+        setErrorMessage(t("filler.submit.noWebhookResponse"));
         return;
       }
 
       const status = nrpcResponse.tags.find((t) => t[0] === "status")?.[1];
       if (status === "200") {
         setIsValidated(true);
-        setValidationMessage("✅ Validation successful. You can now submit.");
+        setValidationMessage(t("filler.submit.validationSuccess"));
       } else {
         const errorTags = nrpcResponse.tags.filter((t) => t[0] === "error");
         const msg =
           errorTags.map((tag: string[]) => tag[2]).join(", ") ||
-          `Validation failed with status ${status}`;
+          t("filler.submit.validationFailedStatus", { status });
         setErrorMessage(msg);
         setIsValidated(false);
       }
     } catch (err) {
       setIsValidating(false);
       console.log("Error during validation", err);
-      setErrorMessage("Validation failed");
+      setErrorMessage(t("filler.submit.validationFailed"));
     }
   };
 
@@ -139,8 +141,8 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
 
     // Check if user is logged in when attempting non-anonymous submission
     if (!anonymous && !userPubKey) {
-      setErrorMessage("Please login to submit with your identity");
-      requestPubkey().then((pubkey) => {
+      setErrorMessage(t("filler.submit.loginToSubmit"));
+      void requestPubkey().then((pubkey) => {
         if (pubkey) {
           setErrorMessage(null);
         }
@@ -189,12 +191,14 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
 
   const items = [
     {
-      label: "Submit Anonymously",
+      label: t("filler.submit.menu.anonymous"),
       key: "submit",
       disabled: selfSign,
     },
     {
-      label: edit ? "Update Response" : "Submit As Yourself",
+      label: edit
+        ? t("filler.submit.menu.updateResponse")
+        : t("filler.submit.menu.asYourself"),
       key: "signSubmition",
     },
   ];
@@ -229,7 +233,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
                   color: "white",
                 }}
               >
-                Validating...
+                {t("filler.submit.validating")}
               </span>
             </>
           ) : (
@@ -242,7 +246,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
                   color: "white",
                 }}
               >
-                Validate
+                {t("common.actions.validate")}
               </Text>
             </div>
           )}
@@ -258,16 +262,16 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
           data-testid="submit-button"
         >
           {disabled ? (
-            disabledMessage
+            disabledMessage || t("filler.submit.disabledFallback")
           ) : isSubmitting ? (
             <span>
               <LoadingOutlined className="mr-2" />
-              Submitting...
+              {t("filler.submit.submitting")}
             </span>
           ) : selfSign ? (
             items[1].label
           ) : (
-            "Submit"
+            t("common.actions.submit")
           )}
         </Dropdown.Button>
       )}
@@ -287,7 +291,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
           className="submit-button"
           data-testid="submit-error"
         >
-          Error: {errorMessage}
+          {t("filler.submit.errorPrefix")}: {errorMessage}
         </div>
       )}
 

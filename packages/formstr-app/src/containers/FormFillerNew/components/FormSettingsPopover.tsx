@@ -1,6 +1,7 @@
 import { Button, Divider, Modal, Popover, Switch, Typography } from "antd";
 import { SettingOutlined } from "@ant-design/icons";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -15,16 +16,16 @@ export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
   onToggleAutoSave,
   onClearForm,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   const handleClearClick = () => {
     setOpen(false);
     Modal.confirm({
-      title: "Clear all responses?",
-      content:
-        "This will remove all entered answers and delete uploaded files from the server. This action cannot be undone.",
-      okText: "Clear form",
-      cancelText: "Cancel",
+      title: t("filler.settings.clearAllTitle"),
+      content: t("filler.settings.clearAllBody"),
+      okText: t("filler.settings.clearForm"),
+      cancelText: t("common.actions.cancel"),
       okButtonProps: { danger: true },
       onOk: onClearForm,
     });
@@ -39,7 +40,7 @@ export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
           alignItems: "center",
         }}
       >
-        <span>Auto-save progress</span>
+        <span>{t("filler.settings.autoSave")}</span>
         <Switch
           checked={autoSaveEnabled}
           onChange={onToggleAutoSave}
@@ -50,13 +51,13 @@ export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
         type="secondary"
         style={{ fontSize: 11, display: "block", marginTop: 4 }}
       >
-        Saves your answers locally so you can continue later
+        {t("filler.settings.autoSaveHint")}
       </Text>
       {onClearForm && (
         <>
           <Divider style={{ margin: "12px 0" }} />
           <Button danger block onClick={handleClearClick}>
-            Clear form
+            {t("filler.settings.clearForm")}
           </Button>
         </>
       )}
@@ -66,7 +67,7 @@ export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
   return (
     <Popover
       content={content}
-      title="Form Settings"
+      title={t("filler.settings.title")}
       trigger="click"
       placement="topRight"
       open={open}

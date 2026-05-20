@@ -57,25 +57,25 @@ export const RULE_CONFIG = {
 const REGEX_RULE_ITEM = {
   key: ValidationRuleTypes.regex,
   value: ValidationRuleTypes.regex,
-  label: "Pattern",
+  labelKey: "builder.validation.rules.pattern",
 };
 
 const RANGE_RULE_ITEM = {
   key: ValidationRuleTypes.range,
   value: ValidationRuleTypes.range,
-  label: "Range",
+  labelKey: "builder.validation.rules.range",
 };
 
 const MIN_RULE_ITEM = {
   key: ValidationRuleTypes.min,
   value: ValidationRuleTypes.min,
-  label: "Min",
+  labelKey: "builder.validation.rules.min",
 };
 
 const MAX_RULE_ITEM = {
   key: ValidationRuleTypes.max,
   value: ValidationRuleTypes.max,
-  label: "Max",
+  labelKey: "builder.validation.rules.max",
 };
 
 type ANSWER_TYPE_RULES_MENU_TYPE = { [key in AnswerTypes]: any[] };

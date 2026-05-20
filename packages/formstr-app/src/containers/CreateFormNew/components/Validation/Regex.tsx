@@ -3,6 +3,7 @@ import { InputStyle } from "./validation.style";
 import { ChangeEvent, useState } from "react";
 import { isMobile } from "../../../../utils/utility";
 import { RegexRule, ValidationRuleTypes } from "../../../../nostr/types";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -16,13 +17,14 @@ function isValidRegex(input: string): boolean {
 }
 
 function Regex({ rule, onChange }: { rule?: RegexRule; onChange: Function }) {
+  const { t } = useTranslation();
   const [patternError, setPatternError] = useState<string | null>(null);
   const [tempPattern, setTempPattern] = useState<string>(rule?.pattern || "");
 
   function handlePatternChange(e: ChangeEvent<HTMLInputElement>) {
     setTempPattern(e.target.value);
     if (!isValidRegex(e.target.value)) {
-      setPatternError("Invalid regex pattern");
+      setPatternError(t("builder.validation.invalidPattern"));
       return;
     }
     setPatternError(null);
@@ -34,7 +36,7 @@ function Regex({ rule, onChange }: { rule?: RegexRule; onChange: Function }) {
 
   function handleErrorMessageChange(e: ChangeEvent<HTMLInputElement>) {
     if (!rule?.pattern) {
-      setPatternError("Pattern is required");
+      setPatternError(t("builder.validation.patternRequired"));
       return;
     }
     onChange(ValidationRuleTypes.regex, {
@@ -46,11 +48,11 @@ function Regex({ rule, onChange }: { rule?: RegexRule; onChange: Function }) {
   return (
     <>
       <Tooltip
-        title="Enter a regex pattern to match against the response"
+        title={t("builder.validation.patternTooltip")}
         trigger={isMobile() ? "click" : "hover"}
       >
         <InputStyle>
-          <Text className="property-name">Pattern:</Text>
+          <Text className="property-name">{t("builder.validation.patternLabel")}</Text>
           <input
             className="number-input"
             value={tempPattern}
@@ -60,7 +62,7 @@ function Regex({ rule, onChange }: { rule?: RegexRule; onChange: Function }) {
       </Tooltip>
       {patternError && <Text type="danger">{patternError}</Text>}
       <InputStyle>
-        <Text className="property-name">Error Message</Text>
+        <Text className="property-name">{t("builder.validation.errorMessage")}</Text>
         <input
           className="number-input"
           type="text"

@@ -8,6 +8,7 @@ import { SubCloser } from "nostr-tools/abstract-pool";
 import { Event } from "nostr-tools";
 import { useProfileContext } from "../../../hooks/useProfileContext";
 import { getDefaultRelays } from "../../../nostr/common";
+import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
 
@@ -55,6 +56,7 @@ const Flair: React.FC<{
 };
 
 export const Purchases: React.FC = () => {
+  const { t } = useTranslation();
   const [formsWithEvents, setFormsWithEvents] = useState<FormWithEvent[]>([]);
   const [nostrEvents, setNostrEvents] = useState<Event[]>([]);
   const { pubkey, userRelays } = useProfileContext();
@@ -106,7 +108,9 @@ export const Purchases: React.FC = () => {
     const matchedEvent = nostrEvents.find((e) => e.pubkey === form.pubkey);
     return { form, event: matchedEvent || null };
   });
-  if (formsReady.length === 0) return <Text>No purchases found.</Text>;
+  if (formsReady.length === 0) {
+    return <Text>{t("dashboardCards.noPurchases")}</Text>;
+  }
 
   return (
     <div
@@ -159,7 +163,7 @@ export const Purchases: React.FC = () => {
                     type="secondary"
                     style={{ marginRight: 4, fontSize: 12 }}
                   >
-                    URL:
+                    {t("dashboardCards.url")}:
                   </Text>
                   <Text code style={{ fontSize: 12 }}>
                     {`${window.location.origin}/i/${form.slug}`}
@@ -173,12 +177,12 @@ export const Purchases: React.FC = () => {
                     type="secondary"
                     style={{ marginRight: 4, fontSize: 12 }}
                   >
-                    URL expires on:
+                    {t("dashboardCards.urlExpiresOn")}:
                   </Text>
                   <Text style={{ fontSize: 12 }}>
                     {form.expirationDate
                       ? new Date(form.expirationDate).toLocaleDateString()
-                      : "Never"}
+                      : t("dashboardCards.never")}
                   </Text>
                 </Flair>
               </div>

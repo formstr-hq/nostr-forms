@@ -5,6 +5,7 @@ import { IAnswerSettings } from "../../../CreateFormNew/components/AnswerSetting
 import { Field } from "../../../../nostr/types";
 import { signerManager } from "../../../../signer";
 import { DatePicker } from "antd";
+import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
 const { Text } = Typography;
@@ -23,6 +24,7 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
   disabled,
   defaultValue,
 }) => {
+  const { t } = useTranslation();
   const sig = fieldConfig.signature || {};
   
   const parseExistingSignature = (value: string | undefined) => {
@@ -90,7 +92,7 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
       onChange(signedString, "Signed nostr event");
     } catch (e) {
       console.error(e);
-      alert("Signature failed");
+      alert(t("filler.inputs.signatureFailed"));
     } finally {
       setIsSigning(false);
     }
@@ -111,14 +113,16 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
           <div style={{ display: "flex" }}>
             {sig.editableCreatedAt && (
               <>
-                <Text style={{ margin: 10 }}> Signature Date: </Text>
+                <Text style={{ margin: 10 }}>
+                  {t("filler.inputs.signatureDate")}:
+                </Text>
                 <DatePicker
                   value={createdAt}
                   onChange={(date) => date && setCreatedAt(date)}
                   showTime
                   style={{ marginBottom: 8, width: "auto" }}
                   disabled={disabled}
-                  placeholder="Pick Date & Time"
+                  placeholder={t("filler.inputs.pickDateTime")}
                 />
               </>
             )}
@@ -130,7 +134,9 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
             disabled={disabled}
             style={{ marginTop: 8 }}
           >
-            {isSigning ? "Signing..." : "Attach Signature"}
+            {isSigning
+              ? t("filler.inputs.signing")
+              : t("filler.inputs.attachSignature")}
           </Button>
         </>
       )}
@@ -138,7 +144,7 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
       {hasExistingSignature && (
         <div style={{ marginBottom: 12 }}>
           <Text strong style={{ display: "block", marginBottom: 8 }}>
-            ✓ Signature Attached
+            {`\u2713 ${t("filler.inputs.signatureAttached")}`}
           </Text>
           {existingSignature.content && (
             <div
@@ -151,14 +157,15 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
               }}
             >
               <Text type="secondary" style={{ fontSize: "12px", display: "block", marginBottom: 4 }}>
-                Signed Content:
+                {t("filler.inputs.signedContent")}:
               </Text>
               <Text>{existingSignature.content}</Text>
             </div>
           )}
           {existingSignature.created_at && (
             <Text type="secondary" style={{ fontSize: "12px", display: "block", marginBottom: 8 }}>
-              Signed on: {dayjs(existingSignature.created_at * 1000).format("YYYY-MM-DD HH:mm:ss")}
+              {t("filler.inputs.signedOn")}:{" "}
+              {dayjs(existingSignature.created_at * 1000).format("YYYY-MM-DD HH:mm:ss")}
             </Text>
           )}
         </div>
@@ -171,7 +178,7 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
           items={[
             {
               key: "1",
-              label: <Text strong>View Signed Event</Text>,
+              label: <Text strong>{t("filler.inputs.viewSignedEvent")}</Text>,
               children: (
                 <TextArea
                   value={signedEvent}

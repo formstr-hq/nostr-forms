@@ -458,15 +458,26 @@ export class BunkerSigner implements Signer {
   async signEvent(event: EventTemplate): Promise<VerifiedEvent> {
     let resp = await this.sendRequest("sign_event", [JSON.stringify(event)]);
     let signed: NostrEvent = JSON.parse(resp);
-    if (verifyEvent(signed)) {
-      return signed;
-    } else {
+
+    if (!verifyEvent(signed)) {
       throw new Error(
         `event returned from bunker is improperly signed: ${JSON.stringify(
           signed
         )}`
       );
     }
+
+    // Ensure the signed event belongs to the expected user pubkey.
+    // Without this, a malicious bunker could return a signature from an
+    // attacker-controlled keypair and the client would publish as the user.
+    const expectedPubkey = await this.getPublicKey();
+    if (signed.pubkey !== expectedPubkey) {
+      throw new Error(
+        `bunker returned event with mismatched pubkey: expected ${expectedPubkey}, got ${signed.pubkey}`
+      );
+    }
+
+    return signed;
   }
 
   async nip04Encrypt(

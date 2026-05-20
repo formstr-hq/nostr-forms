@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { GridOptions } from "../../../../../nostr/types";
 import { makeTag } from "../../../../../utils/utility";
 import styled from "styled-components";
+import { useTranslation } from "react-i18next";
 
 interface GridCreatorProps {
   initialValue?: GridOptions;
@@ -98,6 +99,7 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
   onValuesChange,
   allowMultiple,
 }) => {
+  const { t } = useTranslation();
   const [columns, setColumns] = useState<GridItem[]>(() => {
     if (
       initialValue?.columns &&
@@ -107,8 +109,8 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
       return initialValue.columns;
     }
     return [
-      [makeTag(6), "Column 1", "{}"],
-      [makeTag(6), "Column 2", "{}"],
+      [makeTag(6), t("builder.grid.defaultColumn", { number: 1 }), "{}"],
+      [makeTag(6), t("builder.grid.defaultColumn", { number: 2 }), "{}"],
     ];
   });
 
@@ -121,8 +123,8 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
       return initialValue.rows;
     }
     return [
-      [makeTag(6), "Row 1", "{}"],
-      [makeTag(6), "Row 2", "{}"],
+      [makeTag(6), t("builder.grid.defaultRow", { number: 1 }), "{}"],
+      [makeTag(6), t("builder.grid.defaultRow", { number: 2 }), "{}"],
     ];
   });
 
@@ -142,7 +144,7 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
     if (columns.length >= 10) return;
     const newColumn: GridItem = [
       makeTag(6),
-      `Column ${columns.length + 1}`,
+      t("builder.grid.defaultColumn", { number: columns.length + 1 }),
       "{}",
     ];
     setColumns([...columns, newColumn]);
@@ -163,7 +165,11 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
 
   const handleRowAdd = () => {
     if (rows.length >= 10) return;
-    const newRow: GridItem = [makeTag(6), `Row ${rows.length + 1}`, "{}"];
+    const newRow: GridItem = [
+      makeTag(6),
+      t("builder.grid.defaultRow", { number: rows.length + 1 }),
+      "{}",
+    ];
     setRows([...rows, newRow]);
   };
 
@@ -187,7 +193,7 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
                     onChange={(e) =>
                       handleColumnLabelChange(col[0], e.target.value)
                     }
-                    placeholder="Column"
+                    placeholder={t("builder.grid.columnPlaceholder")}
                     style={{ textAlign: "center", fontWeight: 600 }}
                   />
                   {columns.length > 1 && (
@@ -200,7 +206,7 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
               ))}
               {columns.length < 10 && (
                 <th className="add-column-cell" onClick={handleColumnAdd}>
-                  <PlusOutlined /> Add column
+                  <PlusOutlined /> {t("builder.grid.addColumn")}
                 </th>
               )}
             </tr>
@@ -215,7 +221,7 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
                     onChange={(e) =>
                       handleRowLabelChange(row[0], e.target.value)
                     }
-                    placeholder="Row"
+                    placeholder={t("builder.grid.rowPlaceholder")}
                   />
                   {rows.length > 1 && (
                     <CloseOutlined
@@ -241,7 +247,7 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
           onClick={handleRowAdd}
           icon={<PlusOutlined />}
         >
-          Add row
+          {t("builder.grid.addRow")}
         </AddRowButton>
       )}
     </div>

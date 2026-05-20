@@ -17,6 +17,7 @@ import ModelSelector from "../../../../components/ModelSelector";
 import OllamaSettings from "../../../../components/OllamaSettings";
 import { createAnalysisReport, runAnalysis } from "./analysisHelper";
 import SafeMarkdown from "../../../../components/SafeMarkdown";
+import { useTranslation } from "react-i18next";
 
 const { TextArea } = Input;
 
@@ -26,6 +27,7 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
   responsesData,
   formSpec,
 }) => {
+  const { t } = useTranslation();
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [activePrompt, setActivePrompt] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -75,14 +77,18 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
       setIsConnecting(true);
       const result = await ollamaService.testConnection();
       if (result.success) {
-        if (showAlerts) message.success("Successfully connected to Ollama!");
+        if (showAlerts) {
+          message.success(t("responses.aiChat.connectedSuccess"));
+        }
         setConnectionStatus(true);
         fetchModels();
       } else {
         setConnectionStatus(false);
         if (showAlerts)
           message.error(
-            `Connection failed: ${result.error || "Unknown error"}`
+            t("responses.aiChat.connectionFailed", {
+              error: result.error || t("common.status.unknownError"),
+            }),
           );
       }
       setIsConnecting(false);
@@ -137,10 +143,12 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
         const finalMessage = { sender: "ai" as const, text: completeResponse };
         setChatHistory((prev) => [...prev, finalMessage]);
       } catch (e: any) {
-        message.error(e.message || "An error occurred during analysis.");
+        message.error(e.message || t("responses.aiChat.analysisError"));
         const errorMessage = {
           sender: "ai" as const,
-          text: `Sorry, an error occurred: ${e.message}`,
+          text: t("responses.aiChat.analysisErrorReply", {
+            message: e.message || t("common.status.unknownError"),
+          }),
         };
         setChatHistory((prev) => [...prev, errorMessage]);
       } finally {
@@ -169,7 +177,7 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
       <Card
         title={
           <Space>
-            <RobotOutlined /> AI Analysis
+            <RobotOutlined /> {t("responses.aiChat.title")}
           </Space>
         }
         extra={
@@ -202,7 +210,7 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
             <TextArea
               value={activePrompt}
               onChange={(e) => setActivePrompt(e.target.value)}
-              placeholder="Ask about the responses..."
+              placeholder={t("responses.aiChat.askPlaceholder")}
               autoSize={{ minRows: 1, maxRows: 4 }}
               disabled={controlsDisabled}
               onPressEnter={(e) => {
@@ -236,14 +244,14 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
               fetching={fetchingModels}
               disabled={!connectionStatus || fetchingModels}
               style={{ width: 180 }}
-              placeholder="Select model"
+              placeholder={t("responses.aiChat.modelPlaceholder")}
             />
             <Button
               onClick={() => testConnection(true)}
               loading={isConnecting}
               {...getButtonProps()}
             >
-              Test Connection
+              {t("responses.aiChat.testConnection")}
             </Button>
           </Space>
         </div>

@@ -9,6 +9,7 @@ import { encryptFileToAuthor, decryptFileFromUploader } from "../../../../utils/
 import type { RcFile } from "antd/es/upload/interface";
 import { hexToBytes } from "nostr-tools/utils";
 import { DEFAULT_SERVERS } from "../../../CreateFormNew/components/AnswerSettings/settings/FileUploadSettings";
+import { useTranslation } from "react-i18next";
 
 const { Text, Paragraph } = Typography;
 const { Dragger } = Upload;
@@ -35,6 +36,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   responderSecretKey,
   uploaderPubkey,
 }) => {
+  const { t } = useTranslation();
   const blossomServer: string = fieldConfig.blossomServer || DEFAULT_SERVERS[0];
   const maxFileSize: number = (fieldConfig.maxFileSize || 10) * 1024 * 1024; // Convert MB to bytes
   const allowedTypes: string[] = fieldConfig.allowedTypes || [];
@@ -62,19 +64,19 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
 
   const uploadSteps = [
-    { title: "Reading file", icon: <FileOutlined /> },
-    { title: "Encrypting", icon: <LockOutlined /> },
-    { title: "Preparing upload", icon: <SafetyCertificateOutlined /> },
-    { title: "Uploading", icon: <CloudUploadOutlined /> },
-    { title: "Complete", icon: <CheckCircleOutlined /> },
+    { title: t("filler.inputs.fileUpload.uploadSteps.reading"), icon: <FileOutlined /> },
+    { title: t("filler.inputs.fileUpload.uploadSteps.encrypting"), icon: <LockOutlined /> },
+    { title: t("filler.inputs.fileUpload.uploadSteps.preparing"), icon: <SafetyCertificateOutlined /> },
+    { title: t("filler.inputs.fileUpload.uploadSteps.uploading"), icon: <CloudUploadOutlined /> },
+    { title: t("filler.inputs.fileUpload.uploadSteps.complete"), icon: <CheckCircleOutlined /> },
   ];
 
   const downloadSteps = [
-    { title: "Authenticating", icon: <SafetyCertificateOutlined /> },
-    { title: "Downloading", icon: <CloudDownloadOutlined /> },
-    { title: "Decrypting", icon: <LockOutlined /> },
-    { title: "Saving file", icon: <FileOutlined /> },
-    { title: "Complete", icon: <CheckCircleOutlined /> },
+    { title: t("filler.inputs.fileUpload.downloadSteps.authenticating"), icon: <SafetyCertificateOutlined /> },
+    { title: t("filler.inputs.fileUpload.downloadSteps.downloading"), icon: <CloudDownloadOutlined /> },
+    { title: t("filler.inputs.fileUpload.downloadSteps.decrypting"), icon: <LockOutlined /> },
+    { title: t("filler.inputs.fileUpload.downloadSteps.saving"), icon: <FileOutlined /> },
+    { title: t("filler.inputs.fileUpload.downloadSteps.complete"), icon: <CheckCircleOutlined /> },
   ];
 
   useEffect(() => {
@@ -89,7 +91,11 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   const validateFile = (file: RcFile): boolean => {
     // Check file size
     if (file.size > maxFileSize) {
-      message.error(`File size must be less than ${fieldConfig.maxFileSize || 10} MB`);
+      message.error(
+        t("filler.inputs.fileUpload.sizeLimit", {
+          size: fieldConfig.maxFileSize || 10,
+        }),
+      );
       return false;
     }
 
@@ -104,7 +110,11 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       });
 
       if (!isAllowed) {
-        message.error(`File type ${file.type} is not allowed`);
+        message.error(
+          t("filler.inputs.fileUpload.fileTypeNotAllowed", {
+            type: file.type,
+          }),
+        );
         return false;
       }
     }
@@ -122,7 +132,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
 
     try {
       if (!formAuthorPubkey) {
-        throw new Error("Form author public key not available");
+        throw new Error(t("filler.inputs.fileUpload.authorKeyUnavailable"));
       }
 
       // Step 0: Read file as Uint8Array
@@ -168,13 +178,17 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       onChange(metadataString, file.name);
       setCurrentStep(4);
 
-      message.success("File uploaded successfully!");
+      message.success(t("filler.inputs.fileUpload.uploadSuccess"));
     } catch (error: any) {
       console.error("Upload failed:", error);
       if (error.isCorsError) {
-        message.error("CORS error: The server may not allow uploads from this origin");
+        message.error(t("filler.inputs.fileUpload.uploadCorsError"));
       } else {
-        message.error(`Upload failed: ${error.message || "Unknown error"}`);
+        message.error(
+          t("filler.inputs.fileUpload.uploadFailed", {
+            message: error.message || t("common.status.unknownError"),
+          }),
+        );
       }
     } finally {
       setUploading(false);
@@ -193,11 +207,11 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   const handleDownload = async () => {
     if (!uploadedMetadata) return;
     if (!formEditKey) {
-      message.error("Cannot download: Form edit key not available");
+      message.error(t("filler.inputs.fileUpload.downloadKeyUnavailable"));
       return;
     }
     if (!uploaderPubkey) {
-      message.error("Cannot download: Uploader public key not available");
+      message.error(t("filler.inputs.fileUpload.uploaderUnavailable"));
       return;
     }
 
@@ -244,13 +258,17 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       URL.revokeObjectURL(url);
       setCurrentStep(4);
 
-      message.success("File downloaded successfully!");
+      message.success(t("filler.inputs.fileUpload.downloadSuccess"));
     } catch (error: any) {
       console.error("Download failed:", error);
       if (error.isCorsError) {
-        message.error("CORS error: The server may not allow downloads from this origin");
+        message.error(t("filler.inputs.fileUpload.downloadCorsError"));
       } else {
-        message.error(`Download failed: ${error.message || "Unknown error"}`);
+        message.error(
+          t("filler.inputs.fileUpload.downloadFailed", {
+            message: error.message || t("common.status.unknownError"),
+          }),
+        );
       }
     } finally {
       setDownloading(false);
@@ -283,13 +301,17 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       // Clear local state
       setUploadedMetadata(null);
       onChange("", ""); // Clear the form field value
-      message.success("File deleted successfully");
+      message.success(t("filler.inputs.fileUpload.deleteSuccess"));
     } catch (error: any) {
       console.error("Delete failed:", error);
       if (error.isCorsError) {
-        message.error("CORS error: The server may not allow deletions from this origin");
+        message.error(t("filler.inputs.fileUpload.deleteCorsError"));
       } else {
-        message.error(`Delete failed: ${error.message || "Unknown error"}`);
+        message.error(
+          t("filler.inputs.fileUpload.deleteFailed", {
+            message: error.message || t("common.status.unknownError"),
+          }),
+        );
       }
     } finally {
       setDeleting(false);
@@ -310,14 +332,21 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
           </p>
-          <p className="ant-upload-text">Click or drag file to upload</p>
+          <p className="ant-upload-text">
+            {t("filler.inputs.fileUpload.clickOrDrag")}
+          </p>
           <p className="ant-upload-hint">
-            Files are encrypted with NIP-44 before upload
+            {t("filler.inputs.fileUpload.encryptedHint")}
           </p>
           <p className="ant-upload-hint" style={{ fontSize: "12px" }}>
-            Max size: {fieldConfig.maxFileSize || 10} MB
+            {t("filler.inputs.fileUpload.maxSize", {
+              size: fieldConfig.maxFileSize || 10,
+            })}
             {allowedTypes.length > 0 && (
-              <> • Allowed: {allowedTypes.join(", ")}</>
+              <>
+                {" "}
+                • {t("filler.inputs.fileUpload.allowed")}: {allowedTypes.join(", ")}
+              </>
             )}
           </p>
         </Dragger>
@@ -326,7 +355,9 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       {(uploading || downloading) && (
         <Space direction="vertical" style={{ width: "100%" }}>
           <Text strong style={{ marginBottom: 16, display: "block" }}>
-            {uploading ? "Uploading file..." : "Downloading file..."}
+            {uploading
+              ? t("filler.inputs.fileUpload.uploading")
+              : t("filler.inputs.fileUpload.downloading")}
           </Text>
           <style>
             {`
@@ -360,28 +391,32 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 20 }} />
               <Text strong style={{ fontSize: 16 }}>
-                File Uploaded
+                {t("filler.inputs.fileUpload.uploaded")}
               </Text>
             </div>
 
             <div style={{ paddingLeft: 28 }}>
-              <Text strong>Filename:</Text> <Text>{uploadedMetadata.filename}</Text>
+              <Text strong>{t("filler.inputs.fileUpload.filename")}:</Text>{" "}
+              <Text>{uploadedMetadata.filename}</Text>
             </div>
 
             <div style={{ paddingLeft: 28 }}>
-              <Text strong>Size:</Text> <Text>{formatFileSize(uploadedMetadata.size)}</Text>
+              <Text strong>{t("filler.inputs.fileUpload.size")}:</Text>{" "}
+              <Text>{formatFileSize(uploadedMetadata.size)}</Text>
             </div>
 
             <div style={{ paddingLeft: 28 }}>
-              <Text strong>Type:</Text> <Text>{uploadedMetadata.mimeType}</Text>
+              <Text strong>{t("filler.inputs.fileUpload.type")}:</Text>{" "}
+              <Text>{uploadedMetadata.mimeType}</Text>
             </div>
 
             <div style={{ paddingLeft: 28 }}>
-              <Text strong>Uploaded:</Text> <Text>{formatDate(uploadedMetadata.uploadedAt)}</Text>
+              <Text strong>{t("filler.inputs.fileUpload.uploadedAt")}:</Text>{" "}
+              <Text>{formatDate(uploadedMetadata.uploadedAt)}</Text>
             </div>
 
             <div style={{ paddingLeft: 28 }}>
-              <Text strong>Server:</Text>{" "}
+              <Text strong>{t("filler.inputs.fileUpload.server")}:</Text>{" "}
               <Text
                 style={{ fontSize: "12px", color: "#666", wordBreak: "break-all" }}
               >
@@ -398,7 +433,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
               }}
             >
               <Text type="secondary" style={{ fontSize: "12px" }}>
-                ✓ Encrypted with NIP-44
+                {`\u2713 ${t("filler.inputs.fileUpload.encryptedLabel")}`}
               </Text>
             </div>
 
@@ -411,14 +446,14 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
                   loading={downloading}
                   disabled={deleting}
                 >
-                  Download File
+                  {t("filler.inputs.fileUpload.downloadFile")}
                 </Button>
                 <Popconfirm
-                  title="Clear upload"
-                  description="Are you sure you want to clear this upload? The file will be permanently deleted from the server."
+                  title={t("filler.inputs.fileUpload.clearUpload")}
+                  description={t("filler.inputs.fileUpload.clearUploadConfirm")}
                   onConfirm={handleClearUpload}
-                  okText="Yes, delete"
-                  cancelText="Cancel"
+                  okText={t("filler.inputs.fileUpload.clearUploadOk")}
+                  cancelText={t("common.actions.cancel")}
                   disabled={disabled || deleting}
                 >
                   <Button
@@ -427,7 +462,7 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
                     disabled={disabled || deleting}
                     loading={deleting}
                   >
-                    Clear upload
+                    {t("filler.inputs.fileUpload.clearUpload")}
                   </Button>
                 </Popconfirm>
               </Space>

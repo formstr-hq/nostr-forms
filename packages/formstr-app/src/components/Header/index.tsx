@@ -21,18 +21,19 @@ import {
   WarningOutlined,
   ExclamationCircleOutlined,
   GlobalOutlined,
+  ThunderboltOutlined,
 } from "@ant-design/icons";
 import { getHeaderMenu, HEADER_MENU_KEYS } from "./configs";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { useLocalForms } from "../../provider/LocalFormsProvider";
 import { NostrAvatar } from "./NostrAvatar";
-import { ReactComponent as GeyserIcon } from "../../Images/Geyser.svg";
 import { useState } from "react";
 import { useTemplateContext } from "../../provider/TemplateProvider";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
 import { nip19 } from "nostr-tools";
 import { useTranslation } from "react-i18next";
 import { changeAppLanguage, normalizeLocale, SUPPORTED_LOCALES } from "../../i18n";
+import { SupportUsModal } from "@formstr/support-us-button";
 
 const { Text, Paragraph } = Typography;
 
@@ -58,6 +59,7 @@ export const NostrHeader = () => {
   } = useLocalForms();
   const [isFAQModalVisible, setIsFAQModalVisible] = useState(false);
   const [showEncryptionModal, setShowEncryptionModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const [encryptionLoading, setEncryptionLoading] = useState(false);
   const [languageLoading, setLanguageLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string[]>([]);
@@ -303,7 +305,7 @@ export const NostrHeader = () => {
     }
 
     if (key === "support-us") {
-      window.open("https://geyser.fund/project/formstr", "_blank");
+      setShowSupportModal(true);
       return;
     }
 
@@ -349,31 +351,8 @@ export const NostrHeader = () => {
     },
     {
       key: "support-us",
-      icon: (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
-        >
-          <GeyserIcon
-            style={{
-              color: "white",
-              strokeWidth: 20,
-              fill: "black",
-              stroke: "black",
-              maxHeight: 20,
-              maxWidth: 20,
-              backgroundColor: "black",
-              marginRight: 5,
-            }}
-          />
-          <Typography.Text style={{ marginTop: 2 }}>
-            {t("header.supportUs")}
-          </Typography.Text>
-        </div>
-      ),
+      icon: <ThunderboltOutlined style={{ color: "#fadb14" }} />,
+      label: t("header.supportUs"),
     },
     {
       key: "language",
@@ -412,6 +391,7 @@ export const NostrHeader = () => {
       </div>
     ),
   };
+
   const newHeaderMenu = [...getHeaderMenu(t), User];
   return (
     <>
@@ -422,7 +402,7 @@ export const NostrHeader = () => {
           borderBottom: "1px solid #ddd",
         }}
       >
-        <Row className="header-row" justify="space-between">
+        <Row className="header-row" justify="space-between" align="middle">
           <Col>
             <Link className="app-link" to="/">
               <Logo />
@@ -458,6 +438,11 @@ export const NostrHeader = () => {
       >
         {renderEncryptionModalContent()}
       </Modal>
+      <SupportUsModal
+        open={showSupportModal}
+        npub="npub1qu7dsd44275lms4x9snnwvnnmgx926nsppmr7lcw9dlj36n4fltqgs7p98"
+        onClose={() => setShowSupportModal(false)}
+      />
     </>
   );
 };
