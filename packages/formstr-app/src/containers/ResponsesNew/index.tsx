@@ -401,9 +401,9 @@ export const Response = () => {
           const parseStars = (storedValue: number): number => {
             if (!Number.isFinite(storedValue)) return 0;
             if (storedValue >= 0 && storedValue <= 1) {
-              return Math.round(storedValue * currentMaxStars);
+              return storedValue * currentMaxStars;
             }
-            return Math.round(storedValue);
+            return storedValue;
           };
 
           try {
@@ -414,7 +414,7 @@ export const Response = () => {
               }
               if (typeof parsed.value === "number") {
                 if (typeof parsed.maxStars === "number" && parsed.maxStars > 0) {
-                  return Math.round((parsed.value / parsed.maxStars) * currentMaxStars);
+                  return parseStars((parsed.value / parsed.maxStars) * currentMaxStars);
                 }
                 return parseStars(parsed.value);
               }
@@ -433,18 +433,35 @@ export const Response = () => {
           const displayValue = normalizeStoredRating(data);
 
           return (
-            <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-              {Array.from({ length: currentMaxStars }, (_, i) => i + 1).map((n) => (
-                <svg key={n} width={20} height={20} viewBox="0 0 28 28">
-                  <polygon
-                    points="14,3 17.5,10.5 26,11.5 20,17.5 21.5,26 14,22 6.5,26 8,17.5 2,11.5 10.5,10.5"
-                    fill={n <= displayValue ? "#EF9F27" : "none"}
-                    stroke={n <= displayValue ? "#EF9F27" : "#B4B2A9"}
-                    strokeWidth={1.5}
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              ))}
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                {Array.from({ length: currentMaxStars }, (_, i) => {
+                  const n = i + 1;
+                  const fillPercent = Math.max(0, Math.min(1, displayValue - (n - 1))) * 100;
+                  const gradientId = `response-star-${fieldId}-${n}`;
+
+                  return (
+                    <svg key={n} width={20} height={20} viewBox="0 0 28 28">
+                      <defs>
+                        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset={`${fillPercent}%`} stopColor="#EF9F27" />
+                          <stop offset={`${fillPercent}%`} stopColor="transparent" />
+                        </linearGradient>
+                      </defs>
+                      <polygon
+                        points="14,3 17.5,10.5 26,11.5 20,17.5 21.5,26 14,22 6.5,26 8,17.5 2,11.5 10.5,10.5"
+                        fill={fillPercent > 0 ? `url(#${gradientId})` : "none"}
+                        stroke={n <= displayValue ? "#EF9F27" : "#B4B2A9"}
+                        strokeWidth={1.5}
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  );
+                })}
+              </div>
+              <span style={{ fontSize: 12, color: "#666" }}>
+                {displayValue.toFixed(2)} / {currentMaxStars}
+              </span>
             </div>
           );
         };
