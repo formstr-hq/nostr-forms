@@ -20,6 +20,7 @@ export interface IAnswerSettings {
   blossomServer?: string;
   maxFileSize?: number;
   allowedTypes?: string[];
+  maxStars?: number;
   validationRules?: {
     [ValidationRuleTypes.range]?: RangeRule;
     [ValidationRuleTypes.max]?: MaxRule;

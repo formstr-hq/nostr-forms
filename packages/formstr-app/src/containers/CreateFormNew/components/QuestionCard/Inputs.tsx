@@ -8,6 +8,7 @@ import { AnswerSettings, AnswerTypes, GridOptions } from "../../../../nostr/type
 import SignatureInput from "./InputElements/Signature";
 import { GridCreator } from "./InputElements/GridCreator";
 import FileUploadBuilder from "./InputElements/FileUploadBuilder";
+import { Rating } from "./InputElements/Rating";
 import { useTranslation } from "react-i18next";
 
 interface InputsProps {
@@ -67,6 +68,8 @@ const Inputs: React.FC<InputsProps> = ({
         return <DatePicker disabled={true} />;
       case AnswerTypes.time:
         return <TimePicker disabled={true} />;
+      case AnswerTypes.rating:
+        return <Rating initialValue={0} maxStars={answerSettings.maxStars || 5} onChange={() => {}} />;
       case AnswerTypes.signature:
         return <SignatureInput answerSettings={answerSettings} />;
       case AnswerTypes.datetime:

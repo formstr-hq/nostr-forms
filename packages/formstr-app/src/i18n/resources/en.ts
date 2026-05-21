@@ -554,6 +554,7 @@ const resources = {
       multipleChoiceGrid: "Multiple choice grid",
       dateOfBirth: "Date of birth",
       email: "Email",
+      rating: "Rating",
     },
     defaults: {
       sectionTitle: "Section {{number}}",
