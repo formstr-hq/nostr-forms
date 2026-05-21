@@ -177,6 +177,7 @@ export const RatingFiller: React.FC<RatingFillerProps> = ({
           );
         })}
       </div>
+      <div style={{ marginTop: 6, fontSize: 12, color: "#6b6b6b" }}>Hold to rate</div>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
         <span style={{ minWidth: 52, textAlign: "right", fontSize: 12 }}>{value.toFixed(1)}</span>
       </div>
