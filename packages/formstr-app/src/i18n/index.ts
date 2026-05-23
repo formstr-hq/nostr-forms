@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import enUS from "antd/locale/en_US";
+import hiIN from "antd/locale/hi_IN";
 import { getItem, LOCAL_STORAGE_KEYS, setItem } from "../utils/localStorage";
 
 type TranslationResources = typeof import("./resources/en").default;
@@ -16,6 +17,11 @@ export const SUPPORTED_LOCALES: SupportedLocale[] = [
     code: "en",
     label: "English",
     antdLocale: enUS,
+  },
+  {
+    code: "hi",
+    label: "हिंदी",
+    antdLocale: hiIN,
   },
 ];
 
@@ -64,6 +70,7 @@ const LOCALE_LOADERS: Record<
   () => Promise<{ default: TranslationResources }>
 > = {
   en: () => import("./resources/en"),
+  hi: () => import("./resources/hi"),
 };
 
 const loadLocaleResources = async (locale: string) => {
