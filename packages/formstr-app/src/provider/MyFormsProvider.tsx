@@ -69,15 +69,25 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
   const loadedForPubRef = useRef<string | null>(null);
   const fetchSubRef = useRef<{ close: () => void } | null>(null);
 
-  const fetchFormEvents = (forms: Tag[]) => {
+  const fetchFormEvents = (forms: unknown) => {
     fetchSubRef.current?.close();
 
     const initial = new Map<string, FormEventMetadata>();
     const formLookup = new Map<string, string>();
-    forms.forEach((formTag) => {
-      const [, formData, relay, secretData] = formTag;
+    const list = Array.isArray(forms) ? forms : [];
+    for (const formTag of list) {
+      if (
+        !Array.isArray(formTag) ||
+        formTag[0] !== "f" ||
+        typeof formTag[1] !== "string"
+      )
+        continue;
+      const formData = formTag[1] as string;
+      const relay = typeof formTag[2] === "string" ? formTag[2] : "";
+      const secretData = typeof formTag[3] === "string" ? formTag[3] : "";
       const [formPubkey, formId] = formData.split(":");
-      const [secretKey, viewKey] = secretData.split(":");
+      if (!formPubkey || !formId) continue;
+      const [secretKey = "", viewKey] = secretData.split(":");
       initial.set(formId, {
         event: null,
         secrets: { secretKey, viewKey },
@@ -86,11 +96,13 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
         formId,
       });
       formLookup.set(`${formPubkey}:${formId}`, formId);
-    });
+    }
     setFormEvents(initial);
 
-    const dTags = forms.map((f) => f[1].split(":")[1]);
-    const pubkeys = forms.map((f) => f[1].split(":")[0]);
+    if (initial.size === 0) return;
+
+    const dTags = [...initial.values()].map((v) => v.formId);
+    const pubkeys = [...initial.values()].map((v) => v.formPubkey);
 
     fetchSubRef.current = pool.subscribeMany(
       getDefaultRelays(),
