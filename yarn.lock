@@ -3297,6 +3297,11 @@
     "@webassemblyjs/ast" "1.11.6"
     "@xtuc/long" "4.2.2"
 
+"@wllama/wllama@^3.4.1":
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/@wllama/wllama/-/wllama-3.4.1.tgz#36b5462eb7dc5dc396e43289ac0e7164fe3ebf90"
+  integrity sha512-izq3CLVsIIpFoi4lI5/yvpM1tbzTBnDU8WuVi6I1q1oQgImSXSGF8eZo8WwDNBgbmhVJpcPGyw8cg24jKk0sbg==
+
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
   resolved "https://registry.npmjs.org/@xtuc/ieee754/-/ieee754-1.2.0.tgz"
@@ -6199,6 +6204,11 @@ fs.realpath@^1.0.0:
   resolved "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
 
+fs@^0.0.1-security:
+  version "0.0.1-security"
+  resolved "https://registry.yarnpkg.com/fs/-/fs-0.0.1-security.tgz#8a7bd37186b6dddf3813f23858b57ecaaf5e41d4"
+  integrity sha512-3XY9e1pP0CVEUCdj5BmfIZxRBTSDycnbqhIOGec9QYtmVH2fbLpj86CFWkrNOkt/Fvty4KZG5lTglL9j/gJ87w==
+
 fsevents@^2.3.2, fsevents@~2.3.2:
   version "2.3.3"
   resolved "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz"
@@ -8464,11 +8474,6 @@ lodash@^4.0.1, lodash@^4.17.15, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.7.0:
   version "4.17.21"
   resolved "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
-
-loglevel@^1.9.1:
-  version "1.9.2"
-  resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.9.2.tgz#c2e028d6c757720107df4e64508530db6621ba08"
-  integrity sha512-HgMmCqIJSAKqo68l0rS2AanEWfkxaZ5wNiEFb5ggm08lDs9Xl2KxBlX3PTcaD2chBM1gXAYf491/M2Rv8Jwayg==
 
 longest-streak@^3.0.0:
   version "3.1.0"
@@ -12588,13 +12593,6 @@ wbuf@^1.1.0, wbuf@^1.7.3:
   dependencies:
     minimalistic-assert "^1.0.0"
 
-web-llm-runner@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/web-llm-runner/-/web-llm-runner-0.2.1.tgz#c137d65002712c1ad04de275de2f9edd6b77a0f8"
-  integrity sha512-OnSQ0jbCPdfEXnH37Sgj5YLK0aB94UwqJ4AvfOCMV2TTMKD1Lvam4WpSB133Sy0o8H/W3fTW0Cfz4RtyEcUlwQ==
-  dependencies:
-    loglevel "^1.9.1"
-
 web-namespaces@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/web-namespaces/-/web-namespaces-2.0.1.tgz#1010ff7c650eccb2592cebeeaf9a1b253fd40692"
@@ -12838,6 +12836,16 @@ which@^2.0.1:
   integrity sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
   dependencies:
     isexe "^2.0.0"
+
+wllama-service@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/wllama-service/-/wllama-service-1.0.0.tgz#7779d1058503a44b62a46a2de3c9fa93c5b5d185"
+  integrity sha512-RNX0DJi6CAodiBBP52qCy6bX09aBBXJVKpQxfIkabVp4mYefprauEEB6YvgYfy5Bzv+GfbZ1xB+T4hDXqW1JBA==
+
+wllama-service@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/wllama-service/-/wllama-service-1.0.1.tgz#d2ab15835d1f1521a56769211885de6008ee661f"
+  integrity sha512-47Y2UuMRa7JSHR2vBj+YLwiyw/agHaLJs/tvf1sfWVIrRHns1JjrMYQc0arA2Sj1s2KKqRXu3OohL3mlx4asYw==
 
 wmf@~1.0.1:
   version "1.0.2"

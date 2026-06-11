@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Divider, message, Button, Typography, Select, Progress } from 'antd';
 import { llmService, LLMProvider } from '../../../../services/webLLM';
-import { OllamaModel, OllamaConfig } from '../../../../services/ollamaService';
+import { OllamaConfig } from '../../../../services/ollamaService';
 import { getItem, setItem, LOCAL_STORAGE_KEYS } from '../../../../utils/localStorage';
 import { processOllamaFormData } from './aiProcessor';
 import { extractJsonFromText } from '../../../../utils/parseJsonFromText';
@@ -9,8 +9,9 @@ import { AIFormGeneratorModalProps } from './types';
 import OllamaSettings from '../../../../components/OllamaSettings';
 import ModelSelector from '../../../../components/ModelSelector';
 import GenerationPanel from './GenerationPanel';
+import { wllamaService } from '../../../../services/webLLM/wllamaService';
 import './styles.css';
-import { useTranslation } from "react-i18next";
+import { useTranslation } from 'react-i18next';
 
 const FORM_GENERATION_SYSTEM_PROMPT = `You are an expert JSON generator. Based on the user's request, create a form structure.
 Here is the required JSON schema for the form:
@@ -54,6 +55,31 @@ For Example for output with one field:
   ]
 }"
 `;
+// const FORM_GENERATION_SYSTEM_PROMPT = `You are a JSON generator. Output ONLY raw JSON, nothing else.
+// No markdown, no code fences, no backticks, no explanation.
+// Your entire response must start with { and end with }.
+
+// Required JSON structure:
+// {
+//   "title": "string",
+//   "description": "string",
+//   "fields": [
+//     {
+//       "type": "ShortText|LongText|Email|Number|MultipleChoice|SingleChoice|Checkbox|Dropdown|Date|Time|Label",
+//       "label": "string",
+//       "required": true|false,
+//       "options": ["only for MultipleChoice/SingleChoice/Dropdown"]
+//     }
+//   ]
+// }
+
+// RULES:
+// - Start with { immediately, no preamble
+// - End with } immediately, no postamble  
+// - No \`\`\`json or \`\`\` anywhere
+// - No comments`;
+type AnyConfig = OllamaConfig | { modelName: string; [key: string]: any };
+type AnyModel = { name: string; [key: string]: any };
 
 const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onClose, onFormGenerated }) => {
     const { t } = useTranslation();
@@ -61,29 +87,28 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [connectionStatus, setConnectionStatus] = useState<boolean | null>(null);
-    const [availableModels, setAvailableModels] = useState<OllamaModel[]>([]);
+    const [availableModels, setAvailableModels] = useState<AnyModel[]>([]);
     const [fetchingModels, setFetchingModels] = useState(false);
-    const [config, setConfig] = useState<OllamaConfig>(llmService.activeService.getConfig?.() || { modelName: '' });
+    const [config, setConfig] = useState<AnyConfig>(
+        llmService.activeService.getConfig?.() || { modelName: '', baseUrl: '' }
+    );
     const [provider, setProvider] = useState<LLMProvider>(
         getItem<LLMProvider>(LOCAL_STORAGE_KEYS.LLM_PROVIDER) || LLMProvider.OLLAMA
     );
     const [downloadProgress, setDownloadProgress] = useState<number>(0);
-    const [downloading, setDownloading] = useState<boolean>(false);
+    const [loadingGGUF, setLoadingGGUF] = useState<boolean>(false);
+    const [wllamaModelName, setWllamaModelName] = useState<string>('');
 
     const fetchModels = useCallback(async () => {
         setFetchingModels(true);
         const result = await llmService.fetchModels();
         if (result.success && result.models) {
-            const modelsWithCache = await Promise.all(result.models.map(async m => ({
-                ...m,
-                cached: provider === LLMProvider.WEB_LLM ? await (llmService.activeService as any).isModelCached(m.name) : false
-            })));
-            setAvailableModels(modelsWithCache);
+            setAvailableModels(result.models);
         } else {
             setAvailableModels([]);
         }
         setFetchingModels(false);
-    }, [provider]);
+    }, []);
 
     const testConnection = useCallback(async () => {
         setLoading(true);
@@ -91,95 +116,72 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
         setLoading(false);
         if (result.success) {
             if (provider === LLMProvider.OLLAMA) {
-                message.success(t("builder.aiGenerator.connectionSuccess"));
+                message.success(t('builder.aiGenerator.connectionSuccess'));
             }
             setConnectionStatus(true);
             fetchModels();
         } else {
             setConnectionStatus(false);
+            if (provider === LLMProvider.WLLAMA) {
+                message.error(result.error || 'WebAssembly not supported');
+                return;
+            }
             if (result.error === 'EXTENSION_NOT_FOUND') {
                 message.error(
                     <>
-                        {t("builder.aiGenerator.extensionMissing")}
-                        <Button
-                            type="link"
-                            href="https://github.com/ashu01304/Ollama_Web"
-                            target="_blank"
-                        >
-                            {t("builder.aiGenerator.getExtension")}
+                        {t('builder.aiGenerator.extensionMissing')}
+                        <Button type="link" href="https://github.com/ashu01304/Ollama_Web" target="_blank">
+                            {t('builder.aiGenerator.getExtension')}
                         </Button>
                     </>,
                     10
                 );
             } else {
-                message.error(
-                    t("builder.aiGenerator.connectionFailed", {
-                        error: result.error,
-                    }),
-                );
+                message.error(t('builder.aiGenerator.connectionFailed', { error: result.error }));
             }
         }
-    }, [fetchModels, provider]);
+    }, [fetchModels, provider, t]);
 
     useEffect(() => {
-        if (isOpen) {
-            testConnection();
-        }
+        if (isOpen) testConnection();
     }, [isOpen, testConnection]);
 
     const handleProviderChange = (newProvider: LLMProvider) => {
         setProvider(newProvider);
         setItem(LOCAL_STORAGE_KEYS.LLM_PROVIDER, newProvider);
         setConnectionStatus(null);
-        const nextConfig = llmService.activeService.getConfig?.() || { modelName: '' };
-        setConfig(nextConfig);
+        setConfig((llmService.activeService.getConfig?.() as AnyConfig) || { modelName: '', baseUrl: '' });
     };
 
-    const handleDownload = async () => {
-        if (!config.modelName) {
-            message.error('Please select a model first');
-            return;
-        }
-        setDownloading(true);
+    const handleGGUFFileSelected = async (file: File) => {
+        setLoadingGGUF(true);
         setDownloadProgress(0);
         try {
-            await (llmService.activeService as any).downloadModel(config.modelName, (progressText: string) => {
-                const match = progressText.match(/(\d+)%/);
-                if (match) setDownloadProgress(parseInt(match[1]));
-            });
-            message.success('All set! Your model is ready to go.');
-            fetchModels();
+            await wllamaService.loadGGUFFile(file, (progress) => setDownloadProgress(progress));
+            wllamaService.setConfig({ modelName: file.name });
+            setWllamaModelName(file.name);
+            handleConfigChange({ modelName: file.name });
+            setConnectionStatus(true);
+            message.success('GGUF model loaded successfully!');
         } catch (e: any) {
-            message.error(`Download failed: ${e.message}`);
+            setConnectionStatus(false);
+            message.error(`Failed to load GGUF file: ${e.message}`);
         } finally {
-            setDownloading(false);
+            setLoadingGGUF(false);
         }
     };
 
-    const handleDelete = async () => {
-        if (!config.modelName) return;
-        try {
-            await (llmService.activeService as any).deleteModel(config.modelName);
-            message.success('Model removed from cache');
-            fetchModels();
-        } catch (e: any) {
-            message.error(`Failed to delete: ${e.message}`);
-        }
-    };
-
-    const handleConfigChange = (newConfig: Partial<OllamaConfig>) => {
+    const handleConfigChange = (newConfig: Partial<AnyConfig>) => {
         const updatedConfig = { ...config, ...newConfig };
         setConfig(updatedConfig);
         llmService.activeService.setConfig?.(updatedConfig);
     };
 
-    const handleModelChange = (newModel: string) => {
-        handleConfigChange({ modelName: newModel });
-    };
+    const handleModelChange = (newModel: string) => handleConfigChange({ modelName: newModel });
 
     const handleGenerate = async () => {
         if (!prompt.trim()) {
-            message.error(t("builder.aiGenerator.promptRequired"));
+            message.error(t('builder.aiGenerator.promptRequired'));
             return;
         }
         setGenerating(true);
@@ -187,23 +189,20 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
             const result = await llmService.generate({
                 prompt: `USER REQUEST: "${prompt}"\nYOUR JSON RESPONSE:`,
                 system: FORM_GENERATION_SYSTEM_PROMPT,
-                format: "json",
-                modelName: config.modelName,
+                format: 'json',
+                modelName: provider === LLMProvider.WLLAMA ? wllamaModelName : (config as OllamaConfig).modelName,
             });
-
+            console.log('Generate result:', JSON.stringify(result, null, 2));
             if (result.success && result.data?.response) {
                 const processedData = processOllamaFormData(extractJsonFromText(result.data.response));
                 onFormGenerated(processedData);
-                message.success(t("builder.aiGenerator.generatedSuccess"));
+                message.success(t('builder.aiGenerator.generatedSuccess'));
                 onClose();
             } else {
-                message.error(
-                    result.error ||
-                      t("builder.aiGenerator.generationUnexpected"),
-                );
+                message.error(result.error || t('builder.aiGenerator.generationUnexpected'));
             }
         } catch (err: any) {
-            message.error(err.message || t("builder.aiGenerator.generationUnknown"));
+            message.error(err.message || t('builder.aiGenerator.generationUnknown'));
         } finally {
             setGenerating(false);
         }
@@ -217,7 +216,7 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
 
     return (
         <Modal
-            title={t("builder.aiGenerator.title")}
+            title={t('builder.aiGenerator.title')}
             open={isOpen}
             onCancel={onClose}
             footer={null}
@@ -226,9 +225,9 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
         >
             <div className="ai-provider-header">
                 <div className="ai-provider-label">
-                    <Typography.Text strong>{t("builder.aiGenerator.provider")}</Typography.Text>
+                    <Typography.Text strong>{t('builder.aiGenerator.provider')}</Typography.Text>
                     <Typography.Text type="secondary" className="provider-subtitle">
-                        {t("builder.aiGenerator.chooseModel")}
+                        {t('builder.aiGenerator.chooseModel')}
                     </Typography.Text>
                 </div>
                 <Select
@@ -236,7 +235,7 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
                     onChange={handleProviderChange}
                     options={[
                         { label: 'Ollama (Extension)', value: LLMProvider.OLLAMA },
-                        { label: 'WebLLM (In-Browser)', value: LLMProvider.WEB_LLM },
+                        { label: 'Wllama (Local GGUF)', value: LLMProvider.WLLAMA },
                     ]}
                     className="ai-provider-select"
                     dropdownMatchSelectWidth={false}
@@ -245,28 +244,16 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
 
             <Typography.Text type="secondary" className="ai-powered-by">
                 {provider === LLMProvider.OLLAMA
-                    ? t("builder.aiGenerator.poweredByLocal")
-                    : t("builder.aiGenerator.poweredByWeb")}
+                    ? t('builder.aiGenerator.poweredByLocal')
+                    : 'Powered by Wllama (WebAssembly + WebGPU)'}
             </Typography.Text>
 
             <Divider className="ai-modal-divider" />
 
-            {provider === LLMProvider.WEB_LLM && (
-                <Typography.Paragraph className="web-llm-instruction">
-                    {t("builder.aiGenerator.webLlmInstruction")}
+            {provider === LLMProvider.WLLAMA && (
+                <Typography.Paragraph className="wllama-instruction">
+                    Select a GGUF file to run AI locally in your browser. WebGPU will be used automatically if your browser supports it, with WebAssembly as fallback.
                 </Typography.Paragraph>
-            )}
-            {provider === LLMProvider.WEB_LLM && (
-                <div className="web-llm-model-guide">
-                    <Typography.Text strong>
-                        {t("builder.aiGenerator.modelGuideTitle")}
-                    </Typography.Text>
-                    <ul>
-                        <li>{t("builder.aiGenerator.modelGuideHigh")}</li>
-                        <li>{t("builder.aiGenerator.modelGuideMid")}</li>
-                        <li>{t("builder.aiGenerator.modelGuideLow")}</li>
-                    </ul>
-                </div>
             )}
 
             <div className="ai-modal-controls-container">
@@ -274,37 +261,23 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
                     <ModelSelector
                         model={config.modelName}
                         setModel={handleModelChange}
-                        availableModels={availableModels}
-                        fetching={fetchingModels}
+                        availableModels={availableModels as any}
+                        fetching={fetchingModels || loadingGGUF}
                         disabled={provider === LLMProvider.OLLAMA && !connectionStatus}
                         style={{ width: '100%' }}
+                        provider={provider}
+                        onFileSelected={handleGGUFFileSelected}
+                        loading={loadingGGUF}
                     />
                 </div>
-                {provider === LLMProvider.OLLAMA ? (
-                    <Button
-                        onClick={testConnection}
-                        loading={loading}
-                        {...getButtonProps()}
-                    >
-                        {t("builder.aiGenerator.testConnection")}
+                {provider === LLMProvider.OLLAMA && (
+                    <Button onClick={testConnection} loading={loading} {...getButtonProps()}>
+                        {t('builder.aiGenerator.testConnection')}
                     </Button>
-                ) : (
-                    <div className="web-llm-actions">
-                        <Button
-                            className="ai-modal-button-orange"
-                            onClick={handleDownload}
-                            loading={downloading}
-                        >
-                            {t("builder.aiGenerator.download")}
-                        </Button>
-                        <Button danger ghost onClick={handleDelete}>
-                            {t("builder.aiGenerator.delete")}
-                        </Button>
-                    </div>
                 )}
             </div>
 
-            {downloading && (
+            {loadingGGUF && downloadProgress > 0 && (
                 <Progress percent={downloadProgress} status="active" className="download-progress" />
             )}
 
@@ -316,7 +289,10 @@ const AIFormGeneratorModal: React.FC<AIFormGeneratorModalProps> = ({ isOpen, onC
                 setPrompt={setPrompt}
                 onGenerate={handleGenerate}
                 loading={generating}
-                disabled={(provider === LLMProvider.OLLAMA && !connectionStatus) || !config.modelName}
+                disabled={
+                    (provider === LLMProvider.OLLAMA && !connectionStatus) ||
+                    (provider === LLMProvider.WLLAMA && !wllamaModelName)
+                }
             />
         </Modal>
     );

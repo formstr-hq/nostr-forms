@@ -5,6 +5,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
     "@babel/core": "^7.16.0",
+    "@formstr/support-us-button": "*",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
     "@svgr/webpack": "^5.5.0",
     "@testing-library/jest-dom": "^5.17.0",
@@ -15,6 +16,7 @@
     "@types/react": "^18.2.23",
     "@types/react-color": "^3.0.13",
     "@types/react-dom": "^18.2.8",
+    "@wllama/wllama": "^3.4.1",
     "antd": "^5.11.2",
     "axios": "^1.11.0",
     "babel-jest": "^27.4.2",
@@ -36,12 +38,13 @@
     "eslint-webpack-plugin": "^3.1.1",
     "file-loader": "^6.2.0",
     "framer-motion": "^10.16.15",
+    "fs": "^0.0.1-security",
     "fs-extra": "^10.0.0",
     "html-inline-css-webpack-plugin": "^1.11.2",
     "html-inline-script-webpack-plugin": "^3.2.1",
     "html-webpack-plugin": "^5.5.0",
-    "identity-obj-proxy": "^3.0.0",
     "i18next": "^25.6.0",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^27.4.3",
     "jest-resolve": "^27.4.2",
     "jest-watch-typeahead": "^1.0.0",
@@ -75,14 +78,13 @@
     "terser-webpack-plugin": "^5.2.5",
     "typescript": "^5.2.2",
     "url": "^0.11.3",
-    "web-llm-runner": "^0.2.1",
     "web-vitals": "^2.1.4",
     "webpack": "^5.64.4",
     "webpack-dev-server": "^4.6.0",
     "webpack-manifest-plugin": "^4.0.2",
+    "wllama-service": "^1.0.1",
     "workbox-webpack-plugin": "^6.4.1",
-    "xlsx": "^0.18.5",
-    "@formstr/support-us-button": "*"
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "predeploy": "npm run build",
@@ -91,7 +93,8 @@
     "build": "node scripts/build.js && cp -r \".well-known\" build/ && cp _config.yml build/ && cp .nojekyll build/",
     "test": "node scripts/test.js",
     "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "lint:fix": "eslint src/ --fix",
+    "postinstall": "node scripts/copy-wllama.js"
   },
   "eslintConfig": {
     "extends": [

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Select, Spin, Empty } from 'antd';
 import { ModelSelectorProps } from './types';
+import GGUFFileSelector from '../GGUFFileSelector';
+import { LLMProvider } from '../../services/webLLM/types';
 
 const { Option } = Select;
 
@@ -11,8 +13,29 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
   fetching,
   disabled,
   style,
-  placeholder = "Select a model"
+  placeholder = "Select a model",
+  provider = LLMProvider.OLLAMA,
+  onFileSelected,
+  loading = false,
 }) => {
+  // If using Wllama, show file selector instead of dropdown
+  if (provider === LLMProvider.WLLAMA) {
+    return (
+      <GGUFFileSelector
+        onFileSelected={async (file) => {
+          setModel(file.name);
+          if (onFileSelected) {
+            await onFileSelected(file);
+          }
+        }}
+        loading={loading || fetching}
+        selectedFileName={model}
+        placeholder="Select a GGUF file from your storage"
+      />
+    );
+  }
+
+  // For Ollama and other providers, show dropdown
   return (
     <Select
       style={style}

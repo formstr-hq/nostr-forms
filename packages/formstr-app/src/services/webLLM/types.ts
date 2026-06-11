@@ -2,7 +2,7 @@ import { GenerateParams, GenerateResult } from '../ollamaService';
 
 export enum LLMProvider {
   OLLAMA = 'ollama',
-  WEB_LLM = 'web_llm'
+  WLLAMA = 'wllama'
 }
 
 export interface TestConnectionResult {
@@ -22,4 +22,6 @@ export interface ILLMService {
   fetchModels(): Promise<FetchModelsResult>;
   getConfig?(): any;
   setConfig?(config: any): void;
+  loadGGUFFile?(file: File, onProgress?: (progress: number) => void): Promise<void>;
+  unloadModel?(): Promise<void>;
 }

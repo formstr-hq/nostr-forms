@@ -36,6 +36,12 @@
     color: #262626;
 }
 
+.wllama-instruction {
+    font-weight: 500;
+    margin-bottom: 14px;
+    color: #262626;
+}
+
 .ai-modal-controls-container {
     display: flex;
     flex-wrap: wrap;
