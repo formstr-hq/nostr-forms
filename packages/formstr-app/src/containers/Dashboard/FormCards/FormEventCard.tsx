@@ -20,6 +20,7 @@ import {
   MoreOutlined,
   CopyOutlined,
   InfoCircleOutlined,
+  CloudServerOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { constructDraftUrl } from "./Drafts";
@@ -28,6 +29,8 @@ import SafeMarkdown from "../../../components/SafeMarkdown";
 import { IFormSettings } from "../../CreateFormNew/components/FormSettings/types";
 import { Tag } from "../../../nostr/types";
 import { useTranslation } from "react-i18next";
+import { useRelayCoverage } from "../../../hooks/useRelayCoverage";
+import { BroadcastModal } from "../../../components/BroadcastModal";
 
 interface FormEventCardProps {
   event: Event;
@@ -50,6 +53,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
   const publicForm = event.content === "";
   const [tags, setTags] = useState<Tag[]>([]);
   const [showFormDetails, setShowFormDetails] = useState(false);
+  const [showBroadcast, setShowBroadcast] = useState(false);
   useEffect(() => {
     const initialize = async () => {
       if (event.content === "") {
@@ -69,6 +73,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
   const relays = event.tags
     .filter((tag: Tag) => tag[0] === "relay")
     .map((t) => t[1]);
+  const coverage = useRelayCoverage(pubKey, formId || "", relays);
   if (!formId) {
     return (
       <Card title={t("dashboardCards.invalidFormEvent")}>
@@ -133,6 +138,18 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
     });
     saveAndOpen(duplicatedTags, newFormId);
   };
+  const broadcastMenuItem = {
+    key: "broadcast",
+    label:
+      coverage.loading && coverage.foundCount === 0
+        ? t("broadcast.checking")
+        : t("broadcast.foundOnRelays", {
+            found: coverage.foundCount,
+            total: coverage.total,
+          }),
+    icon: <CloudServerOutlined />,
+    onClick: () => setShowBroadcast(true),
+  };
   const menuItems: MenuProps["items"] = secretKey
     ? [
         {
@@ -171,6 +188,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
           icon: <InfoCircleOutlined />,
           onClick: () => setShowFormDetails(true),
         },
+        broadcastMenuItem,
       ]
     : [
         {
@@ -185,6 +203,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
           icon: <InfoCircleOutlined />,
           onClick: () => setShowFormDetails(true),
         },
+        broadcastMenuItem,
       ];
 
   return (
@@ -312,6 +331,14 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
           {new Date(event.created_at * 1000).toDateString()}
         </div>
       </div>
+      {showBroadcast && (
+        <BroadcastModal
+          isOpen={showBroadcast}
+          onClose={() => setShowBroadcast(false)}
+          event={event}
+          coverage={coverage}
+        />
+      )}
     </Card>
   );
 };
