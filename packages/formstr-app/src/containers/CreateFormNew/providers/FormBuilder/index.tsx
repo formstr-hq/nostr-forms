@@ -28,6 +28,7 @@ import {
 } from "../../components/FormSettings/constants";
 import { getDefaultRelays } from "../../../../nostr/common";
 import { useTranslation } from "react-i18next";
+import { mergeLoadedFormSettings } from "./settingsUtils";
 
 const LOCAL_STORAGE_CUSTOM_RELAYS_KEY = "formstr:customRelays";
 
@@ -95,6 +96,7 @@ const createInitialFormSettings = (
   formstrBranding: true,
   thankYouScreenImageUrl: sampleThankYouScreens[0],
   disablePreview: false,
+  notificationEncryption: "nip44",
 });
 
 const getDefaultSectionTitle = (
@@ -512,10 +514,13 @@ export default function FormBuilderProvider({
   const initializeForm = (form: FormInitData) => {
     let formInitName = form.spec.filter((f) => f[0] === "name")?.[0]?.[1] || "";
     setFormName(formInitName);
-    let settingsFromFile = JSON.parse(
+    const loadedSettings = JSON.parse(
       form.spec.filter((f) => f[0] === "settings")?.[0]?.[1] || "{}",
+    ) as IFormSettings;
+    const settingsFromFile = mergeLoadedFormSettings(
+      initialFormSettings,
+      loadedSettings,
     );
-    settingsFromFile = { ...initialFormSettings, ...settingsFromFile };
     // Migrate legacy globalColor into the colors object
     if (settingsFromFile.globalColor && !settingsFromFile.colors?.global) {
       settingsFromFile.colors = {

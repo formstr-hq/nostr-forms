@@ -28,5 +28,10 @@ export interface IFormSettings {
   nrpcPubkey?: string;
   nrpcMethod?: string;
   requireWebhookPass?: boolean;
-  disablePreview?: boolean
+  disablePreview?: boolean;
+  /** Controls which DM encryption scheme is used for response notifications.
+   *  "nip04" — legacy AES-CBC (kind 4). Preserved for existing forms.
+   *  "nip44" — ChaCha20 (kind 14). Default for all newly created forms.
+   *  Absent — treated as "nip04" for backwards-compatibility. */
+  notificationEncryption?: "nip04" | "nip44";
 }
