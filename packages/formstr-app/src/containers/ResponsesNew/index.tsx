@@ -4,9 +4,10 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchFormResponses } from "../../nostr/responses";
 import SummaryStyle from "./summary.style";
-import { Button, Card, Divider, Tabs, Typography, Spin } from "antd";
+import { Button, Card, Divider, Table, Tabs, Typography, Spin, message } from "antd";
 import { FormAnalytics } from "./components/FormAnalytics";
 import ResponseWrapper from "./Responses.style";
+import { isMobile } from "../../utils/utility";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
 import { hexToBytes } from "@noble/hashes/utils";
@@ -16,7 +17,8 @@ import {
   getFormSpec as getFormSpecFromEventUtil,
   getformstrBranding,
 } from "../../utils/formUtils";
-import { Field, Tag } from "../../nostr/types";
+import { Field, Tag, FileUploadMetadata } from "../../nostr/types";
+import { ResponseDetailModal } from "./components/ResponseDetailModal";
 import { ResponseNavigator } from "./components/ResponseNavigator";
 import {
   getResponseRelays,
@@ -28,7 +30,9 @@ import { ResponseHeader } from "./components/ResponseHeader";
 import { AddressPointer } from "nostr-tools/nip19";
 import { SubCloser } from "nostr-tools/abstract-pool";
 import SafeMarkdown from "../../components/SafeMarkdown";
+import { ExportOutlined, DownloadOutlined } from "@ant-design/icons";
 import { decodeNKeys } from "../../utils/nkeys";
+import { downloadEncryptedFile } from "../../utils/fileDownload";
 import { formatLocalizedDateTime } from "../../i18n/format";
 
 const { Text } = Typography;
@@ -68,6 +72,11 @@ export const Response = () => {
   let viewKeyParams = searchParams.get("viewKey");
   if (!viewKeyParams) viewKeyParams = decodedNKeys?.viewKey || "";
   const [responseCloser, setResponsesCloser] = useState<SubCloser | null>(null);
+  const [selectedEventForModal, setSelectedEventForModal] =
+    useState<Event | null>(null);
+  const [selectedResponseInputsForModal, setSelectedResponseInputsForModal] =
+    useState<Tag[] | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isChatVisible, setIsChatVisible] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
   const [isFormSpecLoading, setIsFormSpecLoading] = useState(true);
@@ -170,6 +179,55 @@ export const Response = () => {
     return new Set(responses.map((r) => r.pubkey)).size;
   };
 
+  const handleRowClick = (record: any) => {
+    const authorPubKey = record.key;
+    if (!responses || !formSpec || formSpec.length === 0) {
+      console.warn("Form spec not ready or no responses, cannot open modal.");
+      return;
+    }
+    const authorEvents = responses.filter(
+      (event) => event.pubkey === authorPubKey
+    );
+    if (authorEvents.length === 0) return;
+    const latestEvent = authorEvents.sort(
+      (a, b) => b.created_at - a.created_at
+    )[0];
+
+    const inputsForModal = getInputsFromResponseEvent(latestEvent, editKey);
+    setSelectedResponseInputsForModal(inputsForModal);
+    setSelectedEventForModal(latestEvent);
+    setIsModalOpen(true);
+  };
+
+  const handleFileDownload = async (metadataJson: string) => {
+    if (!editKey) {
+      message.error(t("responses.fileDownloadUnavailable"));
+      return;
+    }
+
+    try {
+      const metadata: FileUploadMetadata = JSON.parse(metadataJson);
+
+      if (!metadata.uploaderPubkey) {
+        message.error(t("responses.fileUploadedOldVersion"));
+        return;
+      }
+
+      await downloadEncryptedFile({
+        metadata,
+        formEditKey: editKey,
+        uploaderPubkey: metadata.uploaderPubkey, // Use pubkey from metadata, not response event
+      });
+    } catch (error: any) {
+      console.error("handleFileDownload error:", error);
+      message.error(
+        t("responses.downloadFailed", {
+          message: error.message || "Unknown error",
+        }),
+      );
+    }
+  };
+
   const getData = (useLabels: boolean = false) => {
     let answers: Array<{
       [key: string]: string;
@@ -229,6 +287,243 @@ export const Response = () => {
     return t("common.status.untitledForm");
   };
 
+  const getColumns = () => {
+    const columns: Array<{
+      key: string;
+      title: string | JSX.Element;
+      dataIndex: string;
+      fixed?: "left" | "right";
+      width?: number;
+      render?: (data: string, record: any) => JSX.Element;
+    }> = [
+      {
+        key: "author",
+        title: t("common.labels.author"),
+        fixed: "left",
+        dataIndex: "authorPubkey",
+        width: isMobile() ? 120 : 150,
+        render: (data: string) => (
+          <a
+            href={`https://njump.me/${data}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {isMobile()
+              ? `${data.substring(0, 10)}...${data.substring(data.length - 5)}`
+              : data}
+          </a>
+        ),
+      },
+      {
+        key: "responsesCount",
+        title: t("responses.submissions"),
+        dataIndex: "responsesCount",
+        width: isMobile() ? 90 : 120,
+      },
+    ];
+    const rightColumns: Array<{
+      key: string;
+      title: string | JSX.Element;
+      dataIndex: string;
+      fixed?: "left" | "right";
+      width?: number;
+      render?: (data: string, record: any) => JSX.Element;
+    }> = [
+      {
+        key: "createdAt",
+        title: t("common.labels.submittedAt"),
+        dataIndex: "createdAt",
+        width: isMobile() ? 100 : 130,
+      },
+      {
+        key: "action",
+        title: t("common.labels.action"),
+        dataIndex: "action",
+        fixed: "right",
+        width: 40,
+        render: (_: string, record: any) => (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRowClick(record);
+            }}
+          >
+            <ExportOutlined />
+          </div>
+        ),
+      },
+    ];
+    let uniqueQuestionIdsInResponses: Set<string> = new Set();
+    responses?.forEach((response: Event) => {
+      let responseTags = getInputsFromResponseEvent(response, editKey);
+      responseTags.forEach((t: Tag) => {
+        if (Array.isArray(t) && t.length > 1)
+          uniqueQuestionIdsInResponses.add(t[1]);
+      });
+    });
+    let fieldsFromSpec =
+      formSpec?.filter((field) => field[0] === "field") || ([] as Field[]);
+
+    fieldsFromSpec.forEach((field) => {
+      let [_, fieldId, fieldType, label] = field;
+      const column: {
+        key: string;
+        title: string | JSX.Element;
+        dataIndex: string;
+        width?: number;
+        render?: (data: string, record: any) => JSX.Element;
+      } = {
+        key: fieldId,
+        title: label ? (
+          <SafeMarkdown components={{ p: "span" }}>{label as any}</SafeMarkdown>
+        ) : (
+          t("responses.questionFallback", {
+            id: fieldId.substring(0, 5),
+          })
+        ),
+        dataIndex: fieldId,
+        width: 150,
+      };
+
+      // Add custom render for rating fields
+      if (fieldType === "rating") {
+        const answerSettings = JSON.parse(field[5] || '{"maxStars": 5}');
+        const currentMaxStars = Math.min(answerSettings.maxStars || 5, 10);
+
+        const normalizeStoredRating = (value: string): number => {
+          if (!value) return 0;
+
+          const parseStars = (storedValue: number): number => {
+            if (!Number.isFinite(storedValue)) return 0;
+            if (storedValue >= 0 && storedValue <= 1) {
+              return storedValue * currentMaxStars;
+            }
+            return storedValue;
+          };
+
+          try {
+            const parsed = JSON.parse(value);
+            if (typeof parsed === "object" && parsed !== null) {
+              if (typeof parsed.normalizedValue === "number") {
+                return parseStars(Math.max(0, Math.min(parsed.normalizedValue, 1)));
+              }
+              if (typeof parsed.value === "number") {
+                if (typeof parsed.maxStars === "number" && parsed.maxStars > 0) {
+                  return parseStars((parsed.value / parsed.maxStars) * currentMaxStars);
+                }
+                return parseStars(parsed.value);
+              }
+            }
+          } catch (e) {
+            // Fall through to numeric fallback.
+          }
+
+          const numeric = parseFloat(value);
+          return parseStars(numeric);
+        };
+
+        column.render = (data: string) => {
+          if (!data) return <span>-</span>;
+
+          const displayValue = normalizeStoredRating(data);
+
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                {Array.from({ length: currentMaxStars }, (_, i) => {
+                  const n = i + 1;
+                  const fillPercent = Math.max(0, Math.min(1, displayValue - (n - 1))) * 100;
+                  const gradientId = `response-star-${fieldId}-${n}`;
+
+                  return (
+                    <svg key={n} width={20} height={20} viewBox="0 0 28 28">
+                      <defs>
+                        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset={`${fillPercent}%`} stopColor="#EF9F27" />
+                          <stop offset={`${fillPercent}%`} stopColor="transparent" />
+                        </linearGradient>
+                      </defs>
+                      <polygon
+                        points="14,3 17.5,10.5 26,11.5 20,17.5 21.5,26 14,22 6.5,26 8,17.5 2,11.5 10.5,10.5"
+                        fill={fillPercent > 0 ? `url(#${gradientId})` : "none"}
+                        stroke={n <= displayValue ? "#EF9F27" : "#B4B2A9"}
+                        strokeWidth={1.5}
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  );
+                })}
+              </div>
+              <span style={{ fontSize: 12, color: "#666" }}>
+                {displayValue.toFixed(2)} / {currentMaxStars}
+              </span>
+            </div>
+          );
+        };
+      }
+
+      // Add custom render for file upload fields
+      if (fieldType === "file") {
+        column.render = (data: string, record: any) => {
+          if (!data) return <span>-</span>;
+          try {
+            const metadata: FileUploadMetadata = JSON.parse(data);
+            const sizeInMB = (metadata.size / (1024 * 1024)).toFixed(2);
+            return (
+              <div
+                style={{ display: "flex", alignItems: "center", gap: 8 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span>📎 {metadata.filename} ({sizeInMB} MB)</span>
+                <Button
+                  type="link"
+                  size="small"
+                  icon={<DownloadOutlined />}
+                  onClick={() => handleFileDownload(data)}
+                />
+              </div>
+            );
+          } catch (e) {
+            return <span>{data}</span>;
+          }
+        };
+      }
+
+      columns.push(column);
+      uniqueQuestionIdsInResponses.delete(fieldId);
+    });
+    const extraFieldIdsFromResponses = Array.from(uniqueQuestionIdsInResponses);
+    extraFieldIdsFromResponses.forEach((fieldId) => {
+      columns.push({
+        key: fieldId,
+        title: t("responses.questionIdFallback", {
+          id: fieldId.substring(0, 8),
+        }),
+        dataIndex: fieldId,
+        width: 150,
+      });
+    });
+    if (
+      formSpec === null &&
+      responses &&
+      extraFieldIdsFromResponses.length > 0 &&
+      fieldsFromSpec.length === 0
+    ) {
+      extraFieldIdsFromResponses.forEach((id) => {
+        if (!columns.find((col) => col.key === id)) {
+          columns.push({
+            key: id,
+            title: t("responses.questionIdFallback", {
+              id: id.substring(0, 8),
+            }),
+            dataIndex: id,
+            width: 150,
+          });
+        }
+      });
+    }
+    return [...columns, ...rightColumns];
+  };
   if (!(pubkey || secretKey) || !formId)
     return <Text>{t("responses.invalidUrl")}</Text>;
 
@@ -282,6 +577,47 @@ export const Response = () => {
 
   const hasResponses = responses && responses.length > 0;
 
+  const renderResponsesTab = () => {
+    // Mobile: swipeable, filled-form navigator. Desktop: data table.
+    if (isMobile()) {
+      if (responses === undefined) {
+        return (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              padding: "48px 0",
+            }}
+          >
+            <Spin tip={t("responses.lookingForResponses")} />
+          </div>
+        );
+      }
+      return formSpec ? (
+        <ResponseNavigator
+          formSpec={formSpec}
+          responses={responses}
+          editKey={editKey}
+          formstrBranding={getformstrBranding(formSpec)}
+        />
+      ) : null;
+    }
+    return (
+      <div style={{ overflow: "scroll", marginBottom: 60 }}>
+        <Table
+          columns={getColumns()}
+          dataSource={getData()}
+          pagination={{ pageSize: 10 }}
+          loading={{
+            spinning: responses === undefined,
+            tip: t("responses.lookingForResponses"),
+          }}
+          scroll={{ x: isMobile() ? 900 : 1500, y: "calc(65% - 400px)" }}
+        />
+      </div>
+    );
+  };
+
   return (
     <div>
       <SummaryStyle>
@@ -318,25 +654,7 @@ export const Response = () => {
             {
               key: "responses",
               label: t("responses.responsesTab"),
-              children:
-                responses === undefined ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      padding: "48px 0",
-                    }}
-                  >
-                    <Spin tip={t("responses.lookingForResponses")} />
-                  </div>
-                ) : formSpec ? (
-                  <ResponseNavigator
-                    formSpec={formSpec}
-                    responses={responses}
-                    editKey={editKey}
-                    formstrBranding={getformstrBranding(formSpec)}
-                  />
-                ) : null,
+              children: renderResponsesTab(),
             },
             {
               key: "analytics",
@@ -361,6 +679,24 @@ export const Response = () => {
           )}
         </div>
       </ResponseWrapper>
+      {isModalOpen &&
+        formSpec &&
+        formSpec.length > 0 &&
+        selectedResponseInputsForModal && (
+          <ResponseDetailModal
+            isVisible={isModalOpen}
+            onClose={() => {
+              setIsModalOpen(false);
+              setSelectedEventForModal(null);
+              setSelectedResponseInputsForModal(null);
+            }}
+            formSpec={formSpec}
+            processedInputs={selectedResponseInputsForModal}
+            responseMetadataEvent={selectedEventForModal}
+            formstrBranding={getformstrBranding(formSpec)}
+            editKey={editKey}
+          />
+        )}
     </div>
   );
 };

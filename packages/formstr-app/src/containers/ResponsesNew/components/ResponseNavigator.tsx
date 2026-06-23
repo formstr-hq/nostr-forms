@@ -222,14 +222,91 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
   );
 
   if (isMobile()) {
+    const atStart = selectedIndex === 0;
+    const atEnd = selectedIndex >= respondents.length - 1;
+
+    const floatingButtonStyle: React.CSSProperties = {
+      position: "fixed",
+      top: "50%",
+      transform: "translateY(-50%)",
+      zIndex: 1000,
+      opacity: 0.92,
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.18)",
+    };
+
     return (
       <div
-        style={{ marginBottom: 60 }}
+        // Leave room for the sticky bottom bar so the form's last field isn't covered.
+        style={{ paddingBottom: 88 }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {navControls}
+        <div style={{ textAlign: "center", marginBottom: 8 }}>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            {positionLabel}
+          </Text>
+        </div>
         <div>{detail}</div>
+
+        {/* Floating side buttons — reachable by either thumb without scrolling. */}
+        <Button
+          shape="circle"
+          size="large"
+          aria-label={t("common.actions.back", "Prev")}
+          icon={<LeftOutlined />}
+          disabled={atStart}
+          onClick={() => go(-1)}
+          style={{ ...floatingButtonStyle, left: 8 }}
+        />
+        <Button
+          shape="circle"
+          size="large"
+          aria-label={t("common.actions.next", "Next")}
+          icon={<RightOutlined />}
+          disabled={atEnd}
+          onClick={() => go(1)}
+          style={{ ...floatingButtonStyle, right: 8 }}
+        />
+
+        {/* Sticky bottom bar with full-width Prev/Next. */}
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "10px 16px",
+            background: "#fff",
+            borderTop: "1px solid #f0f0f0",
+            boxShadow: "0 -2px 8px rgba(0, 0, 0, 0.06)",
+            zIndex: 1000,
+          }}
+        >
+          <Button
+            icon={<LeftOutlined />}
+            disabled={atStart}
+            onClick={() => go(-1)}
+            style={{ flex: 1 }}
+          >
+            {t("common.actions.back", "Prev")}
+          </Button>
+          <Text
+            type="secondary"
+            style={{ fontSize: 13, minWidth: 56, textAlign: "center" }}
+          >
+            {positionLabel}
+          </Text>
+          <Button
+            disabled={atEnd}
+            onClick={() => go(1)}
+            style={{ flex: 1 }}
+          >
+            {t("common.actions.next", "Next")} <RightOutlined />
+          </Button>
+        </div>
       </div>
     );
   }
