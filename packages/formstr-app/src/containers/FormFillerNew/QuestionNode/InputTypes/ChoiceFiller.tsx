@@ -10,7 +10,7 @@ import {
 import { CheckboxGroupProps } from "antd/es/checkbox";
 import { CheckboxValueType } from "antd/es/checkbox/Group";
 import ChoiceFillerStyle from "./choiceFiller.style";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import SafeMarkdown from "../../../../components/SafeMarkdown";
 import { AnswerTypes, Option } from "../../../../nostr/types";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,7 @@ interface ChoiceFillerProps {
   options: Option[];
   onChange: (value: string, message: string) => void;
   defaultValue?: string;
+  defaultMessage?: string;
   disabled?: boolean;
   testId?: string;
 }
@@ -29,11 +30,16 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
   options,
   onChange,
   defaultValue,
+  defaultMessage,
   disabled = false,
   testId = "choice-filler",
 }) => {
   const { t } = useTranslation();
-  const [otherMessage, setOtherMessage] = useState("");
+  const [otherMessage, setOtherMessage] = useState(defaultMessage || "");
+
+  useEffect(() => {
+    setOtherMessage(defaultMessage || "");
+  }, [defaultMessage]);
 
   function handleChoiceChange(e: RadioChangeEvent): void;
 

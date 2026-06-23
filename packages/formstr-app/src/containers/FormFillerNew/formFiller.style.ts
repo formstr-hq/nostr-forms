@@ -4,7 +4,69 @@ export default styled.div<{
   $isPreview?: boolean;
   $bgImage?: string;
   $titleImageUrl?: string;
+  $readOnly?: boolean;
 }>`
+  ${({ $readOnly }) =>
+    $readOnly &&
+    `
+    /* Embedded read-only view: drop the full-page chrome so the form fits
+       inside a pane/modal instead of a full-viewport grey box. */
+    .filler-container {
+      min-height: auto;
+      background-color: transparent;
+    }
+    .form-filler {
+      width: 100%;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    /* Read-only response view: keep inputs non-interactive but legible,
+       not greyed-out like normal disabled controls. */
+    .ant-input-disabled,
+    .ant-input-number-disabled .ant-input-number-input,
+    .ant-input-number-disabled,
+    .ant-picker-disabled,
+    .ant-picker-disabled input,
+    .ant-select-disabled .ant-select-selection-item,
+    .ant-radio-disabled + span,
+    .ant-checkbox-disabled + span,
+    .ant-radio-wrapper-disabled,
+    .ant-checkbox-wrapper-disabled {
+      color: rgba(0, 0, 0, 0.88) !important;
+      cursor: default !important;
+    }
+
+    .ant-input-disabled,
+    .ant-input-number-disabled,
+    .ant-picker-disabled,
+    .ant-select-disabled .ant-select-selector {
+      background-color: #fafafa !important;
+      opacity: 1 !important;
+    }
+
+    /* Keep the chosen option's mark fully coloured, not faded.
+       Radio: white circle, orange ring + orange dot. */
+    .ant-radio-disabled.ant-radio-checked .ant-radio-inner {
+      background-color: #fff !important;
+      border-color: #ff5733 !important;
+      opacity: 1 !important;
+    }
+    .ant-radio-disabled.ant-radio-checked .ant-radio-inner::after {
+      background-color: #ff5733 !important;
+    }
+
+    /* Checkbox: solid orange box, white check. */
+    .ant-checkbox-disabled.ant-checkbox-checked .ant-checkbox-inner {
+      background-color: #ff5733 !important;
+      border-color: #ff5733 !important;
+      opacity: 1 !important;
+    }
+    .ant-checkbox-disabled.ant-checkbox-checked .ant-checkbox-inner::after {
+      border-color: #fff !important;
+    }
+  `}
+
   .form-filler {
     position: relative;
     background-color: transparent;

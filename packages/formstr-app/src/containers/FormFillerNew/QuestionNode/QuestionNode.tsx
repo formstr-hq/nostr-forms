@@ -46,7 +46,6 @@ export const QuestionNode: React.FC<QuestionProps> = ({
       return inputHandler(questionId, answer, message);
     };
   };
-  console.log("options", options, fieldConfig);
 
   return (
     <Card
@@ -71,6 +70,7 @@ export const QuestionNode: React.FC<QuestionProps> = ({
         onChange={answerHandler(fieldId)}
         disabled={disabled}
         defaultValue={value ? value[0] : undefined}
+        defaultMessage={value ? value[1] : undefined}
         testId={`${testId}:input`}
         gridOptions={gridOptions}
         formAuthorPubkey={formAuthorPubkey}

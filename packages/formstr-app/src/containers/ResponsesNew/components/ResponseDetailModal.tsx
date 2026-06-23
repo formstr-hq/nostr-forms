@@ -109,6 +109,7 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
           form={form}
           onInput={() => {}}
           disabled={true}
+          readOnly={true}
           initialValues={buildInitialValues(processedInputs)}
           formstrBranding={formstrBranding}
           formAuthorPubkey={editKey ? getPublicKey(hexToBytes(editKey)) : undefined}

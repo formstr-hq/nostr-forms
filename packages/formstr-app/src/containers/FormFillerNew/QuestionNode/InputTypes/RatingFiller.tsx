@@ -17,7 +17,9 @@ export const RatingFiller: React.FC<RatingFillerProps> = ({
   const touchTimer = useRef<number | null>(null);
   const touchUnlocked = useRef(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const clampedMax = Math.max(3, Math.min(maxStars, 10));
+  // When interacting we keep a sensible minimum of 3 stars, but when simply
+  // displaying a submitted rating we honour the form's actual maxStars.
+  const clampedMax = Math.max(disabled ? 1 : 3, Math.min(maxStars, 10));
   const minValue = 0.5;
 
   const normalizeStoredRating = (value: string): number => {
@@ -177,9 +179,13 @@ export const RatingFiller: React.FC<RatingFillerProps> = ({
           );
         })}
       </div>
-      <div style={{ marginTop: 6, fontSize: 12, color: "#6b6b6b" }}>Hold to rate</div>
+      {!disabled && (
+        <div style={{ marginTop: 6, fontSize: 12, color: "#6b6b6b" }}>Hold to rate</div>
+      )}
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-        <span style={{ minWidth: 52, textAlign: "right", fontSize: 12 }}>{value.toFixed(1)}</span>
+        <span style={{ minWidth: 52, textAlign: "left", fontSize: 12 }}>
+          {value.toFixed(1)} / {clampedMax}
+        </span>
       </div>
     </div>
   );

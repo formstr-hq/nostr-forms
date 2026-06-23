@@ -92,6 +92,10 @@ export const customPublish = (
   relays: string[],
   event: Event,
   onAcceptedRelays?: (relay: string) => void,
+  // When publishing on behalf of an anonymous responder we hold an ephemeral
+  // secret key. Use it to answer a relay's AUTH challenge instead of prompting
+  // the user to log in (a form-filler must never see a login modal).
+  authSecretKey?: Uint8Array | null,
 ): Promise<string>[] => {
   return relays.map(normalizeURL).map(async (url, i, arr) => {
     if (arr.indexOf(url) !== i) {
@@ -122,8 +126,20 @@ export const customPublish = (
 
         // Relay rejected — wait briefly for the AUTH challenge frame to arrive.
         await new Promise((r) => setTimeout(r, 200));
-        const signer = await signerManager.getSigner();
-        await relay.auth((ev) => signer.signEvent(ev) as Promise<VerifiedEvent>);
+        if (authSecretKey) {
+          // Anonymous responder: sign the AUTH event with the ephemeral key.
+          await relay.auth(
+            (ev) => Promise.resolve(finalizeEvent(ev, authSecretKey)),
+          );
+        } else {
+          // Logged-in flows: use the existing signer if there is one, but
+          // never pop a login modal just to satisfy a relay AUTH.
+          const signer = signerManager.getSignerIfAvailable();
+          if (!signer) throw err;
+          await relay.auth(
+            (ev) => signer.signEvent(ev) as Promise<VerifiedEvent>,
+          );
+        }
 
         const reason = await tryPublish();
         onAcceptedRelays?.(url);
@@ -322,7 +338,7 @@ export const sendResponses = async (
     relayList = defaultRelays;
   }
   const messages = await Promise.allSettled(
-    customPublish(relayList, fullEvent!, onAcceptedRelays),
+    customPublish(relayList, fullEvent!, onAcceptedRelays, responderSecretKey),
   );
   console.log("Message from relays", messages);
 };
