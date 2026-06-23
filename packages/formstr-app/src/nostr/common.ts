@@ -46,7 +46,7 @@ export const getDefaultRelays = () => {
   return defaultRelays;
 };
 
-function toHexNpub(npubOrHex: string): string {
+export function toHexNpub(npubOrHex: string): string {
   try {
     // Attempt to decode npub
     const decoded = nip19.decode(npubOrHex);

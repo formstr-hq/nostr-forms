@@ -19,7 +19,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { pool } from "../../../../../pool";
-import { getDefaultRelays } from "../../../../../nostr/common";
+import { getDefaultRelays, toHexNpub } from "../../../../../nostr/common";
 
 interface NpubListProps {
   NpubList: Set<string> | null;
@@ -40,13 +40,17 @@ const NpubListItem: FC<{
   const { t } = useTranslation();
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
 
+  // Old forms stored npub (bech32) strings while new forms store hex.
+  // Normalize to hex so profile lookups and encoding work for both.
+  const hexPubkey = toHexNpub(pubkey);
+
   useEffect(() => {
     const getProfile = async () => {
       const relays = getDefaultRelays();
       try {
         const profileEvent = await pool.get(relays, {
           kinds: [0],
-          authors: [pubkey],
+          authors: [hexPubkey],
           limit: 1,
         });
         if (profileEvent) {
@@ -57,12 +61,12 @@ const NpubListItem: FC<{
       }
     };
 
-    if (pubkey) {
+    if (hexPubkey) {
       getProfile();
     }
-  }, [pubkey]);
+  }, [hexPubkey]);
 
-  const npub = nip19.npubEncode(pubkey);
+  const npub = nip19.npubEncode(hexPubkey);
   const shortNpub = `${npub.substring(0, 10)}...${npub.substring(
     npub.length - 5,
   )}`;
