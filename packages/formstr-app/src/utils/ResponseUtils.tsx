@@ -48,6 +48,29 @@ export const getInputsFromResponseEvent = (
   }
 };
 
+/**
+ * Maps a respondent's "response" tags into the value shape the FormRenderer's
+ * Form expects: `{ [fieldId]: [answer, message] }`, where `message` is the
+ * optional "Other"/free-text note stored in the response metadata.
+ */
+export const buildResponseFormValues = (
+  inputs: Tag[]
+): Record<string, [string, string]> => {
+  const values: Record<string, [string, string]> = {};
+  if (!inputs) return values;
+  for (const tag of inputs) {
+    if (Array.isArray(tag) && tag[0] === "response") {
+      const [, fieldId, answer, metadata] = tag;
+      let message = "";
+      try {
+        message = JSON.parse(metadata || "{}").message || "";
+      } catch {}
+      values[fieldId] = [answer, message];
+    }
+  }
+  return values;
+};
+
 export interface DisplayableAnswerDetail {
   questionLabel: string;
   responseLabel: string;

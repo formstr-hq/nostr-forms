@@ -6,7 +6,10 @@ import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import { Tag } from "../../../nostr/types";
 import { FormRenderer } from "../../FormFillerNew/FormRenderer";
-import { getInputsFromResponseEvent } from "../../../utils/ResponseUtils";
+import {
+  getInputsFromResponseEvent,
+  buildResponseFormValues,
+} from "../../../utils/ResponseUtils";
 import { formatLocalizedDateTime } from "../../../i18n/format";
 import { isMobile } from "../../../utils/utility";
 
@@ -26,22 +29,6 @@ interface ResponseNavigatorProps {
   editKey?: string | null;
   formstrBranding?: boolean;
 }
-
-const buildInitialValues = (inputs: Tag[]): Record<string, any> => {
-  const values: Record<string, any> = {};
-  if (!inputs) return values;
-  for (const tag of inputs) {
-    if (Array.isArray(tag) && tag[0] === "response") {
-      const [, fieldId, answer, metadata] = tag;
-      let message = "";
-      try {
-        message = JSON.parse(metadata || "{}").message || "";
-      } catch {}
-      values[fieldId] = [answer, message];
-    }
-  }
-  return values;
-};
 
 const shortNpub = (npub: string) =>
   `${npub.substring(0, 10)}…${npub.substring(npub.length - 5)}`;
@@ -94,7 +81,7 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
   useEffect(() => {
     if (!selected) return;
     form.resetFields();
-    form.setFieldsValue(buildInitialValues(selected.processedInputs));
+    form.setFieldsValue(buildResponseFormValues(selected.processedInputs));
   }, [selectedIndex, selected, form]);
 
   const go = (delta: number) =>
@@ -212,7 +199,7 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
         disabled={true}
         readOnly={true}
         hideTitleImage={true}
-        initialValues={buildInitialValues(selected.processedInputs)}
+        initialValues={buildResponseFormValues(selected.processedInputs)}
         formstrBranding={formstrBranding}
         formAuthorPubkey={formAuthorPubkey}
         formEditKey={editKey || undefined}
