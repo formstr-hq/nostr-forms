@@ -28,10 +28,11 @@ function PublicForms() {
     }, 10000);
 
     setIsLoading(true);
-    getPublicForms(getDefaultRelays(), handleFormEvent);
+    const subCloser = getPublicForms(getDefaultRelays(), handleFormEvent);
 
     return () => {
       clearTimeout(loadingTimeout);
+      subCloser.close();
     };
   }, []);
 
