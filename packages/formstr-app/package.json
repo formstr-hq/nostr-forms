@@ -5,6 +5,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
     "@babel/core": "^7.16.0",
+    "@formstr/support-us-button": "*",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
     "@svgr/webpack": "^5.5.0",
     "@testing-library/jest-dom": "^5.17.0",
@@ -40,8 +41,8 @@
     "html-inline-css-webpack-plugin": "^1.11.2",
     "html-inline-script-webpack-plugin": "^3.2.1",
     "html-webpack-plugin": "^5.5.0",
-    "identity-obj-proxy": "^3.0.0",
     "i18next": "^25.6.0",
+    "identity-obj-proxy": "^3.0.0",
     "jest": "^27.4.3",
     "jest-resolve": "^27.4.2",
     "jest-watch-typeahead": "^1.0.0",
@@ -80,8 +81,7 @@
     "webpack-dev-server": "^4.6.0",
     "webpack-manifest-plugin": "^4.0.2",
     "workbox-webpack-plugin": "^6.4.1",
-    "xlsx": "^0.18.5",
-    "@formstr/support-us-button": "*"
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "predeploy": "npm run build",
@@ -89,6 +89,8 @@
     "start": "node scripts/start.js",
     "build": "node scripts/build.js && cp -r \".well-known\" build/ && cp _config.yml build/ && cp .nojekyll build/",
     "test": "node scripts/test.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix"
   },
@@ -100,6 +102,7 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "7.21.11",
+    "@playwright/test": "^1.61.1",
     "@tsconfig/create-react-app": "^2.0.1",
     "@types/styled-components": "^5.1.34",
     "gh-pages": "^6.0.0",
