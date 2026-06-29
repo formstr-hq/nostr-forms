@@ -44,6 +44,16 @@ const defaultRelays = [
 ];
 
 export const getDefaultRelays = () => {
+  // Allow overriding the relay set at build time (e.g. point e2e tests at a
+  // local relay). Unset in production, so the hardcoded list is used.
+  const override = process.env.REACT_APP_DEFAULT_RELAYS;
+  if (override) {
+    const relays = override
+      .split(",")
+      .map((url) => url.trim())
+      .filter(Boolean);
+    if (relays.length) return relays;
+  }
   return defaultRelays;
 };
 
