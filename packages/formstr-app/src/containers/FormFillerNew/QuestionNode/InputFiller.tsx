@@ -10,6 +10,7 @@ import { DateTimeFiller } from "./InputTypes/DateTimeFiller";
 import { GridFiller } from "./InputTypes/GridFiller";
 import { FileUploadFiller } from "./InputTypes/FileUploadFiller";
 import { AnswerTypes, GridOptions, Option } from "../../../nostr/types";
+import { RatingFiller } from "./InputTypes/RatingFiller";
 import { useTranslation } from "react-i18next";
 
 interface InputFillerProps {
@@ -17,6 +18,7 @@ interface InputFillerProps {
   options: Option[];
   onChange: (answer: string, message?: string) => void;
   defaultValue?: string | number | boolean;
+  defaultMessage?: string;
   disabled?: boolean;
   testId?: string;
   gridOptions?: GridOptions | null;
@@ -31,6 +33,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
   options,
   onChange,
   defaultValue,
+  defaultMessage,
   disabled = false,
   testId = "input-filler",
   gridOptions,
@@ -86,6 +89,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
           answerType={answerType as AnswerTypes.radioButton}
           options={options}
           defaultValue={defaultValue as string}
+          defaultMessage={defaultMessage}
           onChange={handleValueChange}
           disabled={disabled}
           testId={`${testId}:radio`}
@@ -94,6 +98,7 @@ export const InputFiller: React.FC<InputFillerProps> = ({
       [AnswerTypes.checkboxes]: (
         <ChoiceFiller
           defaultValue={defaultValue as string}
+          defaultMessage={defaultMessage}
           answerType={answerType as AnswerTypes.checkboxes}
           options={options}
           onChange={handleValueChange}
@@ -173,6 +178,14 @@ export const InputFiller: React.FC<InputFillerProps> = ({
           onChange={handleValueChange}
           defaultValue={defaultValue as string}
           disabled={disabled}
+        />
+      ),
+      [AnswerTypes.rating]: (
+        <RatingFiller
+          defaultValue={defaultValue as string}
+          disabled={disabled}
+          onChange={handleValueChange}
+          maxStars={fieldConfig.maxStars || 5}
         />
       ),
     };

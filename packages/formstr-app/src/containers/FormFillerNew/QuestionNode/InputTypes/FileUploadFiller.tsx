@@ -229,14 +229,8 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       const encryptedBytes = await client.download(uploadedMetadata.sha256, authHeader);
       setCurrentStep(2);
 
-      console.log('Downloaded bytes length:', encryptedBytes.length);
-      console.log('Downloaded bytes preview:', encryptedBytes.slice(0, 20));
-
       // Step 2: Convert bytes to ciphertext string & decrypt
       const ciphertext = new TextDecoder().decode(encryptedBytes);
-
-      console.log('Ciphertext length:', ciphertext.length);
-      console.log('Ciphertext preview:', ciphertext.substring(0, 50));
 
       // Decrypt file using form editKey + uploader's pubkey (from response event)
       const decryptedBytes = await decryptFileFromUploader(

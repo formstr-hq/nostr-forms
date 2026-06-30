@@ -95,4 +95,5 @@ export const ANSWER_TYPE_RULES_MENU: ANSWER_TYPE_RULES_MENU_TYPE = {
   [AnswerTypes.multipleChoiceGrid]: [],
   [AnswerTypes.checkboxGrid]: [],
   [AnswerTypes.fileUpload]: [],
+  [AnswerTypes.rating]: [],
 };

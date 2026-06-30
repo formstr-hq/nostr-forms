@@ -8,6 +8,11 @@ node_modules/
 # testing
 coverage
 
+# playwright e2e
+test-results/
+playwright-report/
+playwright/.cache/
+
 # production
 build/
 static/

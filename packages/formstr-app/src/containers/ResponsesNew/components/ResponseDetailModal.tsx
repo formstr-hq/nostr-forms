@@ -4,6 +4,7 @@ import { Event, nip19, getPublicKey } from "nostr-tools";
 import { hexToBytes } from "nostr-tools/utils";
 import { Tag } from "../../../nostr/types";
 import { FormRenderer } from "../../FormFillerNew/FormRenderer";
+import { buildResponseFormValues } from "../../../utils/ResponseUtils";
 import { useTranslation } from "react-i18next";
 
 const { Text } = Typography;
@@ -38,22 +39,6 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
   }>({});
   const [form] = Form.useForm();
 
-  const buildInitialValues = (inputs: Tag[]) => {
-    const values: Record<string, any> = {};
-    if (!inputs) return values;
-    for (const tag of inputs) {
-      if (Array.isArray(tag) && tag[0] === "response") {
-        const [, fieldId, answer, metadata] = tag;
-        let message = "";
-        try {
-          message = JSON.parse(metadata || "{}").message || "";
-        } catch {}
-        values[fieldId] = [answer, message];
-      }
-    }
-    return values;
-  };
-
   useEffect(() => {
     if (isVisible && responseMetadataEvent) {
       const authorNpub = nip19.npubEncode(responseMetadataEvent.pubkey);
@@ -62,7 +47,7 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
       ).toLocaleString();
       setMetaData({ author: authorNpub, timestamp });
       if (processedInputs && processedInputs.length > 0) {
-        form.setFieldsValue(buildInitialValues(processedInputs));
+        form.setFieldsValue(buildResponseFormValues(processedInputs));
       } else {
         form.resetFields();
       }
@@ -109,7 +94,8 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
           form={form}
           onInput={() => {}}
           disabled={true}
-          initialValues={buildInitialValues(processedInputs)}
+          readOnly={true}
+          initialValues={buildResponseFormValues(processedInputs)}
           formstrBranding={formstrBranding}
           formAuthorPubkey={editKey ? getPublicKey(hexToBytes(editKey)) : undefined}
           formEditKey={editKey || undefined}

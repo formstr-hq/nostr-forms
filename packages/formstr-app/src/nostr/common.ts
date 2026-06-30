@@ -8,6 +8,7 @@ import {
   getEventHash,
   getPublicKey,
   nip04,
+  nip17,
   nip19,
   nip44,
   Relay,
@@ -43,10 +44,20 @@ const defaultRelays = [
 ];
 
 export const getDefaultRelays = () => {
+  // Allow overriding the relay set at build time (e.g. point e2e tests at a
+  // local relay). Unset in production, so the hardcoded list is used.
+  const override = process.env.REACT_APP_DEFAULT_RELAYS;
+  if (override) {
+    const relays = override
+      .split(",")
+      .map((url) => url.trim())
+      .filter(Boolean);
+    if (relays.length) return relays;
+  }
   return defaultRelays;
 };
 
-function toHexNpub(npubOrHex: string): string {
+export function toHexNpub(npubOrHex: string): string {
   try {
     // Attempt to decode npub
     const decoded = nip19.decode(npubOrHex);
@@ -92,6 +103,10 @@ export const customPublish = (
   relays: string[],
   event: Event,
   onAcceptedRelays?: (relay: string) => void,
+  // When publishing on behalf of an anonymous responder we hold an ephemeral
+  // secret key. Use it to answer a relay's AUTH challenge instead of prompting
+  // the user to log in (a form-filler must never see a login modal).
+  authSecretKey?: Uint8Array | null,
 ): Promise<string>[] => {
   return relays.map(normalizeURL).map(async (url, i, arr) => {
     if (arr.indexOf(url) !== i) {
@@ -122,8 +137,20 @@ export const customPublish = (
 
         // Relay rejected — wait briefly for the AUTH challenge frame to arrive.
         await new Promise((r) => setTimeout(r, 200));
-        const signer = await signerManager.getSigner();
-        await relay.auth((ev) => signer.signEvent(ev) as Promise<VerifiedEvent>);
+        if (authSecretKey) {
+          // Anonymous responder: sign the AUTH event with the ephemeral key.
+          await relay.auth(
+            (ev) => Promise.resolve(finalizeEvent(ev, authSecretKey)),
+          );
+        } else {
+          // Logged-in flows: use the existing signer if there is one, but
+          // never pop a login modal just to satisfy a relay AUTH.
+          const signer = signerManager.getSignerIfAvailable();
+          if (!signer) throw err;
+          await relay.auth(
+            (ev) => signer.signEvent(ev) as Promise<VerifiedEvent>,
+          );
+        }
 
         const reason = await tryPublish();
         onAcceptedRelays?.(url);
@@ -169,6 +196,25 @@ const getDisplayAnswer = (answer: string | number | boolean, field: Field) => {
   );
 };
 
+// NIP-17 DM relay list (kind 10050). Returns the recipient's preferred relays
+// for receiving private messages, or an empty list if they haven't published one.
+// Bounded by maxWait so a slow/unreachable relay can't stall notifications.
+const fetchDmRelays = async (hexPubkey: string): Promise<string[]> => {
+  try {
+    const event = await pool.get(
+      defaultRelays,
+      { kinds: [10050], authors: [hexPubkey] },
+      { maxWait: 4000 },
+    );
+    if (!event) return [];
+    return event.tags
+      .filter((t) => t[0] === "relay" && typeof t[1] === "string")
+      .map((t) => t[1]);
+  } catch {
+    return [];
+  }
+};
+
 export const sendNotification = async (
   form: Tag[],
   response: Array<Response>,
@@ -193,8 +239,8 @@ export const sendNotification = async (
   message += "Visit https://formstr.app to view the responses.";
   const newSk = generateSecretKey();
   const newPk = getPublicKey(newSk);
-  settings.notifyNpubs?.forEach(async (npub) => {
-    const hexNpub = toHexNpub(npub);
+
+  const sendNip04 = async (hexNpub: string) => {
     const encryptedMessage = await nip04.encrypt(newSk, hexNpub, message);
     const baseKind4Event: Event = {
       kind: 4,
@@ -207,7 +253,33 @@ export const sendNotification = async (
     };
     const kind4Event = finalizeEvent(baseKind4Event, newSk);
     pool.publish(defaultRelays, kind4Event);
-  });
+  };
+
+  // Notify each recipient. Prefer NIP-17 gift-wrapped DMs for those who have
+  // published a DM relay list (kind 10050); fall back to NIP-04 otherwise.
+  // This runs detached from form submission, so the extra relay lookups never
+  // block the submit flow.
+  await Promise.allSettled(
+    (settings.notifyNpubs ?? []).map(async (npub) => {
+      const hexNpub = toHexNpub(npub);
+      const dmRelays = await fetchDmRelays(hexNpub);
+      if (dmRelays.length > 0) {
+        try {
+          const giftWrap = nip17.wrapEvent(
+            newSk,
+            { publicKey: hexNpub },
+            message,
+            name,
+          );
+          pool.publish(dmRelays, giftWrap);
+          return;
+        } catch (err) {
+          console.error("NIP-17 notification failed, falling back to NIP-04", err);
+        }
+      }
+      await sendNip04(hexNpub);
+    }),
+  );
 };
 
 export const sendNRPCWebhook = async (
@@ -322,7 +394,7 @@ export const sendResponses = async (
     relayList = defaultRelays;
   }
   const messages = await Promise.allSettled(
-    customPublish(relayList, fullEvent!, onAcceptedRelays),
+    customPublish(relayList, fullEvent!, onAcceptedRelays, responderSecretKey),
   );
   console.log("Message from relays", messages);
 };

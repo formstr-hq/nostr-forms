@@ -21,6 +21,7 @@ import {
   FieldTimeOutlined,
   MailOutlined,
   CloudUploadOutlined,
+  StarOutlined,
 } from "@ant-design/icons";
 
 export const getBasicMenu = (t: TFunction) => [
@@ -165,6 +166,15 @@ export const getInputsMenu = (t: TFunction) => [
     answerSettings: {
       renderElement: AnswerTypes.checkboxGrid,
       allowMultiplePerRow: true,
+    },
+  },
+  {
+    key: INPUTS_TYPES.RATING,
+    label: t("builder.menus.rating"),
+    icon: <StarOutlined style={{ color: "#FFD700" }} />,
+    primitive: "rating",
+    answerSettings: {
+      renderElement: AnswerTypes.rating,
     },
   },
 ];

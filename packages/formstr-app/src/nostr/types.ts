@@ -58,6 +58,7 @@ export enum AnswerTypes {
   multipleChoiceGrid = "multipleChoiceGrid",
   checkboxGrid = "checkboxGrid",
   fileUpload = "fileUpload",
+  rating = "rating",
 }
 
 export interface FormSpec {
@@ -155,6 +156,7 @@ export interface AnswerSettings {
   choices?: Array<Choice>;
   numberConstraints?: NumberConstraint;
   required?: boolean;
+  maxStars?: number;
   validationRules?: {
     [ValidationRuleTypes.range]?: RangeRule;
     [ValidationRuleTypes.max]?: MaxRule;

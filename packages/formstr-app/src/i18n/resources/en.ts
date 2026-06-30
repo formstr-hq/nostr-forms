@@ -499,6 +499,22 @@ const resources = {
     noRelaysAccepted:
       "No relays accepted the form. Please check your relay configuration and try again.",
   },
+  broadcast: {
+    title: "Relay coverage",
+    checking: "Checking relays…",
+    foundOnRelays: "Found on {{found}} of {{total}} relays",
+    recheck: "Re-check",
+    rebroadcast: "Re-broadcast to all",
+    broadcastMissing_one: "Broadcast to {{count}} missing relay",
+    broadcastMissing_other: "Broadcast to {{count}} missing relays",
+    statusFound: "Found",
+    statusNotFound: "Not found",
+    statusChecking: "Checking…",
+    statusError: "Unreachable",
+    addRelayTitle: "Add a custom relay",
+    addRelay: "Add",
+    addRelayError: "Enter a valid relay URL (wss://…) that isn't already listed.",
+  },
   drafts: {
     invalid: "Invalid draft",
     redirecting: "Taking you to your draft...",
@@ -554,6 +570,7 @@ const resources = {
       multipleChoiceGrid: "Multiple choice grid",
       dateOfBirth: "Date of birth",
       email: "Email",
+      rating: "Rating",
     },
     defaults: {
       sectionTitle: "Section {{number}}",

@@ -10,6 +10,7 @@ import { IAnswerSettings } from "./types";
 import { AnswerTypes, Field } from "../../../../nostr/types";
 import { SignatureSettings } from "./settings/SignatureSettings";
 import { FileUploadSettings } from "./settings/FileUploadSettings";
+import { RatingSettings } from "./settings/RatingSettings";
 
 const { Text } = Typography;
 
@@ -63,6 +64,13 @@ function AnswerSettings() {
       case AnswerTypes.fileUpload:
         return (
           <FileUploadSettings
+            answerSettings={answerSettings}
+            handleAnswerSettings={handleAnswerSettings}
+          />
+        );
+      case AnswerTypes.rating:
+        return (
+          <RatingSettings
             answerSettings={answerSettings}
             handleAnswerSettings={handleAnswerSettings}
           />

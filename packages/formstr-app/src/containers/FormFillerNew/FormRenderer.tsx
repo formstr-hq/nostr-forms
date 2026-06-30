@@ -37,6 +37,11 @@ interface FormRendererProps {
   hideTitleImage?: boolean;
   hideDescription?: boolean;
   disabled?: boolean;
+  /**
+   * Renders a submitted form for viewing: keeps inputs non-interactive (implies
+   * `disabled`) but styles them as plain text instead of greyed-out controls.
+   */
+  readOnly?: boolean;
   initialValues?: Record<string, any>;
   isPreview?: boolean;
   formstrBranding?: boolean;
@@ -68,6 +73,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   hideTitleImage,
   hideDescription,
   disabled = false,
+  readOnly = false,
   initialValues,
   formstrBranding,
   isPreview = false,
@@ -227,6 +233,38 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     </div>
   );
 
+  // Read-only view: render every section/question at once (no stepper), so a
+  // submitted response can be read in full without clicking through steps.
+  const renderReadOnlyForm = () => (
+    <div>
+      {contentItems.map((item) => (
+        <div key={item.id}>
+          {enableSections && (
+            <Card style={{ marginBottom: 16 }}>
+              <Title level={5}>{item.title}</Title>
+              {item.description && (
+                <Text type="secondary">
+                  <SafeMarkdown>{item.description}</SafeMarkdown>
+                </Text>
+              )}
+            </Card>
+          )}
+          <FormFields
+            fields={item.fields}
+            handleInput={onInput}
+            disabled={disabled || readOnly}
+            values={initialValues}
+            formSettings={settings}
+            formAuthorPubkey={formAuthorPubkey}
+            formEditKey={formEditKey}
+            responderSecretKey={responderSecretKey}
+            uploaderPubkey={uploaderPubkey}
+          />
+        </div>
+      ))}
+    </div>
+  );
+
   const renderSteppedForm = () => (
     <div>
       {showStepper && (
@@ -299,7 +337,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
           <FormFields
             fields={currentItem.fields}
             handleInput={onInput}
-            disabled={disabled}
+            disabled={disabled || readOnly}
             values={initialValues}
             formSettings={settings}
             formAuthorPubkey={formAuthorPubkey}
@@ -354,6 +392,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     <FillerStyle
       $bgImage={settings.backgroundImageUrl}
       $titleImageUrl={settings.titleImageUrl}
+      $readOnly={readOnly}
     >
       <div className="filler-container">
         <div className="form-filler">
@@ -374,7 +413,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
           )}
 
           <Form form={form} onFinish={() => {}} className="with-description">
-            {renderSteppedForm()}
+            {readOnly ? renderReadOnlyForm() : renderSteppedForm()}
           </Form>
         </div>
 
