@@ -16,7 +16,6 @@
     "@types/react": "^18.2.23",
     "@types/react-color": "^3.0.13",
     "@types/react-dom": "^18.2.8",
-    "@wllama/wllama": "^3.4.1",
     "antd": "^5.11.2",
     "axios": "^1.11.0",
     "babel-jest": "^27.4.2",
@@ -82,7 +81,7 @@
     "webpack": "^5.64.4",
     "webpack-dev-server": "^4.6.0",
     "webpack-manifest-plugin": "^4.0.2",
-    "wllama-service": "^1.0.1",
+    "wllama-service": "^2.0.4",
     "workbox-webpack-plugin": "^6.4.1",
     "xlsx": "^0.18.5"
   },

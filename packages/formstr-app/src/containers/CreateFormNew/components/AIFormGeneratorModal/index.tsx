@@ -13,71 +13,31 @@ import { wllamaService } from '../../../../services/webLLM/wllamaService';
 import './styles.css';
 import { useTranslation } from 'react-i18next';
 
-const FORM_GENERATION_SYSTEM_PROMPT = `You are an expert JSON generator. Based on the user's request, create a form structure.
-Here is the required JSON schema for the form:
-{
-    "type": "object",
-    "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "fields": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "type": { "type": "string", "enum": ["ShortText", "LongText", "Email", "Number", "MultipleChoice", "SingleChoice", "Checkbox", "Dropdown", "Date", "Time", "Label"] },
-                    "label": { "type": "string" },
-                    "required": { "type": "boolean" },
-                    "options": { "type": "array", "items": { "type": "string" } }
-                },
-                "required": ["type", "label"]
-            }
-        }
-    },
-    "required": ["title", "fields"]
-}
-CRITICAL RULES:
-- Your response MUST be ONLY the JSON object that validates against the schema above.
-- Start with { and end with }
-- Ensure all strings are properly quoted and all braces/brackets are balanced.
-- Do NOT include any extra text, explanations, comments or markdown formatting like \`\`\`json.
+const FORM_GENERATION_SYSTEM_PROMPT = `You are a JSON generator. Output ONLY raw JSON, nothing else.
+No markdown, no code fences, no backticks, no explanation.
+Your entire response must start with { and end with }.
 
-For Example for output with one field:
-"{
-  "title": "Appropriate Form Title",
-  "description": "Appropriate Form Description",
+Required JSON structure:
+{
+  "title": "string",
+  "description": "string",
   "fields": [
     {
-      "type": "ShortText",
-      "label": "Name",
-      "required": true
+      "type": "ShortText|LongText|Email|Number|MultipleChoice|SingleChoice|Checkbox|Dropdown|Date|Time|Label",
+      "label": "string",
+      "required": true|false,
+      "options": ["only for MultipleChoice/SingleChoice/Dropdown"]
     }
   ]
-}"
-`;
-// const FORM_GENERATION_SYSTEM_PROMPT = `You are a JSON generator. Output ONLY raw JSON, nothing else.
-// No markdown, no code fences, no backticks, no explanation.
-// Your entire response must start with { and end with }.
+}
 
-// Required JSON structure:
-// {
-//   "title": "string",
-//   "description": "string",
-//   "fields": [
-//     {
-//       "type": "ShortText|LongText|Email|Number|MultipleChoice|SingleChoice|Checkbox|Dropdown|Date|Time|Label",
-//       "label": "string",
-//       "required": true|false,
-//       "options": ["only for MultipleChoice/SingleChoice/Dropdown"]
-//     }
-//   ]
-// }
+RULES:
+- Start with { immediately, no preamble
+- End with } immediately, no postamble  
+- No \`\`\`json or \`\`\` anywhere
+- No comments`;
 
-// RULES:
-// - Start with { immediately, no preamble
-// - End with } immediately, no postamble  
-// - No \`\`\`json or \`\`\` anywhere
-// - No comments`;
+
 type AnyConfig = OllamaConfig | { modelName: string; [key: string]: any };
 type AnyModel = { name: string; [key: string]: any };
 

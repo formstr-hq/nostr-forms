@@ -3,8 +3,7 @@ const path = require('path');
 
 // Try multiple locations — monorepo hoists to root, standalone installs locally
 const possibleSrc = [
-  path.resolve(__dirname, '../../../node_modules/@wllama/wllama/esm/wasm/wllama.wasm'), // monorepo root
-  path.resolve(__dirname, '../node_modules/@wllama/wllama/esm/wasm/wllama.wasm'),       // local
+  path.resolve(__dirname, '../../../node_modules/@wllama/wllama/esm/wasm/wllama.wasm'),
 ];
 
 const dest = path.resolve(__dirname, '../public/wllama/wllama.wasm');

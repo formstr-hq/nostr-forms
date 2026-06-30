@@ -3297,10 +3297,10 @@
     "@webassemblyjs/ast" "1.11.6"
     "@xtuc/long" "4.2.2"
 
-"@wllama/wllama@^3.4.1":
-  version "3.4.1"
-  resolved "https://registry.yarnpkg.com/@wllama/wllama/-/wllama-3.4.1.tgz#36b5462eb7dc5dc396e43289ac0e7164fe3ebf90"
-  integrity sha512-izq3CLVsIIpFoi4lI5/yvpM1tbzTBnDU8WuVi6I1q1oQgImSXSGF8eZo8WwDNBgbmhVJpcPGyw8cg24jKk0sbg==
+"@wllama/wllama@^3.5.1":
+  version "3.5.1"
+  resolved "https://registry.yarnpkg.com/@wllama/wllama/-/wllama-3.5.1.tgz#81dc2a290b42d6d04b7c9ad577ccbd1ce74bab47"
+  integrity sha512-m5L0KKtmUTKz5lGvVVa/Y3qRtoobu80Jne51U0CSR6O930aOUURzhMEAolNsN4v0kfQ9u58wi2IdpUicLfaXUw==
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
@@ -12837,15 +12837,12 @@ which@^2.0.1:
   dependencies:
     isexe "^2.0.0"
 
-wllama-service@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/wllama-service/-/wllama-service-1.0.0.tgz#7779d1058503a44b62a46a2de3c9fa93c5b5d185"
-  integrity sha512-RNX0DJi6CAodiBBP52qCy6bX09aBBXJVKpQxfIkabVp4mYefprauEEB6YvgYfy5Bzv+GfbZ1xB+T4hDXqW1JBA==
-
-wllama-service@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/wllama-service/-/wllama-service-1.0.1.tgz#d2ab15835d1f1521a56769211885de6008ee661f"
-  integrity sha512-47Y2UuMRa7JSHR2vBj+YLwiyw/agHaLJs/tvf1sfWVIrRHns1JjrMYQc0arA2Sj1s2KKqRXu3OohL3mlx4asYw==
+wllama-service@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/wllama-service/-/wllama-service-2.0.4.tgz#45243aea59e4aaba99f417685393cbbafb14d2c1"
+  integrity sha512-ZHA1p+6gvBIjn2c4v14M1ITLiQECnu6Jvsad68mO4FAVeIulIVCdU3tzyi5v5sj4tzqlsxQqKwGYhZ6oTcp9pA==
+  dependencies:
+    "@wllama/wllama" "^3.5.1"
 
 wmf@~1.0.1:
   version "1.0.2"

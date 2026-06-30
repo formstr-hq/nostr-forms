@@ -14,7 +14,6 @@
     "prettier": "^3.0.3"
   },
   "dependencies": {
-    "@wllama/wllama": "^3.4.1",
-    "wllama-service": "^1.0.0"
+    "wllama-service": "^2.0.4"
   }
 }
