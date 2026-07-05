@@ -256,6 +256,7 @@ const resources = {
     localEmpty:
       "No forms found on this device. Start by choosing a template:",
     sharedEmpty: "No forms shared with you.",
+    myFormsEmpty: "No forms saved to your account yet.",
     encryptedFormsTitle: "Encrypted forms on this device",
     encryptedFormsDescription:
       "You have encrypted forms stored on this device. Login to access them.",
