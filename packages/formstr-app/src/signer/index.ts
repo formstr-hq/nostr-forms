@@ -34,6 +34,7 @@ class Signer {
   private signer: NostrSigner | null = null;
   private onChangeCallbacks: Set<() => void> = new Set();
   private loginModalCallback: (() => Promise<void>) | null = null;
+  private loginWait: Promise<void> | null = null;
 
   constructor() {
     this.restoreFromStorage();
@@ -142,9 +143,20 @@ class Signer {
     if (this.signer) return this.signer;
 
     if (this.loginModalCallback) {
-      console.log("GOING TO CALL LOGINMODALCALLBACK");
-      await this.loginModalCallback();
-      console.log("AFTER CALLING loginModal Callback", this.signer);
+      // Single-flight the modal wait. Concurrent getSigner() calls (e.g. the
+      // LocalForms and MyForms providers both loading at mount while the
+      // signer is still locked) used to invoke loginModalCallback() twice;
+      // the second invocation overwrote the first one's resolve/reject
+      // handlers in ProfileProvider, so the first caller's promise could
+      // never settle — its loader then held a "refreshing" flag forever
+      // (the My Forms section spun indefinitely). All concurrent callers
+      // must share ONE modal promise.
+      if (!this.loginWait) {
+        this.loginWait = this.loginModalCallback().finally(() => {
+          this.loginWait = null;
+        });
+      }
+      await this.loginWait;
       if (this.signer) return this.signer;
     }
 

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FormEventCard } from "./FormEventCard";
 import { Spin, Card, Button, Divider } from "antd";
 import { LoadingOutlined, ReloadOutlined } from "@ant-design/icons";
@@ -7,8 +8,10 @@ import { useMyForms } from "../../../provider/MyFormsProvider";
 import DeleteFormTrigger from "./DeleteForm";
 import { makeFormNAddr, naddrUrl } from "../../../utils/utility";
 import { responsePath } from "../../../utils/formUtils";
+import EmptyScreen from "../../../components/EmptyScreen";
 
 export const MyForms = () => {
+  const { t } = useTranslation();
   const { formEvents, refreshing, deleteForm, retryForm } = useMyForms();
   const [retrying, setRetrying] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
@@ -35,6 +38,12 @@ export const MyForms = () => {
             <LoadingOutlined style={{ fontSize: 48, color: "#F7931A" }} spin />
           }
         />
+      ) : null}
+      {!refreshing && formEvents.size === 0 ? (
+        // Without this, an empty list rendered nothing at all — which reads
+        // as a load that never finishes (e.g. right after deleting your last
+        // form from another Formstr client).
+        <EmptyScreen message={t("dashboard.myFormsEmpty")} />
       ) : null}
       {[...formEvents.values()]
         .sort((a, b) => {

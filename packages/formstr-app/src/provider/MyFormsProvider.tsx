@@ -206,7 +206,15 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
 
       const event = await signer.signEvent({
         kind: KINDS.myFormsList,
-        created_at: Math.floor(Date.now() / 1000),
+        // Strictly supersede the event this write was derived from: kind 14083
+        // is replaceable, so two writes in the same second tie on created_at
+        // and relays keep the LOWEST id (NIP-01) — which can resurrect the
+        // stale copy. A plain "now" also loses silently to any newer-stamped
+        // list another client just published.
+        created_at: Math.max(
+          Math.floor(Date.now() / 1000),
+          (existing?.created_at ?? 0) + 1,
+        ),
         tags: [],
         content: encrypted,
       });
@@ -281,7 +289,14 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
 
       const event = await signer.signEvent({
         kind: 14083,
-        created_at: Math.floor(Date.now() / 1000),
+        // Must strictly supersede the list we just read, or the delete can
+        // silently lose: a same-second tie resolves to the lowest event id
+        // (resurrecting the pre-delete list), and a list stamped later by
+        // another client outranks a plain "now" republish entirely.
+        created_at: Math.max(
+          Math.floor(Date.now() / 1000),
+          list.created_at + 1,
+        ),
         tags: [],
         content: await signer.nip44Encrypt!(
           userPub,
