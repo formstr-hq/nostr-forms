@@ -14,6 +14,7 @@ export interface IAnswerSettings {
   signature?: {
     kind?: number;
     editableContent?: boolean;
+    editableKind?: boolean;
     prefilledContent?: string;
     editableCreatedAt?: boolean;
   };

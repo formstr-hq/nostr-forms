@@ -1,4 +1,4 @@
-import { bytesToHex } from "@noble/hashes/utils";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import { nip44 } from "nostr-tools";
 
 export const nip44Encrypt = (

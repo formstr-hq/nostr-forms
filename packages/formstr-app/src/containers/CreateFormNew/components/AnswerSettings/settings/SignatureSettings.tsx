@@ -49,6 +49,16 @@ export const SignatureSettings: React.FC<SignatureSettingsProps> = ({
 
       <div className="property-setting">
         <Text className="property-name">
+          {t("builder.signatureSettings.editableKind")}
+        </Text>
+        <Switch
+          checked={sig.editableKind}
+          onChange={(v) => updateSignature("editableKind", v)}
+        />
+      </div>
+
+      <div className="property-setting">
+        <Text className="property-name">
           {t("builder.signatureSettings.prefilledContent")}
         </Text>
         <Input.TextArea

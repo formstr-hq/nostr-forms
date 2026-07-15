@@ -106,7 +106,7 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
 
     fetchSubRef.current = pool.subscribeMany(
       getDefaultRelays(),
-      [{ kinds: [30168], "#d": dTags, authors: pubkeys }],
+      { kinds: [30168], "#d": dTags, authors: pubkeys },
       {
         onevent(event) {
           const dTag = event.tags.find((t) => t[0] === "d")?.[1];

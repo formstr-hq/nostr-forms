@@ -79,13 +79,13 @@ export const Purchases: React.FC = () => {
     if (!formsWithEvents.length) return;
     const useRelays = userRelays.length !== 0 ? userRelays : getDefaultRelays();
     console.log("User relays", useRelays);
-    const filters = formsWithEvents.map(({ form }) => ({
+    const filter = {
       kinds: [30168],
-      authors: [form.pubkey],
-    }));
+      authors: formsWithEvents.map(({ form }) => form.pubkey),
+    };
 
-    console.log("Final filters are", filters, pool);
-    subCloserRef.current = pool.subscribeMany(useRelays, filters, {
+    console.log("Final filter is", filter, pool);
+    subCloserRef.current = pool.subscribeMany(useRelays, filter, {
       onevent: (event: Event) => {
         console.log("GOT EVENT", event);
         setNostrEvents((prev) => {

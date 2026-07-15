@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { signerManager } from "../../signer";
-import { sign } from "crypto";
 
 /**
  * React hook for generating a NIP-98 Authorization header.

@@ -37,7 +37,7 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
         "#d": dTags,
         authors: pubkeys,
       };
-      closer = pool.subscribeMany(getDefaultRelays(), [filter], {
+      closer = pool.subscribeMany(getDefaultRelays(), filter, {
         onevent: onFormEvent,
       });
     };

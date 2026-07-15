@@ -1,6 +1,6 @@
 import { test, expect, Locator, Page } from "@playwright/test";
 import { generateSecretKey, getPublicKey, nip19 } from "nostr-tools";
-import { bytesToHex } from "@noble/hashes/utils";
+import { bytesToHex } from "@noble/hashes/utils.js";
 import {
   publishToLocalRelay,
   LOCAL_RELAY_URL,
@@ -232,11 +232,30 @@ test("every field type can be filled and round-trips to responses", async ({
   await pickTime(page, q(page, "Time Q"));
   await pickDate(page, q(page, "DateTime Q"), true);
 
-  // Grids: pick a cell in each row.
+  // Grids: pick a cell in each row, and confirm it actually renders checked
+  // (not just that the click landed — a rendering gap would leave this
+  // unchecked even though the click handler ran).
+  //
+  // SCGrid is radio-based (single choice per row), so one column per row.
+  // MCGrid is checkbox-based and is specifically supposed to allow more than
+  // one column per row — RowA checks both ColA and ColB to exercise that,
+  // while RowB stays single-column so the test also confirms a row that
+  // *isn't* multi-selected doesn't accidentally pick up extra columns.
   for (const rowName of ["RowA", "RowB"]) {
-    await q(page, "SCGrid Q").getByRole("row", { name: rowName }).getByRole("radio").first().check();
-    await q(page, "MCGrid Q").getByRole("row", { name: rowName }).getByRole("checkbox").first().check();
+    const scCell = q(page, "SCGrid Q").getByRole("row", { name: rowName }).getByRole("radio").first();
+    await scCell.check();
+    await expect(scCell).toBeChecked();
   }
+
+  const mcRowA = q(page, "MCGrid Q").getByRole("row", { name: "RowA" }).getByRole("checkbox");
+  await mcRowA.nth(0).check();
+  await mcRowA.nth(1).check();
+  await expect(mcRowA.nth(0)).toBeChecked();
+  await expect(mcRowA.nth(1)).toBeChecked();
+
+  const mcRowB = q(page, "MCGrid Q").getByRole("row", { name: "RowB" }).getByRole("checkbox").first();
+  await mcRowB.check();
+  await expect(mcRowB).toBeChecked();
 
   // Rating: click the 3rd star.
   await q(page, "Rating Q").getByRole("img").nth(2).click();
@@ -276,4 +295,19 @@ test("every field type can be filled and round-trips to responses", async ({
       timeout: 20_000,
     });
   }
+
+  // SCGrid picked ColA in every row (radios only allow one), rendering as
+  // "RowA: ColA | RowB: ColA" (see ResponseUtils.getResponseLabels).
+  await expect(
+    page.getByText("RowA: ColA | RowB: ColA", { exact: false }),
+  ).toHaveCount(1, { timeout: 20_000 });
+
+  // MCGrid picked both columns on RowA and one on RowB. GridFiller sorts a
+  // row's selected column IDs (random per run) before joining, so ColA/ColB
+  // can land in either order — this is the assertion that actually catches a
+  // checkbox grid silently collapsing to single-selection, without being
+  // fragile to that ordering.
+  await expect(
+    page.getByText(/RowA: (ColA, ColB|ColB, ColA) \| RowB: ColA/, { exact: false }),
+  ).toHaveCount(1, { timeout: 20_000 });
 });

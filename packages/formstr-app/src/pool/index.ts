@@ -72,10 +72,10 @@ class AuthedPool extends SimplePool {
 
   subscribeMany(
     relays: string[],
-    filters: Filter[],
+    filter: Filter,
     params: SubscribeManyParams
   ) {
-    return super.subscribeMany(relays, filters, {
+    return super.subscribeMany(relays, filter, {
       onauth: makeReadOnAuth(),
       ...params,
     });
@@ -86,7 +86,7 @@ class AuthedPool extends SimplePool {
     filter: Filter,
     params: Pick<
       SubscribeManyParams,
-      "label" | "id" | "onevent" | "onclose" | "maxWait" | "onauth" | "doauth"
+      "label" | "id" | "onevent" | "onclose" | "maxWait" | "onauth"
     >
   ) {
     return super.subscribeEose(relays, filter, {

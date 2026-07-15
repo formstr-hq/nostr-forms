@@ -333,9 +333,9 @@ export const ensureRelay = async (
 ): Promise<AbstractRelay> => {
   url = normalizeURL(url);
   const relay = new Relay(url);
-  if (params?.connectionTimeout)
-    relay.connectionTimeout = params.connectionTimeout;
-  await relay.connect();
+  await relay.connect(
+    params?.connectionTimeout ? { timeout: params.connectionTimeout } : undefined,
+  );
   return relay;
 };
 
@@ -554,7 +554,7 @@ async function callRPC(
   return new Promise((resolve, reject) => {
     const sub = pool.subscribeMany(
       relays,
-      [{ kinds: [21169], "#e": [rumor.id] }],
+      { kinds: [21169], "#e": [rumor.id] },
       {
         async onevent(resp) {
           try {

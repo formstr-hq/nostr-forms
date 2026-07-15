@@ -99,7 +99,7 @@ export const Dashboard = () => {
 
     subCloserRef.current = pool.subscribeMany(
       defaultRelays,
-      [queryFilter],
+      queryFilter,
       {
         onevent: handleEvent,
         onclose() {

@@ -1,4 +1,4 @@
-import { Button, Input, Typography, Collapse } from "antd";
+import { Button, Input, InputNumber, Typography, Collapse } from "antd";
 import { useState, useEffect } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { IAnswerSettings } from "../../../CreateFormNew/components/AnswerSettings/types";
@@ -47,6 +47,9 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
   const [signedEvent, setSignedEvent] = useState<string | null>(
     defaultValue || null
   );
+  const [kind, setKind] = useState<number>(
+    existingSignature?.kind ?? sig.kind ?? 22157
+  );
   const [isSigning, setIsSigning] = useState(false);
 
 
@@ -66,16 +69,18 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
       if (parsed.created_at) {
         setCreatedAt(dayjs(parsed.created_at * 1000));
       }
+      setKind(parsed.kind ?? sig.kind ?? 22157);
     } else if (!defaultValue) {
       setSignedEvent(null);
       setContent(sig.prefilledContent || "");
       setCreatedAt(dayjs(Date.now()));
+      setKind(sig.kind ?? 22157);
     }
-  }, [defaultValue, sig.prefilledContent]);
+  }, [defaultValue, sig.prefilledContent, sig.kind]);
 
   const handleSign = async () => {
     const event = {
-      kind: sig.kind || 22157,
+      kind: sig.editableKind ? kind : sig.kind || 22157,
       created_at: sig.editableCreatedAt
         ? Math.floor(createdAt.valueOf() / 1000)
         : Math.floor(Date.now() / 1000),
@@ -110,7 +115,7 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
             onChange={(e) => setContent(e.target.value)}
             rows={4}
           />
-          <div style={{ display: "flex" }}>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
             {sig.editableCreatedAt && (
               <>
                 <Text style={{ margin: 10 }}>
@@ -123,6 +128,20 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
                   style={{ marginBottom: 8, width: "auto" }}
                   disabled={disabled}
                   placeholder={t("filler.inputs.pickDateTime")}
+                />
+              </>
+            )}
+            {sig.editableKind && (
+              <>
+                <Text style={{ margin: 10 }}>
+                  {t("filler.inputs.signatureKind")}:
+                </Text>
+                <InputNumber
+                  min={0}
+                  value={kind}
+                  onChange={(v) => setKind(v ?? 22157)}
+                  disabled={disabled}
+                  style={{ marginBottom: 8 }}
                 />
               </>
             )}
@@ -166,6 +185,11 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
             <Text type="secondary" style={{ fontSize: "12px", display: "block", marginBottom: 8 }}>
               {t("filler.inputs.signedOn")}:{" "}
               {dayjs(existingSignature.created_at * 1000).format("YYYY-MM-DD HH:mm:ss")}
+            </Text>
+          )}
+          {sig.editableKind && existingSignature.kind !== undefined && (
+            <Text type="secondary" style={{ fontSize: "12px", display: "block", marginBottom: 8 }}>
+              {t("filler.inputs.signatureKind")}: {existingSignature.kind}
             </Text>
           )}
         </div>

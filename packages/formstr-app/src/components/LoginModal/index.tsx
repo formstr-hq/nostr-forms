@@ -1,13 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Modal, Button, Typography, Space, Input, Tabs, message, Alert, Divider } from "antd";
 import { KeyOutlined, LinkOutlined, LockOutlined } from "@ant-design/icons";
 import QRCode from "qrcode.react";
 import { useTranslation } from "react-i18next";
 import { signerManager } from "../../signer";
-import { getAppSecretKeyFromLocalStorage, getNcryptsecFromLocalStorage, removeNcryptsecFromLocalStorage } from "../../signer/utils";
-import { getPublicKey } from "nostr-tools";
-import { createNostrConnectURI } from "../../signer/nip46";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
+
+const DEFAULT_NOSTR_CONNECT_RELAY = "wss://relay.nsec.app";
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
@@ -43,37 +42,50 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
   const [bunkerUri, setBunkerUri] = useState("");
   const [loadingConnect, setLoadingConnect] = useState(false);
 
-  const [qrPayload] = useState(() => generateNostrConnectURI());
+  const [relaysInput, setRelaysInput] = useState(DEFAULT_NOSTR_CONNECT_RELAY);
+  const [qrUri, setQrUri] = useState<string | null>(null);
+  const [qrConnecting, setQrConnecting] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
-  function generateNostrConnectURI() {
-    const clientSecretKey = getAppSecretKeyFromLocalStorage();
-    const clientPubkey = getPublicKey(clientSecretKey);
-
-    // Required secret (short random string)
-    const secret = Math.random().toString(36).slice(2, 10);
-
-    // Permissions you want (optional, but usually good to ask explicitly)
-    const perms = [
-      "nip44_encrypt",
-      "nip44_decrypt",
-      "sign_event",
-      "get_public_key",
-    ];
-
-    // Build query params
-    const params = {
-      clientPubkey,
-      relays: ["wss://relay.nsec.app"],
-      secret,
-      perms,
-      name: "Formstr",
-      url: window.location.origin,
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
     };
+  }, []);
 
-    const finalUrl = createNostrConnectURI(params);
-    console.log("FINAL URL is", finalUrl);
-    return finalUrl;
-  }
+  const parseRelays = (input: string) =>
+    input
+      .split(",")
+      .map((r) => r.trim())
+      .filter(Boolean);
+
+  const startNostrConnect = async () => {
+    const relays = parseRelays(relaysInput);
+    if (relays.length === 0) {
+      message.error(t("auth.nip46.enterRelayError"));
+      return;
+    }
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setQrUri(null);
+    setQrConnecting(true);
+    try {
+      await signerManager.loginWithNostrConnect(
+        relays,
+        (uri) => setQrUri(uri),
+        controller.signal,
+      );
+      message.success(t("auth.nip46.connected"));
+      onSuccess();
+    } catch (err) {
+      if (!controller.signal.aborted) {
+        message.error(t("auth.nip46.connectionFailed"));
+      }
+    } finally {
+      setQrConnecting(false);
+    }
+  };
 
   const connectToBunkerUri = async (bunkerUri: string) => {
     await signerManager.loginWithNip46(bunkerUri);
@@ -100,9 +112,10 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
       <Tabs
         activeKey={activeTab}
         onChange={(tab: string) => {
+          abortRef.current?.abort();
           setActiveTab(tab);
           if (tab === "qr") {
-            connectToBunkerUri(qrPayload);
+            startNostrConnect();
           }
         }}
       >
@@ -123,14 +136,29 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
           </Space>
         </TabPane>
         <TabPane tab={t("auth.nip46.qrCode")} key="qr">
-          <div style={{ textAlign: "center", marginTop: 16 }}>
-            <QRCode value={qrPayload} size={180} />
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                {t("auth.nip46.usingRelay")}
-              </Text>
+          <Space direction="vertical" style={{ width: "100%" }}>
+            <Input
+              placeholder={t("auth.nip46.relaysPlaceholder")}
+              value={relaysInput}
+              onChange={(e) => setRelaysInput(e.target.value)}
+              onPressEnter={startNostrConnect}
+            />
+            <Button size="small" onClick={startNostrConnect} loading={qrConnecting}>
+              {t("auth.nip46.regenerate")}
+            </Button>
+            <div style={{ textAlign: "center", marginTop: 8 }}>
+              {qrUri ? (
+                <QRCode value={qrUri} size={180} />
+              ) : (
+                <Text type="secondary">{t("auth.nip46.generatingQr")}</Text>
+              )}
+              <div style={{ marginTop: 8 }}>
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  {t("auth.nip46.usingRelay")}
+                </Text>
+              </div>
             </div>
-          </div>
+          </Space>
         </TabPane>
       </Tabs>
     </div>
@@ -143,8 +171,8 @@ interface NcryptsecSectionProps {
 }
 const NcryptsecSection: React.FC<NcryptsecSectionProps> = ({ onSuccess }) => {
   const { t } = useTranslation();
-  const [ncryptsec, setNcryptsec] = useState(() => getNcryptsecFromLocalStorage() ?? "");
-  const [storedNcryptsec, setStoredNcryptsec] = useState(() => !!getNcryptsecFromLocalStorage());
+  const [ncryptsec, setNcryptsec] = useState(() => signerManager.getSavedNcryptsec() ?? "");
+  const [storedNcryptsec, setStoredNcryptsec] = useState(() => !!signerManager.getSavedNcryptsec());
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -172,8 +200,8 @@ const NcryptsecSection: React.FC<NcryptsecSectionProps> = ({ onSuccess }) => {
       okText: t("auth.ncryptsec.forgetSavedKeyAction"),
       okType: "danger",
       cancelText: t("common.actions.cancel"),
-      onOk() {
-        removeNcryptsecFromLocalStorage();
+      async onOk() {
+        await signerManager.forgetSavedNcryptsec();
         setNcryptsec("");
         setStoredNcryptsec(false);
       },
@@ -386,7 +414,7 @@ interface LoginModalProps {
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
   const { t } = useTranslation();
   const [showNip46, setShowNip46] = useState(false);
-  const [showNcryptsec, setShowNcryptsec] = useState(() => !!getNcryptsecFromLocalStorage());
+  const [showNcryptsec, setShowNcryptsec] = useState(() => !!signerManager.getSavedNcryptsec());
 
   const [loadingNip07, setLoadingNip07] = useState(false);
 

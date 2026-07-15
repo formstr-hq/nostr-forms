@@ -77,7 +77,7 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
         }));
       });
     });
-    const unsubscribe = signerManager.onChange(async () => {
+    const syncPubkeyFromSigner = async () => {
       const signer = signerManager.getSignerIfAvailable();
       if (signer) {
         try {
@@ -89,7 +89,13 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
       } else {
         setPubkey(undefined);
       }
-    });
+    };
+    const unsubscribe = signerManager.onChange(syncPubkeyFromSigner);
+    // The signer may have already restored a session (e.g. a silently
+    // unlocked NIP-07/bunker account, or a legacy guest key) before this
+    // listener was registered — its notify() would have fired into an empty
+    // subscriber set. Check current state directly so that case isn't missed.
+    syncPubkeyFromSigner();
     return () => {
       unsubscribe();
     };

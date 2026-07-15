@@ -4,7 +4,7 @@ import useFormBuilderContext from "../CreateFormNew/hooks/useFormBuilderContext"
 import { useEffect, useState } from "react";
 import { HEADER_MENU_KEYS } from "../CreateFormNew/components/Header/config";
 import { getPublicKey, nip19 } from "nostr-tools";
-import { hexToBytes } from "@noble/hashes/utils";
+import { hexToBytes } from "@noble/hashes/utils.js";
 import { Spin, Typography } from "antd";
 import { getFormSpec as formSpecFromEvent } from "../../utils/formUtils";
 import { useProfileContext } from "../../hooks/useProfileContext";

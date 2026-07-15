@@ -3,7 +3,7 @@ import { customPublish, getDefaultRelays, signEvent } from "./common";
 import { IWrap, Tag } from "./types";
 import { nip44Encrypt } from "./utils";
 import { grantAccess, sendWraps } from "./accessControl";
-import { hexToBytes } from "@noble/hashes/utils";
+import { hexToBytes } from "@noble/hashes/utils.js";
 
 const defaultRelays = getDefaultRelays();
 

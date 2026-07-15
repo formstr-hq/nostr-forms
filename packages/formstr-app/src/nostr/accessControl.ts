@@ -9,9 +9,9 @@ import {
 } from "nostr-tools";
 import { AccessRequest, IWrap } from "./types";
 import { nip44Encrypt } from "./utils";
-import { bytesToHex, hexToBytes } from "@noble/hashes/utils";
+import { bytesToHex, hexToBytes, utf8ToBytes } from "@noble/hashes/utils.js";
 import { getDefaultRelays } from "./common";
-import { sha256 } from "@noble/hashes/sha256";
+import { sha256 } from "@noble/hashes/sha2.js";
 import { pool } from "../pool";
 
 const now = () => Math.round(Date.now() / 1000);
@@ -62,7 +62,7 @@ const createWrap = (
 ) => {
   const randomKey = generateSecretKey();
   let aliasPubKey = bytesToHex(
-    sha256(`${30168}:${eventAuthor}:${d_tag}:${recipientPublicKey}`)
+    sha256(utf8ToBytes(`${30168}:${eventAuthor}:${d_tag}:${recipientPublicKey}`))
   );
   // console.log("Alias pubkey created is", aliasPubKey);
   return finalizeEvent(

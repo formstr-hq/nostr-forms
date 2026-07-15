@@ -14,7 +14,7 @@ export const fetchFormTemplate = async (
     authors: [pubKey],
     "#d": [formIdentifier],
   };
-  const subCloser = pool.subscribeMany(relayList, [filter], {
+  const subCloser = pool.subscribeMany(relayList, filter, {
     onevent: (event: Event) => {
       onEvent(event);
       subCloser.close();
