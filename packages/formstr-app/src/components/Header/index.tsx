@@ -37,6 +37,7 @@ import { SupportUsModal } from "@formstr/support-us-button";
 import { truncateNpub } from "../../utils/utility";
 import { useAccountsMenuItems } from "./AccountsMenu";
 import { UnlockAccountModal } from "./UnlockAccountModal";
+import { NotificationsBell } from "./NotificationsBell";
 
 const { Text, Paragraph } = Typography;
 
@@ -328,7 +329,10 @@ export const NostrHeader = () => {
   };
 
   const onMenuClick: MenuProps["onClick"] = (e) => {
-    if (e.key === HEADER_MENU_KEYS.USER) {
+    if (
+      e.key === HEADER_MENU_KEYS.USER ||
+      e.key === HEADER_MENU_KEYS.NOTIFICATIONS
+    ) {
       return;
     }
     if (e.key === HEADER_MENU_KEYS.HELP) {
@@ -417,7 +421,12 @@ export const NostrHeader = () => {
     ),
   };
 
-  const newHeaderMenu = [...getHeaderMenu(t), User];
+  const Notifications = {
+    key: HEADER_MENU_KEYS.NOTIFICATIONS,
+    icon: <NotificationsBell />,
+  };
+
+  const newHeaderMenu = [...getHeaderMenu(t), Notifications, User];
   return (
     <>
       <Header

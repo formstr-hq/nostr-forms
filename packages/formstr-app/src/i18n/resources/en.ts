@@ -83,6 +83,14 @@ const resources = {
       "Forms saved on this device aren't encrypted yet — they'll be visible to every account you add here. You can enable encryption from this menu first, or continue anyway.",
     continueAnyway: "Continue anyway",
   },
+  notifications: {
+    title: "Notifications",
+    bellLabel: "Notifications ({{count}} unread)",
+    markAllRead: "Mark all as read",
+    empty: "No notifications yet",
+    responseText: 'New response on "{{formName}}"',
+    shareText: '"{{formName}}" was shared with you',
+  },
   header: {
     help: "Help",
     contactUs: "Contact Us",

@@ -8,6 +8,8 @@ export const LOCAL_STORAGE_KEYS = {
   DRAFT_RESPONSES: "formstr:draft-response",
   AUTO_SAVE_ENABLED: "formstr:auto-save-enabled",
   SUBMISSIONS: "formstr:submissions",
+  NOTIFICATIONS: "formstr:notifications",
+  NOTIFICATIONS_STATE: "formstr:notifications-state",
   PROFILE: "formstr:profile",
   OLLAMA_CONFIG: "formstr:ollama_config",
   APP_LOCALE: "formstr:locale",

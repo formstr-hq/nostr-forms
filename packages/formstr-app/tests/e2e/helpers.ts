@@ -212,6 +212,59 @@ export async function switchToAccount(
   await expect(dialog).toBeHidden({ timeout: 10_000 });
 }
 
+/** Click "Login" inside the header's user menu (only present with zero stored accounts). */
+export async function login(page: Page) {
+  await openUserMenu(page);
+  await page.getByText("Login", { exact: true }).click();
+}
+
+/**
+ * Read the notifications bell's live unread count from its aria-label
+ * ("Notifications ({{count}} unread)") — the count itself has no other
+ * accessible text, so this is the only way to assert on it without
+ * `data-testid`.
+ */
+export async function unreadNotificationsCount(page: Page): Promise<number> {
+  const label = await page
+    .getByRole("button", { name: /^Notifications \(/ })
+    .first()
+    .getAttribute("aria-label");
+  const match = label?.match(/\((\d+) unread\)/);
+  return match ? parseInt(match[1], 10) : 0;
+}
+
+/** Open the notifications bell's dropdown panel. */
+export async function openNotifications(page: Page) {
+  await page
+    .getByRole("button", { name: /^Notifications \(/ })
+    .first()
+    .click();
+}
+
+/** Read a form saved on this device (works logged out) — test-only shortcut to its keys for direct relay publishing. */
+export async function getLocalForm(page: Page, index = 0) {
+  return page.evaluate((i) => {
+    const raw = localStorage.getItem("formstr:forms");
+    const forms = raw ? (JSON.parse(raw) as unknown[]) : [];
+    return forms[i] as {
+      publicKey: string;
+      formId: string;
+      privateKey: string;
+      relays: string[];
+    };
+  }, index);
+}
+
+/** The active account's hex pubkey (not the truncated npub `activeAccountNpub` returns) — needed to construct raw events that tag it. */
+export async function activeAccountPubkeyHex(
+  page: Page,
+): Promise<string | null> {
+  return page.evaluate(() => {
+    const raw = localStorage.getItem("formstr:profile");
+    return raw ? (JSON.parse(raw) as { pubkey: string }).pubkey : null;
+  });
+}
+
 /**
  * Dismiss the login modal if a full page reload popped it unprompted. This
  * is a known, pre-existing gap (not introduced by account switching): after

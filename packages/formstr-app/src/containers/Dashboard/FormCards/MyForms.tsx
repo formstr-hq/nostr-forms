@@ -9,7 +9,8 @@ import { makeFormNAddr, naddrUrl } from "../../../utils/utility";
 import { responsePath } from "../../../utils/formUtils";
 
 export const MyForms = () => {
-  const { formEvents, refreshing, deleteForm, retryForm } = useMyForms();
+  const { formEvents, refreshing, deleteForm, retryForm, refreshForms } =
+    useMyForms();
   const [retrying, setRetrying] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
 
@@ -29,6 +30,16 @@ export const MyForms = () => {
 
   return (
     <>
+      <div style={{ textAlign: "right", marginBottom: 8 }}>
+        <Button
+          icon={<ReloadOutlined />}
+          onClick={() => void refreshForms(true)}
+          loading={refreshing}
+          size="small"
+        >
+          Reload
+        </Button>
+      </div>
       {refreshing ? (
         <Spin
           indicator={

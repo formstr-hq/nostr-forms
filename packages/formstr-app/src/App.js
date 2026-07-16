@@ -5,20 +5,23 @@ import { ProfileProvider } from "./provider/ProfileProvider";
 import { TemplateProvider } from "./provider/TemplateProvider";
 import { MyFormsProvider } from "./provider/MyFormsProvider";
 import { LocalFormsProvider } from "./provider/LocalFormsProvider";
+import { NotificationsProvider } from "./provider/NotificationsProvider";
 
 function App() {
   return (
     <BrowserRouter>
       <div className="App">
         <ProfileProvider>
-            <LocalFormsProvider>
-              <MyFormsProvider>
+          <LocalFormsProvider>
+            <MyFormsProvider>
+              <NotificationsProvider>
                 <TemplateProvider>
                   <Routing />
                 </TemplateProvider>
-              </MyFormsProvider>
-            </LocalFormsProvider>
-          </ProfileProvider>
+              </NotificationsProvider>
+            </MyFormsProvider>
+          </LocalFormsProvider>
+        </ProfileProvider>
       </div>
     </BrowserRouter>
   );

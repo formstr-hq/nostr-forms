@@ -65,8 +65,13 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     new Map(),
   );
   const [refreshing, setRefreshing] = useState(false);
-  const isRefreshingRef = useRef(false);
+  // Tracked per-pubkey (not a single shared boolean) so a fetch in flight
+  // for one account can never block or get clobbered by a fetch for a
+  // different one — see refreshForms for why this matters.
+  const inFlightForRef = useRef<string | null>(null);
   const loadedForPubRef = useRef<string | null>(null);
+  const latestPubRef = useRef<string | undefined>(userPub);
+  latestPubRef.current = userPub;
   const fetchSubRef = useRef<{ close: () => void } | null>(null);
 
   const fetchFormEvents = (forms: unknown) => {
@@ -140,11 +145,15 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
       ? [...new Set([relay, ...getDefaultRelays()])]
       : getDefaultRelays();
 
-    const events = await pool.querySync(relaysToTry, {
-      kinds: [30168],
-      "#d": [formId],
-      authors: [formPubkey],
-    });
+    const events = await pool.querySync(
+      relaysToTry,
+      {
+        kinds: [30168],
+        "#d": [formId],
+        authors: [formPubkey],
+      },
+      { maxWait: 6000 },
+    );
 
     const event =
       events.find(
@@ -176,10 +185,11 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     try {
       const signer = await signerManager.getSigner();
 
-      const existing = await pool.get(targetRelays, {
-        kinds: [KINDS.myFormsList],
-        authors: [userPub],
-      });
+      const existing = await pool.get(
+        targetRelays,
+        { kinds: [KINDS.myFormsList], authors: [userPub] },
+        { maxWait: 6000 },
+      );
 
       let forms: Tag[] = [];
 
@@ -223,34 +233,48 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshForms = async (force = false) => {
     if (!userPub) return;
-    // Non-forced calls bail if a refresh is already running or data is fresh
-    if (!force && isRefreshingRef.current) return;
-    if (!force && loadedForPubRef.current === userPub) return;
+    const targetPubkey = userPub;
+    // Non-forced calls bail only if a fetch for THIS pubkey is already
+    // running or its data is already fresh — never blocked by a fetch for
+    // a different (e.g. just-switched-away-from) account.
+    if (!force && inFlightForRef.current === targetPubkey) return;
+    if (!force && loadedForPubRef.current === targetPubkey) return;
 
-    isRefreshingRef.current = true;
+    inFlightForRef.current = targetPubkey;
     setRefreshing(true);
 
     try {
       const signer = await signerManager.getSigner();
 
-      const list = await pool.get(getDefaultRelays(), {
-        kinds: [14083],
-        authors: [userPub],
-      });
+      // Bounded so a slow/unreachable relay can't stall the whole list
+      // (and, combined with the per-pubkey tracking above, can't block a
+      // subsequent account switch either).
+      const list = await pool.get(
+        getDefaultRelays(),
+        { kinds: [14083], authors: [targetPubkey] },
+        { maxWait: 6000 },
+      );
+
+      // A different account has since become active — this result is
+      // stale, don't let it clobber whatever's now current.
+      if (latestPubRef.current !== targetPubkey) return;
 
       if (!list) {
         setFormEvents(new Map());
-        loadedForPubRef.current = userPub;
+        loadedForPubRef.current = targetPubkey;
         return;
       }
-      const decrypted = await signer.nip44Decrypt!(userPub, list.content);
+      const decrypted = await signer.nip44Decrypt!(targetPubkey, list.content);
+      if (latestPubRef.current !== targetPubkey) return;
       fetchFormEvents(JSON.parse(decrypted));
-      loadedForPubRef.current = userPub;
+      loadedForPubRef.current = targetPubkey;
     } catch (err) {
       console.error("Error loading forms:", err);
       // Don't mark as loaded on error - allow retry
     } finally {
-      isRefreshingRef.current = false;
+      if (inFlightForRef.current === targetPubkey) {
+        inFlightForRef.current = null;
+      }
       setRefreshing(false);
     }
   };
@@ -263,10 +287,11 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     try {
       const signer = await signerManager.getSigner();
 
-      const list = await pool.get(getDefaultRelays(), {
-        kinds: [14083],
-        authors: [userPub],
-      });
+      const list = await pool.get(
+        getDefaultRelays(),
+        { kinds: [14083], authors: [userPub] },
+        { maxWait: 6000 },
+      );
 
       if (!list) return;
 
