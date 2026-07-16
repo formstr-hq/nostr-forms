@@ -55,7 +55,33 @@ const resources = {
       invalidUrl: "Invalid URL",
       invalidFormUrl: "Invalid form URL",
       noSupportedRelays: "No relays configured. Add one to get started!",
+      userMenu: "User menu",
     },
+  },
+  accounts: {
+    title: "Accounts",
+    addAccount: "Add account",
+    methods: {
+      extension: "Extension",
+      nip46: "Remote signer",
+      ncryptsec: "Key",
+      android: "Android signer",
+    },
+    removeTitle: "Remove this account?",
+    removeBody:
+      "This removes the account from this device. You can add it back anytime by signing in again.",
+    removeBodyNcryptsec:
+      "This removes the account from this device. Make sure you've saved your encrypted key (ncryptsec) somewhere safe — without it you won't be able to access this account again.",
+    removeAction: "Remove",
+    unlockTitle: "Unlock account",
+    unlockBody: "Enter the passphrase for {{npub}} to switch to it.",
+    passphrasePlaceholder: "Passphrase",
+    unlockAction: "Unlock",
+    unlockFailed: "Wrong passphrase. Try again.",
+    unencryptedWarningTitle: "Local forms aren't encrypted",
+    unencryptedWarningBody:
+      "Forms saved on this device aren't encrypted yet — they'll be visible to every account you add here. You can enable encryption from this menu first, or continue anyway.",
+    continueAnyway: "Continue anyway",
   },
   header: {
     help: "Help",
@@ -255,6 +281,7 @@ const resources = {
       myForms: "My forms",
       drafts: "Drafts",
       purchases: "Purchases",
+      submissions: "My submissions",
     },
     import: "Import",
     localEmpty:
@@ -265,6 +292,15 @@ const resources = {
       "You have encrypted forms stored on this device. Login to access them.",
     encryptedFormsFor:
       "You have forms encrypted for {{npub}}. Login with that key to access them.",
+    submissionsEmpty:
+      "No submissions yet. Forms you fill out will show up here.",
+    submissionsEmptyAction: "Browse Public Forms",
+    submissionsColumns: {
+      form: "Form",
+      submittedAt: "Submitted on",
+      submittedAs: "Submitted as",
+      anonymous: "Anonymous",
+    },
   },
   publicForms: {
     recentlyPosted: "Recently Posted",

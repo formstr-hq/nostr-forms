@@ -23,10 +23,17 @@ import { ROUTES } from "../../constants/routes";
 import { FormInitData } from "../CreateFormNew/providers/FormBuilder/typeDefs";
 import { createFormSpecFromTemplate } from "../../utils/formUtils";
 import { Purchases } from "./FormCards/Purchases";
+import { Submissions } from "./FormCards/Submissions";
 import { SubCloser } from "nostr-tools/abstract-pool";
 import { getDefaultRelays } from "../../nostr/common";
 
-type FilterType = "local" | "shared" | "myForms" | "drafts" | "purchases";
+type FilterType =
+  | "local"
+  | "shared"
+  | "myForms"
+  | "drafts"
+  | "purchases"
+  | "submissions";
 
 type RouteMapType = {
   [key: string]: FilterType;
@@ -38,6 +45,7 @@ const ROUTE_TO_FILTER_MAP: RouteMapType = {
   [ROUTES.DASHBOARD_MY_FORMS]: "myForms",
   [ROUTES.DASHBOARD_DRAFTS]: "drafts",
   [ROUTES.DASHBOARD_PURCHASES]: "purchases",
+  [ROUTES.DASHBOARD_SUBMISSIONS]: "submissions",
   [ROUTES.DASHBOARD]: "local",
 };
 
@@ -66,6 +74,7 @@ export const Dashboard = () => {
     myForms: t("dashboard.filters.myForms"),
     drafts: t("dashboard.filters.drafts"),
     purchases: t("dashboard.filters.purchases"),
+    submissions: t("dashboard.filters.submissions"),
   };
 
   const getCurrentFilterFromPath = (): FilterType => {
@@ -172,6 +181,8 @@ export const Dashboard = () => {
       return <Drafts />;
     } else if (filter === "purchases") {
       return <Purchases />;
+    } else if (filter === "submissions") {
+      return <Submissions />;
     }
 
     return null;
@@ -184,6 +195,7 @@ export const Dashboard = () => {
       myForms: ROUTES.DASHBOARD_MY_FORMS,
       drafts: ROUTES.DASHBOARD_DRAFTS,
       purchases: ROUTES.DASHBOARD_PURCHASES,
+      submissions: ROUTES.DASHBOARD_SUBMISSIONS,
     };
 
     navigate(routeMap[selectedFilter]);
@@ -216,6 +228,12 @@ export const Dashboard = () => {
         onClick={() => handleFilterChange("purchases")}
       >
         {menuOptions.purchases}
+      </Menu.Item>
+      <Menu.Item
+        key="submissions"
+        onClick={() => handleFilterChange("submissions")}
+      >
+        {menuOptions.submissions}
       </Menu.Item>
     </Menu>
   );

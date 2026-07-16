@@ -44,6 +44,15 @@ export const makeFormNAddr = (
   });
 };
 
+export const truncateNpub = (pubkey: string): string => {
+  try {
+    const npub = nip19.npubEncode(pubkey);
+    return `${npub.slice(0, 12)}...${npub.slice(-8)}`;
+  } catch {
+    return `${pubkey.slice(0, 8)}...${pubkey.slice(-8)}`;
+  }
+};
+
 export const naddrUrl = (
   publicKey: string,
   formId: string,

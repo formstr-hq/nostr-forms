@@ -2,6 +2,7 @@ import {
   createSigner,
   LocalSigner as PkgLocalSigner,
   type ActiveSigner,
+  type StoredAccount,
 } from "@formstr/signer";
 import { SimplePool } from "nostr-tools/pool";
 import { hexToBytes } from "@noble/hashes/utils.js";
@@ -126,10 +127,76 @@ class Signer {
   }
 
   async logout(): Promise<void> {
-    const pubkey = this.pkg.getActiveAccount()?.pubkey;
-    if (pubkey) await this.pkg.logout(pubkey);
+    const activePubkey = this.pkg.getActiveAccount()?.pubkey;
+    if (activePubkey) {
+      await this.removeAccount(activePubkey);
+      return;
+    }
+    // Legacy guest sessions predate the account model and aren't tracked by
+    // `pkg` at all (see restoreFromStorage), so there's no account to remove.
     localStorage.removeItem(LEGACY_KEYS_STORAGE);
     this.signer = null;
+    this.notify();
+  }
+
+  listAccounts(): StoredAccount[] {
+    return this.pkg.listAccounts();
+  }
+
+  getActiveAccount(): StoredAccount | null {
+    return this.pkg.getActiveAccount();
+  }
+
+  /**
+   * Switches the active account. The package always starts a freshly
+   * switched-to account locked; extension/nip46 unlock silently, but
+   * ncryptsec accounts need a passphrase — signaled by `locked: true`, at
+   * which point the caller should prompt and call
+   * `unlockActiveWithPassphrase`.
+   */
+  async switchAccount(pubkey: string): Promise<{ locked: boolean }> {
+    await this.pkg.switchAccount(pubkey);
+    const active = await this.pkg.unlock({ pool: this.pool });
+    this.signer = active ? toNostrSigner(active) : null;
+    this.notify();
+    return { locked: !this.signer };
+  }
+
+  /** Unlocks the active ncryptsec account after a `switchAccount` reports `locked: true`. */
+  async unlockActiveWithPassphrase(passphrase: string): Promise<void> {
+    const account = this.pkg.getActiveAccount();
+    if (!account || account.method !== "ncryptsec" || !account.ncryptsec) {
+      throw new Error("Active account does not use a passphrase.");
+    }
+    await this.pkg.loginWithNcryptsec(account.ncryptsec, passphrase);
+    this.activateCurrent();
+  }
+
+  /**
+   * Removes a stored account. If it was the active one, falls back to
+   * another remaining stored account (silently unlocking it where
+   * possible) or clears the signer if none remain.
+   */
+  async removeAccount(pubkey: string): Promise<void> {
+    const wasActive = this.pkg.getActiveAccount()?.pubkey === pubkey;
+    await this.pkg.logout(pubkey);
+    localStorage.removeItem(LEGACY_KEYS_STORAGE);
+
+    if (!wasActive) {
+      this.notify();
+      return;
+    }
+
+    let active = this.pkg.getActiveAccount();
+    if (!active) {
+      const [next] = this.pkg.listAccounts();
+      if (next) {
+        await this.pkg.switchAccount(next.pubkey);
+        active = this.pkg.getActiveAccount();
+      }
+    }
+    const unlocked = active ? await this.pkg.unlock({ pool: this.pool }) : null;
+    this.signer = unlocked ? toNostrSigner(unlocked) : null;
     this.notify();
   }
 

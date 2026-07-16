@@ -99,12 +99,20 @@ export async function expectThankYou(page: Page) {
  * internals or storage seeding — so it stays valid after LocalSigner is replaced
  * by @formstr/signer.
  */
-export async function completeSignupModal(page: Page, password = "e2e-pass-1234") {
+export async function completeSignupModal(
+  page: Page,
+  password = "e2e-pass-1234",
+) {
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("tab", { name: "Create Account" }).click();
-  await dialog.getByPlaceholder("Password", { exact: true }).fill(password);
-  await dialog.getByPlaceholder("Confirm password").fill(password);
-  await dialog.getByRole("button", { name: "Create Account" }).click();
+  // Once a key has been saved before (e.g. a prior signup in this session),
+  // the Sign In tab also renders its own "Password" field for it — even
+  // while hidden, antd keeps inactive tab panes mounted, so scope to the
+  // active pane rather than the whole dialog to avoid matching both.
+  const panel = dialog.getByRole("tabpanel", { name: "Create Account" });
+  await panel.getByPlaceholder("Password", { exact: true }).fill(password);
+  await panel.getByPlaceholder("Confirm password").fill(password);
+  await panel.getByRole("button", { name: "Create Account" }).click();
   // Backup step: a primary button proceeds into the app.
   await dialog.getByRole("button").last().click();
   await expect(dialog).toBeHidden({ timeout: 10_000 });
@@ -117,4 +125,109 @@ export async function completeSignupModal(page: Page, password = "e2e-pass-1234"
 export async function submitVia(page: Page, option: string | RegExp) {
   await page.getByRole("button", { name: "down" }).last().click();
   await page.getByRole("menuitem", { name: option }).click();
+}
+
+/**
+ * Open the header's account/settings dropdown (an icon-only avatar trigger,
+ * given an accessible name via `aria-label` since it has no visible text).
+ */
+export async function openUserMenu(page: Page) {
+  await page.getByRole("button", { name: "User menu" }).click();
+}
+
+/**
+ * Reveal the "Accounts" submenu inside the already-open user menu. Its title
+ * row is plain text ("Accounts: <npub>"), which also doubles as the readable
+ * label for whichever account is currently active.
+ */
+async function openAccountsSubmenu(page: Page) {
+  const accountsRow = page.getByText(/^Accounts:/);
+  await accountsRow.hover();
+  await expect(page.getByText("Add account")).toBeVisible();
+  return accountsRow;
+}
+
+/** The truncated npub of the currently active account, read from the user menu. */
+export async function activeAccountNpub(page: Page): Promise<string> {
+  await openUserMenu(page);
+  const label = await page.getByText(/^Accounts:/).innerText();
+  await page.keyboard.press("Escape");
+  return label.replace(/^Accounts:\s*/, "").trim();
+}
+
+/**
+ * Add another account without disturbing the currently stored ones — opens
+ * the login modal from inside the accounts submenu (`ProfileProvider`'s
+ * `addAccount`, distinct from the plain sign-in prompt). Caller still needs
+ * to drive the login modal itself, e.g. with `completeSignupModal`.
+ */
+export async function addAccount(page: Page) {
+  await openUserMenu(page);
+  await openAccountsSubmenu(page);
+  await page.getByText("Add account", { exact: true }).click();
+
+  // If unencrypted forms are already saved on this device, adding another
+  // account is gated behind a warning that it'll be visible to it too.
+  // These modals don't set aria-label/aria-labelledby, so `getByRole` gives
+  // them no accessible name to filter on — match by visible text instead.
+  const warning = page
+    .getByRole("dialog")
+    .filter({ hasText: "Local forms aren't encrypted" });
+  const appeared = await warning
+    .waitFor({ state: "visible", timeout: 2_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (appeared) {
+    await warning.getByRole("button", { name: "Continue anyway" }).click();
+    await expect(warning).toBeHidden({ timeout: 5_000 });
+    // The confirm dialog's own overlay lingers mid-close-animation for a
+    // moment, intercepting clicks meant for the login modal underneath.
+    await page.waitForTimeout(300);
+  }
+}
+
+/**
+ * Switch the active account to whichever stored account's row contains
+ * `npub` (as produced by `activeAccountNpub`). If that account is a locked
+ * ncryptsec key, unlocks it with `passphrase` via the passphrase modal.
+ */
+export async function switchToAccount(
+  page: Page,
+  npub: string,
+  passphrase?: string,
+) {
+  await openUserMenu(page);
+  await openAccountsSubmenu(page);
+  await page.getByText(npub, { exact: false }).click();
+
+  if (!passphrase) return;
+  const dialog = page.getByRole("dialog").filter({ hasText: "Unlock account" });
+  const appeared = await dialog
+    .waitFor({ state: "visible", timeout: 3_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!appeared) return;
+  await dialog.getByPlaceholder("Passphrase").fill(passphrase);
+  await dialog.getByRole("button", { name: "Unlock" }).click();
+  await expect(dialog).toBeHidden({ timeout: 10_000 });
+}
+
+/**
+ * Dismiss the login modal if a full page reload popped it unprompted. This
+ * is a known, pre-existing gap (not introduced by account switching): after
+ * a reload, a locked ncryptsec account's `pubkey` is restored from legacy
+ * storage before the signer itself is confirmed unlockable, so
+ * `LocalFormsProvider` briefly believes a signer should be available and
+ * requests one. `pubkey`/account state is unaffected either way — this only
+ * clears the stray prompt so the rest of the page can be interacted with.
+ */
+export async function dismissStraySignInPrompt(page: Page) {
+  const dialog = page.getByRole("dialog");
+  if (await dialog.isVisible().catch(() => false)) {
+    // The modal auto-focuses itself on open, but by the time this runs
+    // something else may already hold focus — click its own Close button
+    // rather than relying on Escape reaching an unfocused dialog.
+    await dialog.getByRole("button", { name: "Close" }).click();
+    await expect(dialog).toBeHidden({ timeout: 5_000 });
+  }
 }

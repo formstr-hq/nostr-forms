@@ -22,6 +22,7 @@ import {
   ExclamationCircleOutlined,
   GlobalOutlined,
   ThunderboltOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { getHeaderMenu, HEADER_MENU_KEYS } from "./configs";
 import { useProfileContext } from "../../hooks/useProfileContext";
@@ -30,27 +31,21 @@ import { NostrAvatar } from "./NostrAvatar";
 import { useState } from "react";
 import { useTemplateContext } from "../../provider/TemplateProvider";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
-import { nip19 } from "nostr-tools";
 import { useTranslation } from "react-i18next";
 import { changeAppLanguage, normalizeLocale, SUPPORTED_LOCALES } from "../../i18n";
 import { SupportUsModal } from "@formstr/support-us-button";
+import { truncateNpub } from "../../utils/utility";
+import { useAccountsMenuItems } from "./AccountsMenu";
+import { UnlockAccountModal } from "./UnlockAccountModal";
 
 const { Text, Paragraph } = Typography;
-
-const truncateNpub = (pubkey: string): string => {
-  try {
-    const npub = nip19.npubEncode(pubkey);
-    return `${npub.slice(0, 12)}...${npub.slice(-8)}`;
-  } catch {
-    return `${pubkey.slice(0, 8)}...${pubkey.slice(-8)}`;
-  }
-};
 
 export const NostrHeader = () => {
   const { Header } = Layout;
   const { t, i18n } = useTranslation();
-  const { pubkey, requestPubkey, logout } = useProfileContext();
+  const { pubkey, accounts, requestPubkey, addAccount } = useProfileContext();
   const {
+    localForms,
     isEncrypted,
     encryptionMeta,
     encryptionError,
@@ -63,6 +58,9 @@ export const NostrHeader = () => {
   const [encryptionLoading, setEncryptionLoading] = useState(false);
   const [languageLoading, setLanguageLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string[]>([]);
+  const [unlockPubkey, setUnlockPubkey] = useState<string | undefined>(
+    undefined,
+  );
   const { openTemplateModal } = useTemplateContext();
   const currentLocale = normalizeLocale(i18n.resolvedLanguage || i18n.language);
   const currentLocaleLabel =
@@ -271,6 +269,25 @@ export const NostrHeader = () => {
     return t("header.storage.enableTitle");
   };
 
+  const handleAddAccount = () => {
+    if (!isEncrypted && localForms.length > 0) {
+      Modal.confirm({
+        title: t("accounts.unencryptedWarningTitle"),
+        content: t("accounts.unencryptedWarningBody"),
+        okText: t("accounts.continueAnyway"),
+        cancelText: t("common.actions.cancel"),
+        onOk: () => void addAccount(),
+      });
+      return;
+    }
+    void addAccount();
+  };
+
+  const accountsMenuItems = useAccountsMenuItems({
+    onNeedsPassphrase: setUnlockPubkey,
+    onAddAccount: handleAddAccount,
+  });
+
   const handleLanguageChange = async (locale: string) => {
     const normalizedLocale = normalizeLocale(locale);
 
@@ -289,11 +306,6 @@ export const NostrHeader = () => {
   };
 
   const handleUserMenuClick: MenuProps["onClick"] = ({ key }) => {
-    if (key === "logout") {
-      logout();
-      return;
-    }
-
     if (key === "login") {
       void requestPubkey();
       return;
@@ -333,10 +345,14 @@ export const NostrHeader = () => {
 
   const dropdownMenuItems: MenuProps["items"] = [
     ...[
-      pubkey
+      accounts.length > 0
         ? {
-            key: "logout",
-            label: t("common.actions.logout"),
+            key: "accounts",
+            icon: <UserOutlined />,
+            label: pubkey
+              ? `${t("accounts.title")}: ${truncateNpub(pubkey)}`
+              : t("accounts.title"),
+            children: accountsMenuItems,
           }
         : {
             key: "login",
@@ -380,9 +396,18 @@ export const NostrHeader = () => {
           trigger={["click"]}
         >
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={t("common.labels.userMenu")}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.currentTarget.click();
+              }
             }}
           >
             <NostrAvatar pubkey={pubkey} /> <DownOutlined />
@@ -442,6 +467,11 @@ export const NostrHeader = () => {
         open={showSupportModal}
         npub="npub1qu7dsd44275lms4x9snnwvnnmgx926nsppmr7lcw9dlj36n4fltqgs7p98"
         onClose={() => setShowSupportModal(false)}
+      />
+      <UnlockAccountModal
+        open={!!unlockPubkey}
+        pubkey={unlockPubkey}
+        onClose={() => setUnlockPubkey(undefined)}
       />
     </>
   );

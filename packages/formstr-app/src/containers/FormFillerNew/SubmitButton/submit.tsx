@@ -8,6 +8,7 @@ import { Response, Tag } from "../../../nostr/types";
 import { getFormSettings } from "./utils";
 import { useProfileContext } from "../../../hooks/useProfileContext";
 import { useTranslation } from "react-i18next";
+import { recordSubmission } from "../../../utils/submissions";
 
 const { Text } = Typography;
 
@@ -94,6 +95,16 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       (url: string) => setAcceptedRelays((prev) => [...prev, url])
     );
     setIsSubmitting(false);
+    recordSubmission({
+      formId: formId!,
+      formPubkey: pubKey,
+      formName:
+        formTemplate.find((t) => t[0] === "name")?.[1] || formId!,
+      relays,
+      submittedAt: new Date().toISOString(),
+      anonymous,
+      submittedAs: anonymous ? undefined : userPubKey || undefined,
+    });
     onSubmit();
   };
 
