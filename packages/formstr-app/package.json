@@ -73,7 +73,6 @@
     "source-map-loader": "^3.0.0",
     "style-loader": "^3.3.1",
     "styled-components": "^6.1.1",
-    "tailwindcss": "^3.0.2",
     "terser-webpack-plugin": "^5.2.5",
     "typescript": "^5.2.2",
     "url": "^0.11.3",

@@ -1,26 +1,38 @@
-.header-menu::before {
-  content: none;
-}
-
-.ant-menu-horizontal,
-.ant-menu-item::after,
-.ant-menu-submenu::after {
-  border: none !important;
-}
-
-.ant-menu-item-selected {
-  color: rgb(255, 42, 0) !important;
-}
-
 .header-style {
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 
-    0 1px 6px -1px rgba(0, 0, 0, 0.02), 
+  box-shadow:
+    0 1px 2px 0 rgba(0, 0, 0, 0.03),
+    0 1px 6px -1px rgba(0, 0, 0, 0.02),
     0 2px 4px 0 rgba(0, 0, 0, 0.02);
-  opacity: "0.88";
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .header-row {
   align-items: center;
+}
+
+.header-nav-col {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  gap: 16px;
+}
+
+/* Menu styling is scoped to the header so other menus are unaffected. */
+.header-style .header-menu {
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
+  background: transparent;
+  border-bottom: none;
+}
+
+.header-style .header-menu::before {
+  content: none;
+}
+
+.header-actions {
+  flex-shrink: 0;
 }
 
 .app-link {

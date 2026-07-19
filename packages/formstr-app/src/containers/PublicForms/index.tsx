@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, Divider, Typography, Skeleton } from "antd";
+import { Card, Typography, Skeleton } from "antd";
 import { useTranslation } from "react-i18next";
 import StyleWrapper from "./style";
 import { getPublicForms } from "../../nostr/publicForms";
@@ -39,49 +39,21 @@ function PublicForms() {
     <StyleWrapper>
       <Typography.Text>{t("publicForms.recentlyPosted")}</Typography.Text>
       {isLoading ? (
-        <div
-          style={{
-            alignItems: "center",
-            display: "flex",
-            flexDirection: "column",
-            marginLeft: "10%",
-            marginRight: "10%",
-            width: "80%",
-          }}
-        >
+        <div className="public-forms-list">
           {Array(3)
             .fill(0)
             .map((_, index) => (
-              <Card key={index} style={{ margin: 20, width: "80%", minWidth: "360px" }}>
+              <Card key={index}>
                 <Skeleton
                   active
                   title={{ width: "40%" }}
                   paragraph={{ rows: 2 }}
                 />
-                <Divider />
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    margin: 30,
-                  }}
-                >
-                </div>
               </Card>
             ))}
         </div>
       ) : forms.length > 0 ? (
-        <div
-          style={{
-            alignItems: "center",
-            display: "flex",
-            flexDirection: "column",
-            marginLeft: "10%",
-            marginRight: "10%",
-            width: "80%",
-          }}
-        >
+        <div className="public-forms-list">
           {forms.map((f: Event) => {
             return <PublicFormCard key={f.id} event={f} />;
           })}

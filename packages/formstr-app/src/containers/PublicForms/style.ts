@@ -1,8 +1,17 @@
 import style from "styled-components";
 
 export default style.div`
-  margin: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  .public-forms-list {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 760px;
+    gap: 16px;
+    margin-top: 16px;
+  }
 `;

@@ -59,9 +59,7 @@ export default function PublicFormCard({ event }: { event: Event }) {
           position: "relative",
           borderRadius: 8,
           overflow: "hidden",
-          width: "80%",
-          minWidth: "360px",
-          margin: 15,
+          width: "100%",
           cursor: "pointer",
         }}
         bodyStyle={{

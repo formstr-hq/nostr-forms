@@ -235,7 +235,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
         >
           {isValidating ? (
             <>
-              <LoadingOutlined className="mr-2" />
+              <LoadingOutlined style={{ marginRight: 8 }} />
               <span
                 style={{
                   top: 10,
@@ -276,7 +276,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
             disabledMessage || t("filler.submit.disabledFallback")
           ) : isSubmitting ? (
             <span>
-              <LoadingOutlined className="mr-2" />
+              <LoadingOutlined style={{ marginRight: 8 }} />
               {t("filler.submit.submitting")}
             </span>
           ) : selfSign ? (

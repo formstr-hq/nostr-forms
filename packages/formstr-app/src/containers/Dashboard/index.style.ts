@@ -4,27 +4,25 @@ export default styled.div`
   .form-cards-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-  }
-
-  .dashboard-container {
-    margin-left: 10%;
-    margin-right: 10%;
+    align-items: stretch;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
   }
 
   .form-card {
-    min-width: 390px;
-    width: 80%;
-    margin: 10px;
+    width: 100%;
+    margin: 10px 0;
   }
 
   .filter-dropdown-container {
     margin: 10px auto;
-    width: 80%;
+    width: 100%;
+    max-width: 760px;
     display: flex;
 
     .ant-dropdown-trigger {
-       width: 100%;
+      width: 100%;
     }
 
     .ant-btn {
@@ -37,14 +35,14 @@ export default styled.div`
       box-shadow: none;
       color: inherit;
 
-  &:hover,
-  &:focus,
-  &:active {
-    background: rgba(0, 0, 0, 0.08);
-    color: inherit;
-    border: none;
-    box-shadow: none;
-  }
+      &:hover,
+      &:focus,
+      &:active {
+        background: rgba(0, 0, 0, 0.08);
+        color: inherit;
+        border: none;
+        box-shadow: none;
+      }
     }
     .anticon-down {
       position: relative;

@@ -1,12 +1,8 @@
-import { Link } from "react-router-dom";
-import { Button } from "antd";
 import {
   SearchOutlined,
-  PlusOutlined,
   InfoCircleOutlined,
   MailOutlined,
 } from "@ant-design/icons";
-import { ROUTES } from "../../constants/routes";
 import { TFunction } from "i18next";
 
 export const HEADER_MENU_KEYS = {
@@ -39,23 +35,8 @@ export const getHeaderMenu = (t: TFunction) => [
     icon: <MailOutlined />,
   },
   {
-    key: HEADER_MENU_KEYS.CREATE_FORMS,
-    label: (
-      <Button
-        type="primary"
-        icon={<PlusOutlined style={{ paddingTop: "2px" }} />}
-      >
-        {t("header.createForm")}
-      </Button>
-    ),
-  },
-  {
     key: HEADER_MENU_KEYS.PUBLIC_FORMS,
     label: t("header.bulletinBoard"),
-    icon: (
-      <Link to={ROUTES.PUBLIC_FORMS}>
-        <SearchOutlined />
-      </Link>
-    ),
+    icon: <SearchOutlined />,
   },
 ];

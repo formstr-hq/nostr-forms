@@ -10,8 +10,9 @@ import {
   Button,
   Alert,
   message,
+  Space,
 } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./index.css";
 import { ReactComponent as Logo } from "../../Images/formstr.svg";
 import {
@@ -23,8 +24,10 @@ import {
   GlobalOutlined,
   ThunderboltOutlined,
   UserOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { getHeaderMenu, HEADER_MENU_KEYS } from "./configs";
+import { ROUTES } from "../../constants/routes";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { useLocalForms } from "../../provider/LocalFormsProvider";
 import { NostrAvatar } from "./NostrAvatar";
@@ -32,7 +35,11 @@ import { useState } from "react";
 import { useTemplateContext } from "../../provider/TemplateProvider";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
 import { useTranslation } from "react-i18next";
-import { changeAppLanguage, normalizeLocale, SUPPORTED_LOCALES } from "../../i18n";
+import {
+  changeAppLanguage,
+  normalizeLocale,
+  SUPPORTED_LOCALES,
+} from "../../i18n";
 import { SupportUsModal } from "@formstr/support-us-button";
 import { truncateNpub } from "../../utils/utility";
 import { useAccountsMenuItems } from "./AccountsMenu";
@@ -58,10 +65,15 @@ export const NostrHeader = () => {
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [encryptionLoading, setEncryptionLoading] = useState(false);
   const [languageLoading, setLanguageLoading] = useState(false);
-  const [selectedKey, setSelectedKey] = useState<string[]>([]);
   const [unlockPubkey, setUnlockPubkey] = useState<string | undefined>(
     undefined,
   );
+  const location = useLocation();
+  const navigate = useNavigate();
+  // Route-aware menu selection (no local state to get out of sync)
+  const selectedKeys = location.pathname.startsWith(ROUTES.PUBLIC_FORMS)
+    ? [HEADER_MENU_KEYS.PUBLIC_FORMS]
+    : [];
   const { openTemplateModal } = useTemplateContext();
   const currentLocale = normalizeLocale(i18n.resolvedLanguage || i18n.language);
   const currentLocaleLabel =
@@ -127,9 +139,7 @@ export const NostrHeader = () => {
       if (encryptionError.type === "login_required") {
         return (
           <>
-            <Paragraph>
-              {t("header.storage.encryptedLoginPrompt")}
-            </Paragraph>
+            <Paragraph>{t("header.storage.encryptedLoginPrompt")}</Paragraph>
             <Button type="primary" onClick={requestPubkey}>
               {t("common.actions.login")}
             </Button>
@@ -139,9 +149,7 @@ export const NostrHeader = () => {
       if (encryptionError.type === "wrong_key") {
         return (
           <>
-            <Paragraph>
-              {t("header.storage.wrongKeyBody")}
-            </Paragraph>
+            <Paragraph>{t("header.storage.wrongKeyBody")}</Paragraph>
             {encryptionError.encryptedBy && (
               <Paragraph>
                 <Text strong>{t("common.labels.encryptedBy")}: </Text>
@@ -166,9 +174,7 @@ export const NostrHeader = () => {
     if (isEncrypted) {
       return (
         <>
-          <Paragraph>
-            {t("header.storage.encryptedBody")}
-          </Paragraph>
+          <Paragraph>{t("header.storage.encryptedBody")}</Paragraph>
           {encryptionMeta?.encryptedBy && (
             <Paragraph>
               <Text strong>{t("common.labels.key")}: </Text>
@@ -188,14 +194,10 @@ export const NostrHeader = () => {
     // Unencrypted
     return (
       <>
-        <Paragraph>
-          {t("header.storage.unencryptedBody")}
-        </Paragraph>
+        <Paragraph>{t("header.storage.unencryptedBody")}</Paragraph>
         {pubkey ? (
           <>
-            <Paragraph>
-              {t("header.storage.encryptWithCurrentKey")}
-            </Paragraph>
+            <Paragraph>{t("header.storage.encryptWithCurrentKey")}</Paragraph>
             <Paragraph>
               <Text code>{truncateNpub(pubkey)}</Text>
             </Paragraph>
@@ -329,22 +331,14 @@ export const NostrHeader = () => {
   };
 
   const onMenuClick: MenuProps["onClick"] = (e) => {
-    if (
-      e.key === HEADER_MENU_KEYS.USER ||
-      e.key === HEADER_MENU_KEYS.NOTIFICATIONS
-    ) {
-      return;
-    }
     if (e.key === HEADER_MENU_KEYS.HELP) {
       setIsFAQModalVisible(true);
-      setSelectedKey([e.key]);
       return;
     }
-    if (e.key === HEADER_MENU_KEYS.CREATE_FORMS) {
-      openTemplateModal();
+    if (e.key === HEADER_MENU_KEYS.PUBLIC_FORMS) {
+      navigate(ROUTES.PUBLIC_FORMS);
       return;
     }
-    setSelectedKey([e.key]);
   };
 
   const dropdownMenuItems: MenuProps["items"] = [
@@ -386,72 +380,57 @@ export const NostrHeader = () => {
     },
   ];
 
-  const User = {
-    key: HEADER_MENU_KEYS.USER,
-    icon: (
-      <div>
-        <Dropdown
-          menu={{
-            items: dropdownMenuItems,
-            onClick: handleUserMenuClick,
-            overflowedIndicator: null,
-            style: { overflow: "auto" },
-          }}
-          trigger={["click"]}
-        >
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label={t("common.labels.userMenu")}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                e.currentTarget.click();
-              }
-            }}
-          >
-            <NostrAvatar pubkey={pubkey} /> <DownOutlined />
-          </div>
-        </Dropdown>
-      </div>
-    ),
-  };
+  const userDropdown = (
+    <Dropdown
+      menu={{
+        items: dropdownMenuItems,
+        onClick: handleUserMenuClick,
+        overflowedIndicator: null,
+        style: { overflow: "auto" },
+      }}
+      trigger={["click"]}
+    >
+      <Button type="text" aria-label={t("common.labels.userMenu")}>
+        <NostrAvatar pubkey={pubkey} /> <DownOutlined />
+      </Button>
+    </Dropdown>
+  );
 
-  const Notifications = {
-    key: HEADER_MENU_KEYS.NOTIFICATIONS,
-    icon: <NotificationsBell />,
-  };
-
-  const newHeaderMenu = [...getHeaderMenu(t), Notifications, User];
   return (
     <>
-      <Header
-        className="header-style"
-        style={{
-          background: "white",
-          borderBottom: "1px solid #ddd",
-        }}
-      >
-        <Row className="header-row" justify="space-between" align="middle">
+      <Header className="header-style">
+        <Row
+          className="header-row"
+          justify="space-between"
+          align="middle"
+          wrap={false}
+        >
           <Col>
             <Link className="app-link" to="/">
               <Logo />
             </Link>
           </Col>
-          <Col md={12} xs={10} sm={2}>
+          <Col flex="auto" className="header-nav-col">
             <Menu
               mode="horizontal"
               theme="light"
-              defaultSelectedKeys={[]}
-              selectedKeys={selectedKey}
+              selectedKeys={selectedKeys}
               overflowedIndicator={<MenuOutlined />}
-              items={newHeaderMenu}
+              items={getHeaderMenu(t)}
               onClick={onMenuClick}
+              className="header-menu"
             />
+            <Space size="middle" className="header-actions">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={openTemplateModal}
+              >
+                {t("header.createForm")}
+              </Button>
+              <NotificationsBell />
+              {userDropdown}
+            </Space>
           </Col>
         </Row>
       </Header>
@@ -459,7 +438,6 @@ export const NostrHeader = () => {
         visible={isFAQModalVisible}
         onClose={() => {
           setIsFAQModalVisible(false);
-          setSelectedKey([]);
         }}
         filePath="/docs/faq.md"
         title={t("header.faqTitle")}
