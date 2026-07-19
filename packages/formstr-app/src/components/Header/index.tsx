@@ -423,6 +423,8 @@ export const NostrHeader = () => {
             <Space size="middle" className="header-actions">
               <Button
                 type="primary"
+                className="header-create-btn"
+                aria-label={t("header.createForm")}
                 icon={<PlusOutlined />}
                 onClick={openTemplateModal}
               >

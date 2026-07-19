@@ -35,6 +35,44 @@
   flex-shrink: 0;
 }
 
+/* Mobile: keep the header on one line without overflow —
+   icon-only Create button, tighter gaps. */
+@media (max-width: 575px) {
+  .header-style {
+    padding: 0 12px;
+  }
+
+  .header-nav-col {
+    gap: 4px;
+  }
+
+  .header-actions.ant-space {
+    gap: 4px;
+  }
+
+  /* Never let flex shrinking crush buttons/icons to zero width */
+  .header-actions > .ant-space-item {
+    flex-shrink: 0;
+  }
+
+  /* Icon-only Create button: hide the text label but keep the icon.
+     antd wraps the icon in .ant-btn-icon (never hide that one). */
+  .header-create-btn > span:not(.ant-btn-icon):not(.anticon) {
+    display: none;
+  }
+
+  .header-create-btn {
+    padding-inline-start: 8px;
+    padding-inline-end: 8px;
+  }
+
+  /* Slimmer avatar dropdown trigger */
+  .header-actions .ant-btn-text {
+    padding-inline-start: 8px;
+    padding-inline-end: 8px;
+  }
+}
+
 .app-link {
   display: flex;
 }
