@@ -145,7 +145,7 @@
       "^(?!.*\\.(js|jsx|mjs|cjs|ts|tsx|css|json)$)": "<rootDir>/config/jest/fileTransform.js"
     },
     "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|cjs|ts|tsx)$",
+      "[/\\\\]node_modules[/\\\\](?!(?:@noble|@scure|@formstr|nostr-tools|react-markdown|rehype-.*|remark-.*|unified|unist-.*|mdast-.*|hast-.*|hastscript|micromark.*|vfile.*|bail|trough|zwitch|devlop|extend|is-plain-obj|property-information|space-separated-tokens|comma-separated-tokens|web-namespaces|html-void-elements|ccount|escape-string-regexp|decode-named-character-reference|character-entities.*|stringify-entities|trim-lines|estree-util-.*|periscopic|is-reference|html-url-attributes)/).+\\.(js|jsx|mjs|cjs|ts|tsx)$",
       "^.+\\.module\\.(css|sass|scss)$"
     ],
     "modulePaths": [],

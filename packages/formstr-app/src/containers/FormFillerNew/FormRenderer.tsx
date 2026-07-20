@@ -1,19 +1,11 @@
-import {
-  Form,
-  Typography,
-  Steps,
-  Button,
-  Space,
-  Progress,
-  Card,
-} from "antd";
+import { Form, Typography, Steps, Button, Space, Progress, Card } from "antd";
 import { useState } from "react";
 import { FormFields } from "./FormFields";
 import { Field, Tag } from "../../nostr/types";
 import FillerStyle from "./formFiller.style";
 import FormBanner from "../../components/FormBanner";
 import { IFormSettings } from "../CreateFormNew/components/FormSettings/types";
-import { SectionData } from "../CreateFormNew/providers/FormBuilder/typeDefs";
+import { createContentFlow, stepClickAction } from "./utils/contentFlow";
 import { Link } from "react-router-dom";
 import { isMobile } from "../../utils/utility";
 import { ReactComponent as CreatedUsingFormstr } from "../../Images/created-using-formstr.svg";
@@ -55,16 +47,6 @@ interface FormRendererProps {
   onClearForm?: () => void;
 }
 
-// Content item can be either a section or individual questions
-interface ContentItem {
-  type: "section" | "questions";
-  id: string;
-  title: string;
-  description?: string;
-  fields: Field[];
-  sectionData?: SectionData;
-}
-
 export const FormRenderer: React.FC<FormRendererProps> = ({
   formTemplate,
   form,
@@ -100,63 +82,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   const sections = settings.sections || [];
   const enableSections = !!sections.length;
 
-  // Create mixed content flow
-  const createContentFlow = (): ContentItem[] => {
-    if (!enableSections) {
-      return [
-        {
-          type: "questions",
-          id: "all-questions",
-          title: t("common.labels.formQuestions"),
-          fields: fields,
-        },
-      ];
-    }
-
-    const contentItems: ContentItem[] = [];
-    const sectionedQuestionIds = new Set(
-      sections.flatMap((section: SectionData) => section.questionIds),
-    );
-
-    // Get unsectioned questions that appear before any section
-    const unsectionedFields = fields.filter(
-      (field) => !sectionedQuestionIds.has(field[1]),
-    );
-
-    if (unsectionedFields.length > 0) {
-      // Group unsectioned questions at the beginning
-      contentItems.push({
-        type: "questions",
-        id: "unsectioned-questions",
-        title: t("common.labels.generalQuestions"),
-        description: t("common.labels.generalQuestionsDescription"),
-        fields: unsectionedFields,
-      });
-    }
-
-    // Add sections
-    sections.forEach((section: SectionData) => {
-      const sectionQuestionIds = new Set(section.questionIds);
-      const sectionFields = fields.filter((field) =>
-        sectionQuestionIds.has(field[1]),
-      );
-
-      if (sectionFields.length > 0) {
-        contentItems.push({
-          type: "section",
-          id: section.id,
-          title: section.title,
-          description: section.description,
-          fields: sectionFields,
-          sectionData: section,
-        });
-      }
-    });
-
-    return contentItems;
-  };
-
-  const contentItems = createContentFlow();
+  const contentItems = createContentFlow(fields, sections, t);
   const currentItem = contentItems[currentStep];
   const isLastStep = currentStep >= contentItems.length - 1;
   const showStepper = enableSections && contentItems.length > 1;
@@ -198,9 +124,10 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   };
 
   const handleStepClick = async (stepIndex: number) => {
-    if (stepIndex < currentStep || completedSteps.has(stepIndex)) {
+    const action = stepClickAction(stepIndex, currentStep, completedSteps);
+    if (action === "jump") {
       setCurrentStep(stepIndex);
-    } else if (stepIndex === stepIndex + 1) {
+    } else if (action === "validate") {
       await handleNext();
     }
   };
@@ -384,7 +311,6 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
       )}
 
       {!showStepper && renderFooterWithControls()}
-
     </div>
   );
 
@@ -406,7 +332,14 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
           )}
           {!hideDescription && settings?.description && (
             <div className="form-description">
-              <Text style={{ color: settings.colors?.description ?? settings.colors?.global ?? settings.globalColor }}>
+              <Text
+                style={{
+                  color:
+                    settings.colors?.description ??
+                    settings.colors?.global ??
+                    settings.globalColor,
+                }}
+              >
                 <SafeMarkdown>{settings.description}</SafeMarkdown>
               </Text>
             </div>
@@ -427,9 +360,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                 href="https://github.com/abhay-raizada/nostr-forms"
                 className="foss-link"
               >
-                <Text className="text-style">
-                  {t("filler.branding")}
-                </Text>
+                <Text className="text-style">{t("filler.branding")}</Text>
               </a>
             )}
           </div>
