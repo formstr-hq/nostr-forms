@@ -1,4 +1,4 @@
-import { Card, Divider, Typography } from "antd";
+import { Box, Card, Divider, Typography } from "@mui/material";
 import { naddrUrl } from "../../utils/utility";
 import { useNavigate } from "react-router-dom";
 import { getDefaultRelays } from "../../nostr/common";
@@ -33,89 +33,70 @@ export default function PublicFormCard({ event }: { event: Event }) {
     (description.length > 200 ? "..." : "");
 
   return formId ? (
-    <>
-      {/* custom styles */}
-      <style>
-        {`
-          .ant-card-hoverable {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-          }
-          .ant-card-hoverable:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-          }
-        `}
-      </style>
-
-      <Card
-        hoverable
-        onClick={() =>
-          navigate(naddrUrl(event.pubkey, formId, getDefaultRelays()))
-        }
-        style={{
-          backgroundImage: `url(${settings.titleImageUrl})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          position: "relative",
-          borderRadius: 8,
-          overflow: "hidden",
-          width: "100%",
-          cursor: "pointer",
-        }}
-        bodyStyle={{
-          background: "transparent",
+    <Card
+      variant="outlined"
+      onClick={() =>
+        navigate(naddrUrl(event.pubkey, formId, getDefaultRelays()))
+      }
+      sx={{
+        backgroundImage: `url(${settings.titleImageUrl})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        position: "relative",
+        borderRadius: 2,
+        overflow: "hidden",
+        width: "100%",
+        cursor: "pointer",
+        transition: "border-color 0.2s ease-in-out",
+        "&:hover": { borderColor: "primary.main" },
+      }}
+    >
+      <Box
+        sx={{
           position: "relative",
           zIndex: 2,
-          padding: 0,
+          background: "rgba(0,0,0,0.3)",
+          borderRadius: 2,
+          p: 2.5,
         }}
       >
-        <div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            background: "rgba(0,0,0,0.3)",
-            borderRadius: 8,
-            padding: 20,
+        <Typography
+          variant="h5"
+          sx={{
+            color: "white",
+            m: 0,
+            textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
           }}
         >
-          <Typography.Title
-            level={4}
-            style={{
-              color: "white",
-              margin: 0,
-              textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
-            }}
-          >
-            <SafeMarkdown>{name}</SafeMarkdown>
-          </Typography.Title>
-          <Divider style={{ borderColor: "rgba(255,255,255,0.2)" }} />
-          <div
-            style={{
-              color: "white",
-              opacity: "80%",
-              textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
-            }}
-          >
-            <SafeMarkdown>{truncatedDescription}</SafeMarkdown>
-          </div>
-          <Divider style={{ borderColor: "rgba(255,255,255,0.2)" }} />
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
-            }}
-          >
-            <Typography.Text style={{ color: "white", marginTop: 5 }}>
-              {formatLocalizedDate(event.created_at * 1000)}
-            </Typography.Text>
-          </div>
-        </div>
-      </Card>
-    </>
+          <SafeMarkdown>{name}</SafeMarkdown>
+        </Typography>
+        <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1.5 }} />
+        <Box
+          sx={{
+            color: "white",
+            opacity: "80%",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
+          }}
+        >
+          <SafeMarkdown>{truncatedDescription}</SafeMarkdown>
+        </Box>
+        <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1.5 }} />
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            textShadow: "2px 2px 4px rgba(0,0,0,0.7)",
+          }}
+        >
+          <Typography sx={{ color: "white", mt: 0.5 }}>
+            {formatLocalizedDate(event.created_at * 1000)}
+          </Typography>
+        </Box>
+      </Box>
+    </Card>
   ) : (
-    <Card>
-      <Typography.Text>{t("publicForms.corruptedCard")}</Typography.Text>
+    <Card variant="outlined">
+      <Typography sx={{ p: 2 }}>{t("publicForms.corruptedCard")}</Typography>
     </Card>
   );
 }

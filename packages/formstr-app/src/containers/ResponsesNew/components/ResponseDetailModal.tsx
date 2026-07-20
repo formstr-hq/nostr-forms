@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Typography, Button, Space, Form } from "antd";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Link,
+  Typography,
+} from "@mui/material";
 import { Event, nip19, getPublicKey } from "nostr-tools";
 import { hexToBytes } from "nostr-tools/utils";
 import { Tag } from "../../../nostr/types";
@@ -7,13 +16,6 @@ import { FormRenderer } from "../../FormFillerNew/FormRenderer";
 import { buildResponseFormValues } from "../../../utils/ResponseUtils";
 import { useTranslation } from "react-i18next";
 
-const { Text } = Typography;
-
-type ResponseDetailItem = {
-  key: string;
-  question: string;
-  answer: string;
-};
 interface ResponseDetailModalProps {
   isVisible: boolean;
   onClose: () => void;
@@ -37,73 +39,71 @@ export const ResponseDetailModal: React.FC<ResponseDetailModalProps> = ({
     author?: string;
     timestamp?: string;
   }>({});
-  const [form] = Form.useForm();
 
   useEffect(() => {
     if (isVisible && responseMetadataEvent) {
       const authorNpub = nip19.npubEncode(responseMetadataEvent.pubkey);
       const timestamp = new Date(
-        responseMetadataEvent.created_at * 1000
+        responseMetadataEvent.created_at * 1000,
       ).toLocaleString();
       setMetaData({ author: authorNpub, timestamp });
-      if (processedInputs && processedInputs.length > 0) {
-        form.setFieldsValue(buildResponseFormValues(processedInputs));
-      } else {
-        form.resetFields();
-      }
     } else {
       setMetaData({});
-      form.resetFields();
     }
   }, [isVisible, responseMetadataEvent, processedInputs, formSpec]);
 
   return (
-    <Modal
-      title={
-        <Space direction="vertical" size="small">
-          <Text strong>{t("responses.detail.title")}</Text>
-          <Text type="secondary" style={{ fontSize: "0.9em" }}>
+    <Dialog
+      open={isVisible}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      // Fresh mount per response so FormRenderer re-seeds from initialValues.
+      key={responseMetadataEvent?.id}
+    >
+      <DialogTitle>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Typography sx={{ fontWeight: 600 }}>
+            {t("responses.detail.title")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
             {t("responses.detail.by")}:{" "}
-            <Typography.Link
+            <Link
               href={`https://njump.me/${metaData.author}`}
               target="_blank"
               rel="noopener noreferrer"
             >
               {metaData.author || t("responses.detail.unknownAuthor")}
-            </Typography.Link>
-          </Text>
-          <Text type="secondary" style={{ fontSize: "0.8em" }}>
+            </Link>
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
             {t("responses.detail.submitted")}:{" "}
             {metaData.timestamp || t("responses.detail.unavailable")}
-          </Text>
-        </Space>
-      }
-      open={isVisible}
-      onCancel={onClose}
-      footer={[
-        <Button key="close" onClick={onClose}>
-          {t("common.actions.close")}
-        </Button>,
-      ]}
-      width={900}
-      destroyOnClose={true}
-    >
-      {formSpec && formSpec.length > 0 ? (
-        <FormRenderer
-          formTemplate={formSpec}
-          form={form}
-          onInput={() => {}}
-          disabled={true}
-          readOnly={true}
-          initialValues={buildResponseFormValues(processedInputs)}
-          formstrBranding={formstrBranding}
-          formAuthorPubkey={editKey ? getPublicKey(hexToBytes(editKey)) : undefined}
-          formEditKey={editKey || undefined}
-          uploaderPubkey={responseMetadataEvent?.pubkey}
-        />
-      ) : (
-        <Typography.Text>{t("responses.detail.waiting")}</Typography.Text>
-      )}
-    </Modal>
+          </Typography>
+        </Box>
+      </DialogTitle>
+      <DialogContent dividers>
+        {formSpec && formSpec.length > 0 ? (
+          <FormRenderer
+            formTemplate={formSpec}
+            onInput={() => {}}
+            disabled={true}
+            readOnly={true}
+            initialValues={buildResponseFormValues(processedInputs)}
+            formstrBranding={formstrBranding}
+            formAuthorPubkey={
+              editKey ? getPublicKey(hexToBytes(editKey)) : undefined
+            }
+            formEditKey={editKey || undefined}
+            uploaderPubkey={responseMetadataEvent?.pubkey}
+          />
+        ) : (
+          <Typography>{t("responses.detail.waiting")}</Typography>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>{t("common.actions.close")}</Button>
+      </DialogActions>
+    </Dialog>
   );
 };

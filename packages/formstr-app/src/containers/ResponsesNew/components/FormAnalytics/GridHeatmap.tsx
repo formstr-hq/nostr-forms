@@ -1,8 +1,7 @@
 import React from "react";
-import { Card, Typography, Tooltip } from "antd";
+import { Box, Tooltip, Typography } from "@mui/material";
 import { GridHeatmapData } from "./dataUtils";
-
-const { Text } = Typography;
+import { ChartCard } from "./ChartCard";
 
 // Interpolate between white and indigo based on 0–1 intensity
 function heatColor(intensity: number): string {
@@ -22,7 +21,11 @@ interface Props {
   totalAnswered: number;
 }
 
-export const GridHeatmap: React.FC<Props> = ({ label, data, totalAnswered }) => {
+export const GridHeatmap: React.FC<Props> = ({
+  label,
+  data,
+  totalAnswered,
+}) => {
   const { rows, columns, matrix, maxCount, fieldType } = data;
   const typeLabel =
     fieldType === "checkboxGrid" ? "checkbox grid" : "multiple choice grid";
@@ -30,21 +33,8 @@ export const GridHeatmap: React.FC<Props> = ({ label, data, totalAnswered }) => 
   const COL_WIDTH = Math.max(64, Math.floor(480 / columns.length));
 
   return (
-    <Card
-      size="small"
-      style={{ marginBottom: 16, borderRadius: 12 }}
-      title={
-        <div>
-          <Text strong style={{ fontSize: 14 }}>
-            {label}
-          </Text>
-          <Text type="secondary" style={{ fontSize: 11, marginLeft: 8 }}>
-            {typeLabel} &bull; {totalAnswered} answered
-          </Text>
-        </div>
-      }
-    >
-      <div style={{ overflowX: "auto" }}>
+    <ChartCard label={label} meta={`${typeLabel} • ${totalAnswered} answered`}>
+      <Box sx={{ overflowX: "auto" }}>
         <table
           style={{
             borderCollapse: "collapse",
@@ -108,7 +98,9 @@ export const GridHeatmap: React.FC<Props> = ({ label, data, totalAnswered }) => 
                   return (
                     <Tooltip
                       key={col.id}
-                      title={`${row.label} → ${col.label}: ${count} selection${count !== 1 ? "s" : ""} (${pct}%)`}
+                      title={`${row.label} → ${col.label}: ${count} selection${
+                        count !== 1 ? "s" : ""
+                      } (${pct}%)`}
                     >
                       <td
                         style={{
@@ -132,27 +124,27 @@ export const GridHeatmap: React.FC<Props> = ({ label, data, totalAnswered }) => 
             ))}
           </tbody>
         </table>
-      </div>
-      <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
-        <Text type="secondary" style={{ fontSize: 11 }}>
+      </Box>
+      <Box sx={{ mt: 1.25, display: "flex", alignItems: "center", gap: 0.75 }}>
+        <Typography variant="caption" color="text.secondary">
           Low
-        </Text>
+        </Typography>
         {[0, 0.25, 0.5, 0.75, 1].map((v) => (
-          <div
+          <Box
             key={v}
-            style={{
+            sx={{
               width: 18,
               height: 18,
-              borderRadius: 3,
+              borderRadius: "3px",
               background: heatColor(v),
               border: "1px solid #e5e7eb",
             }}
           />
         ))}
-        <Text type="secondary" style={{ fontSize: 11 }}>
+        <Typography variant="caption" color="text.secondary">
           High
-        </Text>
-      </div>
-    </Card>
+        </Typography>
+      </Box>
+    </ChartCard>
   );
 };

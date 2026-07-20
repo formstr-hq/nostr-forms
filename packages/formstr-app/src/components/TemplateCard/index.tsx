@@ -1,36 +1,6 @@
-import React from 'react';
-import { Card, Typography } from 'antd';
-import styled from 'styled-components';
-import { FormTemplate } from '../../templates';
-
-const { Text, Paragraph } = Typography;
-
-const StyledCard = styled(Card)`
-  width: 180px; // Adjust width as needed
-  height: 120px; // Adjust height as needed
-  margin: 8px;
-  cursor: pointer;
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* Center content vertically */
-  align-items: center; /* Center content horizontally */
-  text-align: center;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  .ant-card-body {
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 100%; /* Ensure body takes full height */
-  }
-`;
+import React from "react";
+import { Card, CardContent, Typography } from "@mui/material";
+import { FormTemplate } from "../../templates";
 
 interface TemplateCardProps {
   template: FormTemplate;
@@ -39,14 +9,45 @@ interface TemplateCardProps {
 
 const TemplateCard: React.FC<TemplateCardProps> = ({ template, onClick }) => {
   return (
-    <StyledCard hoverable onClick={() => onClick(template)}>
-      <Text strong>{template.name}</Text>
-      {template.description && (
-        <Paragraph type="secondary" style={{ marginTop: '4px', marginBottom: 0 }} ellipsis={{ rows: 2 }}>
-          {template.description}
-        </Paragraph>
-      )}
-    </StyledCard>
+    <Card
+      variant="outlined"
+      onClick={() => onClick(template)}
+      sx={{
+        width: 180,
+        height: 120,
+        m: 1,
+        cursor: "pointer",
+        transition: "border-color 0.2s ease-in-out",
+        "&:hover": { borderColor: "primary.main" },
+      }}
+    >
+      <CardContent
+        sx={{
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+        }}
+      >
+        <Typography sx={{ fontWeight: 600 }}>{template.name}</Typography>
+        {template.description && (
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 0.5,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {template.description}
+          </Typography>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

@@ -1,8 +1,18 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FormEventCard } from "./FormEventCard";
-import { Spin, Card, Button, Divider } from "antd";
-import { LoadingOutlined, ReloadOutlined } from "@ant-design/icons";
+import {
+  Box,
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  CardHeader,
+  CircularProgress,
+  Divider,
+  Typography,
+} from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useMyForms } from "../../../provider/MyFormsProvider";
 import DeleteFormTrigger from "./DeleteForm";
 import { makeFormNAddr, naddrUrl } from "../../../utils/utility";
@@ -30,22 +40,22 @@ export const MyForms = () => {
 
   return (
     <>
-      <div style={{ textAlign: "right", marginBottom: 8 }}>
+      <Box sx={{ gridColumn: "1 / -1", textAlign: "right", mb: -1 }}>
         <Button
-          icon={<ReloadOutlined />}
+          startIcon={
+            refreshing ? <CircularProgress size={16} /> : <RefreshIcon />
+          }
           onClick={() => void refreshForms(true)}
-          loading={refreshing}
+          disabled={refreshing}
           size="small"
         >
           Reload
         </Button>
-      </div>
+      </Box>
       {refreshing ? (
-        <Spin
-          indicator={
-            <LoadingOutlined style={{ fontSize: 48, color: "#F7931A" }} spin />
-          }
-        />
+        <Box sx={{ gridColumn: "1 / -1", textAlign: "center", py: 4 }}>
+          <CircularProgress />
+        </Box>
       ) : null}
       {[...formEvents.values()]
         .sort((a, b) => {
@@ -59,34 +69,30 @@ export const MyForms = () => {
 
           if (!formMetadata.event) {
             return (
-              <Card
-                key={formId}
-                className="form-card"
-                title={formId}
-                style={{ fontSize: 12, color: "grey" }}
-                extra={
-                  <DeleteFormTrigger
-                    formKey={`${formPubkey}:${formId}`}
-                    onDeleted={() => handleFormDeleted(formId, formPubkey)}
-                  />
-                }
-              >
-                <p style={{ marginBottom: 16 }}>
-                  {"Could not find this form's event on the default relays."}
-                  {formMetadata.relay
-                    ? ` Will also check: ${formMetadata.relay}`
-                    : ""}
-                </p>
+              <Card key={formId} variant="outlined" className="form-card">
+                <CardHeader
+                  title={formId}
+                  action={
+                    <DeleteFormTrigger
+                      formKey={`${formPubkey}:${formId}`}
+                      onDeleted={() => handleFormDeleted(formId, formPubkey)}
+                    />
+                  }
+                  sx={{ "& .MuiCardHeader-content": { minWidth: 0 } }}
+                />
+                <CardContent sx={{ pt: 0 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {"Could not find this form's event on the default relays."}
+                    {formMetadata.relay
+                      ? ` Will also check: ${formMetadata.relay}`
+                      : ""}
+                  </Typography>
+                </CardContent>
                 <Divider />
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div>
+                <CardActions sx={{ justifyContent: "space-between", px: 2 }}>
+                  <Box>
                     <Button
+                      size="small"
                       onClick={() => {
                         const relays = formMetadata.relay
                           ? [formMetadata.relay]
@@ -100,12 +106,11 @@ export const MyForms = () => {
                           ),
                         );
                       }}
-                      type="dashed"
-                      style={{ color: "purple", borderColor: "purple" }}
                     >
                       View Responses
                     </Button>
                     <Button
+                      size="small"
                       onClick={() => {
                         const relays = formMetadata.relay
                           ? [formMetadata.relay]
@@ -119,26 +124,25 @@ export const MyForms = () => {
                           ),
                         );
                       }}
-                      type="dashed"
-                      style={{
-                        marginLeft: 10,
-                        color: "green",
-                        borderColor: "green",
-                      }}
                     >
                       Open Form
                     </Button>
-                  </div>
+                  </Box>
                   <Button
-                    icon={<ReloadOutlined />}
+                    size="small"
+                    startIcon={
+                      retrying.has(formId) ? (
+                        <CircularProgress size={16} />
+                      ) : (
+                        <RefreshIcon />
+                      )
+                    }
                     onClick={() => handleRetry(formId)}
-                    loading={retrying.has(formId)}
-                    type="dashed"
-                    style={{ color: "purple", borderColor: "purple" }}
+                    disabled={retrying.has(formId)}
                   >
                     Retry
                   </Button>
-                </div>
+                </CardActions>
               </Card>
             );
           }

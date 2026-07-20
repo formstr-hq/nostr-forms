@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Event, getPublicKey, nip19 } from "nostr-tools";
 import { hexToBytes } from "@noble/hashes/utils.js";
-import { Button, Empty, Form, Typography } from "antd";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
+import { Box, Button, IconButton, Link, Typography } from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useTranslation } from "react-i18next";
 import { Tag } from "../../../nostr/types";
 import { FormRenderer } from "../../FormFillerNew/FormRenderer";
@@ -12,8 +13,7 @@ import {
 } from "../../../utils/ResponseUtils";
 import { formatLocalizedDateTime } from "../../../i18n/format";
 import { isMobile } from "../../../utils/utility";
-
-const { Text } = Typography;
+import { FORMSTR_COLORS } from "../../../theme/muiTheme";
 
 interface Respondent {
   pubkey: string;
@@ -40,7 +40,6 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
   formstrBranding,
 }) => {
   const { t } = useTranslation();
-  const [form] = Form.useForm();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
 
@@ -55,7 +54,7 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
     return Array.from(byPubkey.entries())
       .map(([pubkey, events]) => {
         const latest = [...events].sort(
-          (a, b) => b.created_at - a.created_at
+          (a, b) => b.created_at - a.created_at,
         )[0];
         return {
           pubkey,
@@ -77,16 +76,9 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
 
   const selected = respondents[selectedIndex];
 
-  // Push the selected response into the (read-only) form.
-  useEffect(() => {
-    if (!selected) return;
-    form.resetFields();
-    form.setFieldsValue(buildResponseFormValues(selected.processedInputs));
-  }, [selectedIndex, selected, form]);
-
   const go = (delta: number) =>
     setSelectedIndex((i) =>
-      Math.max(0, Math.min(respondents.length - 1, i + delta))
+      Math.max(0, Math.min(respondents.length - 1, i + delta)),
     );
 
   // Arrow-key navigation (desktop): ↑/← previous, ↓/→ next; j/k as aliases.
@@ -94,11 +86,7 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
-      if (
-        tag === "INPUT" ||
-        tag === "TEXTAREA" ||
-        target?.isContentEditable
-      ) {
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) {
         return;
       }
       if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "j") {
@@ -132,10 +120,11 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
 
   if (respondents.length === 0) {
     return (
-      <Empty
-        description={t("responses.noResponsesYet", "No responses yet")}
-        style={{ marginTop: 48 }}
-      />
+      <Box sx={{ mt: 6, textAlign: "center" }}>
+        <Typography color="text.secondary">
+          {t("responses.noResponsesYet", "No responses yet")}
+        </Typography>
+      </Box>
     );
   }
 
@@ -146,55 +135,65 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
   const positionLabel = `${selectedIndex + 1} / ${respondents.length}`;
 
   const navControls = (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        gap: 8,
-        marginBottom: 12,
+        gap: 1,
+        mb: 1.5,
       }}
     >
       <Button
-        icon={<LeftOutlined />}
+        variant="outlined"
+        startIcon={<ChevronLeftIcon />}
         disabled={selectedIndex === 0}
         onClick={() => go(-1)}
       >
         {t("common.actions.back", "Prev")}
       </Button>
-      <Text type="secondary" style={{ fontSize: 13 }}>
+      <Typography variant="body2" color="text.secondary">
         {positionLabel}
-      </Text>
+      </Typography>
       <Button
+        variant="outlined"
+        endIcon={<ChevronRightIcon />}
         disabled={selectedIndex >= respondents.length - 1}
         onClick={() => go(1)}
       >
-        {t("common.actions.next", "Next")} <RightOutlined />
+        {t("common.actions.next", "Next")}
       </Button>
-    </div>
+    </Box>
   );
 
   const detail = selected && (
     <>
-      <div style={{ marginBottom: 8 }}>
-        <a
+      <Box sx={{ mb: 1 }}>
+        <Link
           href={`https://njump.me/${selected.npub}`}
           target="_blank"
           rel="noopener noreferrer"
         >
           {shortNpub(selected.npub)}
-        </a>
-        <Text type="secondary" style={{ marginLeft: 8, fontSize: 12 }}>
+        </Link>
+        <Typography
+          component="span"
+          variant="body2"
+          color="text.secondary"
+          sx={{ ml: 1 }}
+        >
           {formatLocalizedDateTime(selected.createdAt * 1000)}
           {selected.submissionsCount > 1
-            ? ` · ${t("responses.submissions", "Submissions")}: ${selected.submissionsCount}`
+            ? ` · ${t("responses.submissions", "Submissions")}: ${
+                selected.submissionsCount
+              }`
             : ""}
-        </Text>
-      </div>
+        </Typography>
+      </Box>
+      {/* key remounts per respondent so the renderer re-seeds initialValues */}
       <FormRenderer
         key={selected.pubkey}
         formTemplate={formSpec}
-        form={form}
         onInput={() => {}}
         disabled={true}
         readOnly={true}
@@ -212,140 +211,150 @@ export const ResponseNavigator: React.FC<ResponseNavigatorProps> = ({
     const atStart = selectedIndex === 0;
     const atEnd = selectedIndex >= respondents.length - 1;
 
-    const floatingButtonStyle: React.CSSProperties = {
+    const floatingButtonSx = {
       position: "fixed",
       top: "50%",
       transform: "translateY(-50%)",
       zIndex: 1000,
       opacity: 0.92,
-      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.18)",
-    };
+      boxShadow: 3,
+      bgcolor: "background.paper",
+    } as const;
 
     return (
-      <div
+      <Box
         // Leave room for the sticky bottom bar so the form's last field isn't covered.
-        style={{ paddingBottom: 88 }}
+        sx={{ pb: 11 }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div style={{ textAlign: "center", marginBottom: 8 }}>
-          <Text type="secondary" style={{ fontSize: 13 }}>
+        <Box sx={{ textAlign: "center", mb: 1 }}>
+          <Typography variant="body2" color="text.secondary">
             {positionLabel}
-          </Text>
-        </div>
-        <div>{detail}</div>
+          </Typography>
+        </Box>
+        <Box>{detail}</Box>
 
         {/* Floating side buttons — reachable by either thumb without scrolling. */}
-        <Button
-          shape="circle"
-          size="large"
+        <IconButton
           aria-label={t("common.actions.back", "Prev")}
-          icon={<LeftOutlined />}
           disabled={atStart}
           onClick={() => go(-1)}
-          style={{ ...floatingButtonStyle, left: 8 }}
-        />
-        <Button
-          shape="circle"
-          size="large"
+          sx={{ ...floatingButtonSx, left: 8 }}
+        >
+          <ChevronLeftIcon />
+        </IconButton>
+        <IconButton
           aria-label={t("common.actions.next", "Next")}
-          icon={<RightOutlined />}
           disabled={atEnd}
           onClick={() => go(1)}
-          style={{ ...floatingButtonStyle, right: 8 }}
-        />
+          sx={{ ...floatingButtonSx, right: 8 }}
+        >
+          <ChevronRightIcon />
+        </IconButton>
 
         {/* Sticky bottom bar with full-width Prev/Next. */}
-        <div
-          style={{
+        <Box
+          sx={{
             position: "fixed",
             bottom: 0,
             left: 0,
             right: 0,
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            padding: "10px 16px",
-            background: "#fff",
-            borderTop: "1px solid #f0f0f0",
-            boxShadow: "0 -2px 8px rgba(0, 0, 0, 0.06)",
+            gap: 1,
+            px: 2,
+            py: 1.25,
+            bgcolor: "background.paper",
+            borderTop: 1,
+            borderColor: "divider",
+            boxShadow: 3,
             zIndex: 1000,
           }}
         >
           <Button
-            icon={<LeftOutlined />}
+            variant="outlined"
+            startIcon={<ChevronLeftIcon />}
             disabled={atStart}
             onClick={() => go(-1)}
-            style={{ flex: 1 }}
+            sx={{ flex: 1 }}
           >
             {t("common.actions.back", "Prev")}
           </Button>
-          <Text
-            type="secondary"
-            style={{ fontSize: 13, minWidth: 56, textAlign: "center" }}
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ minWidth: 56, textAlign: "center" }}
           >
             {positionLabel}
-          </Text>
+          </Typography>
           <Button
+            variant="outlined"
+            endIcon={<ChevronRightIcon />}
             disabled={atEnd}
             onClick={() => go(1)}
-            style={{ flex: 1 }}
+            sx={{ flex: 1 }}
           >
-            {t("common.actions.next", "Next")} <RightOutlined />
+            {t("common.actions.next", "Next")}
           </Button>
-        </div>
-      </div>
+        </Box>
+      </Box>
     );
   }
 
   return (
-    <div style={{ display: "flex", gap: 16, marginBottom: 60 }}>
-      <div
-        style={{
+    <Box sx={{ display: "flex", gap: 2, mb: 7 }}>
+      <Box
+        sx={{
           width: 280,
           flexShrink: 0,
           maxHeight: "70vh",
           overflowY: "auto",
-          borderRight: "1px solid #f0f0f0",
-          paddingRight: 8,
+          borderRight: 1,
+          borderColor: "divider",
+          pr: 1,
         }}
       >
         {respondents.map((r, i) => {
           const isActive = i === selectedIndex;
           return (
-            <div
+            <Box
               key={r.pubkey}
               onClick={() => setSelectedIndex(i)}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 8,
+              sx={{
+                p: "10px 12px",
+                borderRadius: 2,
                 cursor: "pointer",
-                marginBottom: 4,
-                background: isActive ? "#fff1ec" : "transparent",
-                borderLeft: isActive
-                  ? "3px solid #ff5733"
-                  : "3px solid transparent",
+                mb: 0.5,
+                bgcolor: isActive ? FORMSTR_COLORS.primaryTint : "transparent",
+                borderLeft: "3px solid",
+                borderColor: isActive ? "primary.main" : "transparent",
               }}
             >
-              <div style={{ fontWeight: isActive ? 600 : 400 }}>
+              <Box sx={{ fontWeight: isActive ? 600 : 400 }}>
                 {shortNpub(r.npub)}
-              </div>
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
                 {formatLocalizedDateTime(r.createdAt * 1000)}
-              </Text>
+              </Typography>
               {r.submissionsCount > 1 && (
-                <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-                  {t("responses.submissions", "Submissions")}: {r.submissionsCount}
-                </Text>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ display: "block" }}
+                >
+                  {t("responses.submissions", "Submissions")}:{" "}
+                  {r.submissionsCount}
+                </Typography>
               )}
-            </div>
+            </Box>
           );
         })}
-      </div>
-      <div style={{ flex: 1, minWidth: 0, maxHeight: "70vh", overflowY: "auto" }}>
+      </Box>
+      <Box sx={{ flex: 1, minWidth: 0, maxHeight: "70vh", overflowY: "auto" }}>
         {navControls}
         {detail}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };

@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, Typography } from "antd";
 import {
   BarChart,
   Bar,
@@ -11,12 +10,17 @@ import {
   LabelList,
 } from "recharts";
 import { ChoiceData } from "./dataUtils";
-
-const { Text } = Typography;
+import { ChartCard } from "./ChartCard";
 
 const COLORS = [
-  "#6366f1", "#8b5cf6", "#ec4899", "#f59e0b",
-  "#10b981", "#3b82f6", "#ef4444", "#14b8a6",
+  "#6366f1",
+  "#8b5cf6",
+  "#ec4899",
+  "#f59e0b",
+  "#10b981",
+  "#3b82f6",
+  "#ef4444",
+  "#14b8a6",
 ];
 
 interface Props {
@@ -65,23 +69,7 @@ export const ChoiceChart: React.FC<Props> = ({
   const chartHeight = Math.max(180, data.length * 44);
 
   return (
-    <Card
-      size="small"
-      style={{ marginBottom: 16, borderRadius: 12 }}
-      title={
-        <div>
-          <Text strong style={{ fontSize: 14 }}>
-            {label}
-          </Text>
-          <Text
-            type="secondary"
-            style={{ fontSize: 11, marginLeft: 8 }}
-          >
-            {typeLabel} &bull; {totalAnswered} answered
-          </Text>
-        </div>
-      }
-    >
+    <ChartCard label={label} meta={`${typeLabel} • ${totalAnswered} answered`}>
       <ResponsiveContainer width="100%" height={chartHeight}>
         <BarChart
           data={data}
@@ -105,12 +93,14 @@ export const ChoiceChart: React.FC<Props> = ({
             <LabelList
               dataKey="percentage"
               position="right"
-              formatter={(v: string | number | boolean | null | undefined) => `${v}%`}
+              formatter={(v: string | number | boolean | null | undefined) =>
+                `${v}%`
+              }
               style={{ fontSize: 12, fill: "#6b7280" }}
             />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </Card>
+    </ChartCard>
   );
 };

@@ -1,10 +1,15 @@
-import { Button, Card } from "antd";
+import {
+  Button,
+  Card,
+  CardActions,
+  CardHeader,
+  IconButton,
+} from "@mui/material";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import { getItem, LOCAL_STORAGE_KEYS } from "../../../utils/localStorage";
 import { Tag } from "../../../nostr/types";
-import { DeleteOutlined } from "@ant-design/icons";
 import { deleteDraft } from "../../../utils/utility";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 export function constructDraftUrl(
   draft: { formSpec: unknown; tempId: string },
@@ -33,31 +38,39 @@ export const Drafts = () => {
         const questionCount = d.formSpec.filter((f) => f[0] === "field").length;
 
         return (
-          <Card
-            key={d.tempId}
-            title={`${name} (${questionCount} ${
-              questionCount === 1 ? "question" : "questions"
-            })`}
-            className="form-card"
-            extra={
-              <DeleteOutlined
-                onClick={() => {
-                  deleteDraft(d.tempId);
-                  setDrafts(getItem(LOCAL_STORAGE_KEYS.DRAFT_FORMS) || []);
-                }}
-              />
-            }
-          >
-            <Button
-              onClick={() =>
-                window.open(
-                  constructDraftUrl(d, window.location.origin),
-                  "_blank",
-                )
+          <Card key={d.tempId} variant="outlined" className="form-card">
+            <CardHeader
+              title={`${name} (${questionCount} ${
+                questionCount === 1 ? "question" : "questions"
+              })`}
+              action={
+                <IconButton
+                  aria-label="delete draft"
+                  onClick={() => {
+                    deleteDraft(d.tempId);
+                    setDrafts(getItem(LOCAL_STORAGE_KEYS.DRAFT_FORMS) || []);
+                  }}
+                  size="small"
+                  sx={{ color: "error.main" }}
+                >
+                  <DeleteOutlinedIcon />
+                </IconButton>
               }
-            >
-              Open Draft
-            </Button>
+              sx={{ "& .MuiCardHeader-content": { minWidth: 0 } }}
+            />
+            <CardActions>
+              <Button
+                size="small"
+                onClick={() =>
+                  window.open(
+                    constructDraftUrl(d, window.location.origin),
+                    "_blank",
+                  )
+                }
+              >
+                Open Draft
+              </Button>
+            </CardActions>
           </Card>
         );
       })}

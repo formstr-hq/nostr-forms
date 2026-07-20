@@ -1,26 +1,33 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
+  Box,
   Button,
   Card,
-  Input,
+  CardContent,
+  CardHeader,
+  CircularProgress,
+  IconButton,
   List,
-  Space,
-  Spin,
-  message,
-  Collapse,
-} from "antd";
-import { CloseOutlined, RobotOutlined, SendOutlined } from "@ant-design/icons";
+  ListItem,
+  TextField,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import SendIcon from "@mui/icons-material/Send";
+import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import { AIAnalysisChatProps, Message } from "./types";
-import { ChatWrapper, MessageItem, MessageList } from "./style";
 import { ollamaService, OllamaModel } from "../../../../services/ollamaService";
 import ModelSelector from "../../../../components/ModelSelector";
 import OllamaSettings from "../../../../components/OllamaSettings";
 import { createAnalysisReport, runAnalysis } from "./analysisHelper";
 import SafeMarkdown from "../../../../components/SafeMarkdown";
 import { useTranslation } from "react-i18next";
+import { useSnackbar } from "../../../../providers/SnackbarProvider";
 
-const { TextArea } = Input;
-
+/**
+ * MUI chat card (ui-rewrite-mui Phase 4). ModelSelector/OllamaSettings stay
+ * antd until Phase 6 — the footer sx keeps the antd settings panel anchored
+ * above the footer in the meantime.
+ */
 const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
   isVisible,
   onClose,
@@ -28,16 +35,17 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
   formSpec,
 }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [activePrompt, setActivePrompt] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [availableModels, setAvailableModels] = useState<OllamaModel[]>([]);
   const [selectedModel, setSelectedModel] = useState<string | undefined>(
-    () => ollamaService.getConfig().modelName
+    () => ollamaService.getConfig().modelName,
   );
   const [fetchingModels, setFetchingModels] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<boolean | null>(
-    null
+    null,
   );
   const [isConnecting, setIsConnecting] = useState(false);
   const [streamingText, setStreamingText] = useState("");
@@ -58,7 +66,7 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
       setAvailableModels(result.models);
       const currentConfig = ollamaService.getConfig();
       const modelStillExists = result.models.some(
-        (m) => m.name === currentConfig.modelName
+        (m) => m.name === currentConfig.modelName,
       );
       if (modelStillExists) {
         setSelectedModel(currentConfig.modelName);
@@ -78,22 +86,23 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
       const result = await ollamaService.testConnection();
       if (result.success) {
         if (showAlerts) {
-          message.success(t("responses.aiChat.connectedSuccess"));
+          showMessage(t("responses.aiChat.connectedSuccess"), "success");
         }
         setConnectionStatus(true);
         fetchModels();
       } else {
         setConnectionStatus(false);
         if (showAlerts)
-          message.error(
+          showMessage(
             t("responses.aiChat.connectionFailed", {
               error: result.error || t("common.status.unknownError"),
             }),
+            "error",
           );
       }
       setIsConnecting(false);
     },
-    [fetchModels]
+    [fetchModels],
   );
 
   const handleSend = () => {
@@ -143,7 +152,7 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
         const finalMessage = { sender: "ai" as const, text: completeResponse };
         setChatHistory((prev) => [...prev, finalMessage]);
       } catch (e: any) {
-        message.error(e.message || t("responses.aiChat.analysisError"));
+        showMessage(e.message || t("responses.aiChat.analysisError"), "error");
         const errorMessage = {
           sender: "ai" as const,
           text: t("responses.aiChat.analysisErrorReply", {
@@ -160,103 +169,181 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
     performAnalysis();
   }, [chatHistory, isVisible, connectionStatus, selectedModel]);
 
-  const getButtonProps = () => {
-    if (connectionStatus === true)
-      return { className: "ai-chat-button-success" };
-    if (connectionStatus === false)
-      return { className: "ai-chat-button-danger" };
-    return {};
-  };
+  const connectionButtonSx =
+    connectionStatus === true
+      ? {
+          bgcolor: "#00796b",
+          borderColor: "#00796b",
+          color: "#fff",
+          "&:hover": { bgcolor: "#004d40", borderColor: "#004d40" },
+        }
+      : connectionStatus === false
+      ? {
+          bgcolor: "#d32f2f",
+          borderColor: "#d32f2f",
+          color: "#fff",
+          "&:hover": { bgcolor: "#c62828", borderColor: "#c62828" },
+        }
+      : {};
 
   if (!isVisible) return null;
 
   const controlsDisabled = !connectionStatus || isAnalyzing;
 
   return (
-    <ChatWrapper>
-      <Card
-        title={
-          <Space>
-            <RobotOutlined /> {t("responses.aiChat.title")}
-          </Space>
-        }
-        extra={
-          <Button type="text" icon={<CloseOutlined />} onClick={onClose} />
-        }
-        bodyStyle={{ paddingTop: 4, paddingBottom: 0 }}
-      >
-        <MessageList ref={messageListRef}>
-          <List
-            dataSource={chatHistory}
-            renderItem={(item) => (
-              <MessageItem sender={item.sender}>
-                <div className="message-bubble">
-                  <SafeMarkdown>{item.text}</SafeMarkdown>
-                </div>
-              </MessageItem>
+    <Box sx={{ width: "100%", mt: 1 }}>
+      <Card variant="outlined">
+        <CardHeader
+          title={
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <SmartToyOutlinedIcon /> {t("responses.aiChat.title")}
+            </Box>
+          }
+          action={
+            <IconButton aria-label="close" onClick={onClose} size="small">
+              <CloseIcon />
+            </IconButton>
+          }
+        />
+        <CardContent sx={{ pt: 0, pb: 0 }}>
+          <Box
+            ref={messageListRef}
+            sx={{ height: 300, overflowY: "auto", pr: 1 }}
+          >
+            <List disablePadding>
+              {chatHistory.map((item, index) => (
+                <ListItem
+                  key={index}
+                  disableGutters
+                  sx={{
+                    display: "flex",
+                    justifyContent:
+                      item.sender === "user" ? "flex-end" : "flex-start",
+                    mb: 1.5,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      px: 1.5,
+                      py: 1,
+                      borderRadius: "18px",
+                      maxWidth: "80%",
+                      bgcolor:
+                        item.sender === "user" ? "primary.main" : "grey.100",
+                      color: item.sender === "user" ? "#fff" : "inherit",
+                      wordWrap: "break-word",
+                    }}
+                  >
+                    <SafeMarkdown>{item.text}</SafeMarkdown>
+                  </Box>
+                </ListItem>
+              ))}
+            </List>
+            {isAnalyzing && (
+              <Box sx={{ display: "flex", mb: 1.5 }}>
+                <Box
+                  sx={{
+                    px: 1.5,
+                    py: 1,
+                    borderRadius: "18px",
+                    maxWidth: "80%",
+                    bgcolor: "grey.100",
+                    wordWrap: "break-word",
+                  }}
+                >
+                  <SafeMarkdown>{streamingText}</SafeMarkdown>
+                  <CircularProgress size={14} sx={{ ml: 1 }} />
+                </Box>
+              </Box>
             )}
-          />
-          {isAnalyzing && (
-            <MessageItem sender="ai">
-              <div className="message-bubble">
-                <SafeMarkdown>{streamingText}</SafeMarkdown>
-                <Spin size="small" style={{ marginLeft: "8px" }} />
-              </div>
-            </MessageItem>
-          )}
-        </MessageList>
-        <div style={{ marginTop: "auto" }}>
-          <Space.Compact style={{ width: "100%" }}>
-            <TextArea
+          </Box>
+          <Box sx={{ display: "flex", gap: 0.5, mt: 1 }}>
+            <TextField
+              multiline
+              minRows={1}
+              maxRows={4}
+              fullWidth
+              size="small"
               value={activePrompt}
               onChange={(e) => setActivePrompt(e.target.value)}
               placeholder={t("responses.aiChat.askPlaceholder")}
-              autoSize={{ minRows: 1, maxRows: 4 }}
               disabled={controlsDisabled}
-              onPressEnter={(e) => {
-                if (!e.shiftKey && !isAnalyzing) {
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && !isAnalyzing) {
                   e.preventDefault();
                   handleSend();
                 }
               }}
             />
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
+            <IconButton
+              color="primary"
+              aria-label="send"
               onClick={handleSend}
-              loading={isAnalyzing}
               disabled={controlsDisabled || !activePrompt.trim()}
-            />
-          </Space.Compact>
-        </div>
-        <div className="chat-footer-controls">
-          <div className="footer-help-section">
-            <OllamaSettings />
-          </div>
-          <Space>
-            <ModelSelector
-              model={selectedModel}
-              setModel={(model) => {
-                setSelectedModel(model);
-                ollamaService.setConfig({ modelName: model });
-              }}
-              availableModels={availableModels}
-              fetching={fetchingModels}
-              disabled={!connectionStatus || fetchingModels}
-              style={{ width: 180 }}
-              placeholder={t("responses.aiChat.modelPlaceholder")}
-            />
-            <Button
-              onClick={() => testConnection(true)}
-              loading={isConnecting}
-              {...getButtonProps()}
             >
-              {t("responses.aiChat.testConnection")}
-            </Button>
-          </Space>
-        </div>
+              {isAnalyzing ? <CircularProgress size={20} /> : <SendIcon />}
+            </IconButton>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: 1,
+              py: 1,
+            }}
+          >
+            <Box
+              sx={{
+                flexGrow: 1,
+                position: "relative",
+                // OllamaSettings is antd until Phase 6 — keep its panel
+                // anchored above the footer.
+                "& .ant-collapse-content": {
+                  position: "absolute",
+                  bottom: "calc(100%)",
+                  left: 0,
+                  right: 0,
+                  minWidth: 400,
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #f0f0f0",
+                  zIndex: 10,
+                  borderRadius: "8px",
+                  boxShadow: "0 -2px 8px rgba(0,0,0,0.1)",
+                },
+              }}
+            >
+              <OllamaSettings />
+            </Box>
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <ModelSelector
+                model={selectedModel}
+                setModel={(model) => {
+                  setSelectedModel(model);
+                  ollamaService.setConfig({ modelName: model });
+                }}
+                availableModels={availableModels}
+                fetching={fetchingModels}
+                disabled={!connectionStatus || fetchingModels}
+                style={{ width: 180 }}
+                placeholder={t("responses.aiChat.modelPlaceholder")}
+              />
+              <Button
+                variant="outlined"
+                onClick={() => testConnection(true)}
+                disabled={isConnecting}
+                startIcon={
+                  isConnecting ? <CircularProgress size={16} /> : undefined
+                }
+                sx={connectionButtonSx}
+              >
+                {t("responses.aiChat.testConnection")}
+              </Button>
+            </Box>
+          </Box>
+        </CardContent>
       </Card>
-    </ChatWrapper>
+    </Box>
   );
 };
 

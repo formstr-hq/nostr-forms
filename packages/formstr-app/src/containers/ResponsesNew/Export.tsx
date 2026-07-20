@@ -1,6 +1,6 @@
-import React from "react";
-import { Dropdown, MenuProps } from "antd";
-import { DownOutlined } from "@ant-design/icons";
+import React, { useState } from "react";
+import { Button, Menu, MenuItem } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { useTranslation } from "react-i18next";
 
 export const Export: React.FC<{
@@ -8,6 +8,7 @@ export const Export: React.FC<{
   formName: string;
 }> = ({ responsesData, formName }) => {
   const { t } = useTranslation();
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const hasResponses = responsesData.length > 0;
 
   const onDownloadClick = async (type: "csv" | "excel") => {
@@ -48,39 +49,37 @@ export const Export: React.FC<{
     }
   };
 
-  const items = [
-    {
-      label: t("responses.export.items.excel"),
-      key: "excel",
-    },
-    {
-      label: t("responses.export.items.csv"),
-      key: "csv",
-    },
-  ];
-
-  const handleMenuClick: MenuProps["onClick"] = (e) => {
-    onDownloadClick(e.key as "csv" | "excel");
-  };
-
-  const menuProps: MenuProps = {
-    items,
-    onClick: handleMenuClick,
-  };
-
-  const handleButtonClick = () => {
-    onDownloadClick("excel");
-  };
-
   return (
-    <Dropdown.Button
-      menu={menuProps}
-      className="export-excel"
-      type="text"
-      onClick={handleButtonClick}
-      icon={<DownOutlined />}
-    >
-      {t("responses.export.buttonExcel")}
-    </Dropdown.Button>
+    <>
+      <Button
+        variant="outlined"
+        endIcon={<KeyboardArrowDownIcon />}
+        onClick={(e) => setMenuAnchor(e.currentTarget)}
+      >
+        {t("responses.export.buttonExcel")}
+      </Button>
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={() => setMenuAnchor(null)}
+      >
+        <MenuItem
+          onClick={() => {
+            setMenuAnchor(null);
+            onDownloadClick("excel");
+          }}
+        >
+          {t("responses.export.items.excel")}
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            setMenuAnchor(null);
+            onDownloadClick("csv");
+          }}
+        >
+          {t("responses.export.items.csv")}
+        </MenuItem>
+      </Menu>
+    </>
   );
 };

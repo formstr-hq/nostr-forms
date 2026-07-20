@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Alert, Box, Button, CircularProgress, Tab, Tabs } from "@mui/material";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import { FormDetails } from "../CreateFormNew/components/FormDetails";
 import { Event } from "nostr-tools";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { FormEventCard } from "./FormCards/FormEventCard";
-import DashboardStyleWrapper from "./index.style";
 import EmptyScreen from "../../components/EmptyScreen";
 import { pool } from "../../pool";
 import { ILocalForm } from "../CreateFormNew/providers/FormBuilder/typeDefs";
-import { Dropdown, Menu, Typography, Button, Spin, Alert } from "antd";
-import { DownOutlined, ImportOutlined, LockOutlined } from "@ant-design/icons";
 import { nip19 } from "nostr-tools";
 import ImportFormModal from "../../components/ImportFormModal";
 import { useLocalForms } from "../../provider/LocalFormsProvider";
@@ -49,8 +49,22 @@ const ROUTE_TO_FILTER_MAP: RouteMapType = {
   [ROUTES.DASHBOARD]: "local",
 };
 
+const FILTER_TO_ROUTE_MAP: Record<FilterType, string> = {
+  local: ROUTES.DASHBOARD_LOCAL,
+  shared: ROUTES.DASHBOARD_SHARED,
+  myForms: ROUTES.DASHBOARD_MY_FORMS,
+  drafts: ROUTES.DASHBOARD_DRAFTS,
+  purchases: ROUTES.DASHBOARD_PURCHASES,
+  submissions: ROUTES.DASHBOARD_SUBMISSIONS,
+};
+
 const defaultRelays = getDefaultRelays();
 
+/**
+ * MUI dashboard (ui-rewrite-mui Phase 4). The filter dimensions approved in
+ * docs/ui-rewrite/design-direction.md stay as filters above the card grid —
+ * rendered as scrollable MUI Tabs instead of the old antd dropdown.
+ */
 export const Dashboard = () => {
   const { t } = useTranslation();
   const { state } = useLocation();
@@ -106,16 +120,12 @@ export const Dashboard = () => {
       "#p": [pubkey],
     };
 
-    subCloserRef.current = pool.subscribeMany(
-      defaultRelays,
-      queryFilter,
-      {
-        onevent: handleEvent,
-        onclose() {
-          subCloserRef.current?.close();
-        },
+    subCloserRef.current = pool.subscribeMany(defaultRelays, queryFilter, {
+      onevent: handleEvent,
+      onclose() {
+        subCloserRef.current?.close();
       },
-    );
+    });
   };
 
   useEffect(() => {
@@ -141,20 +151,22 @@ export const Dashboard = () => {
     if (filter === "local") {
       if (isLoadingLocalForms) {
         return (
-          <div style={{ textAlign: "center", padding: 40 }}>
-            <Spin size="large" />
-          </div>
+          <Box sx={{ textAlign: "center", py: 5, gridColumn: "1 / -1" }}>
+            <CircularProgress />
+          </Box>
         );
       }
       if (localForms.length == 0) {
         return (
-          <EmptyScreen
-            templates={availableTemplates}
-            onTemplateClick={handleTemplateClick}
-            message={t("dashboard.localEmpty")}
-            action={() => navigate(ROUTES.CREATE_FORMS_NEW)}
-            actionLabel={t("header.createForm")}
-          />
+          <Box sx={{ gridColumn: "1 / -1" }}>
+            <EmptyScreen
+              templates={availableTemplates}
+              onTemplateClick={handleTemplateClick}
+              message={t("dashboard.localEmpty")}
+              action={() => navigate(ROUTES.CREATE_FORMS_NEW)}
+              actionLabel={t("header.createForm")}
+            />
+          </Box>
         );
       }
       return (
@@ -167,7 +179,11 @@ export const Dashboard = () => {
       );
     } else if (filter === "shared") {
       if (nostrForms.size == 0) {
-        return <EmptyScreen message={t("dashboard.sharedEmpty")} />;
+        return (
+          <Box sx={{ gridColumn: "1 / -1" }}>
+            <EmptyScreen message={t("dashboard.sharedEmpty")} />
+          </Box>
+        );
       }
       return Array.from(nostrForms.values()).map((formEvent: Event) => {
         let d_tag = formEvent.tags.find((t) => t[0] === "d")?.[1];
@@ -189,126 +205,110 @@ export const Dashboard = () => {
   };
 
   const handleFilterChange = (selectedFilter: FilterType) => {
-    const routeMap = {
-      local: ROUTES.DASHBOARD_LOCAL,
-      shared: ROUTES.DASHBOARD_SHARED,
-      myForms: ROUTES.DASHBOARD_MY_FORMS,
-      drafts: ROUTES.DASHBOARD_DRAFTS,
-      purchases: ROUTES.DASHBOARD_PURCHASES,
-      submissions: ROUTES.DASHBOARD_SUBMISSIONS,
-    };
-
-    navigate(routeMap[selectedFilter]);
+    navigate(FILTER_TO_ROUTE_MAP[selectedFilter]);
   };
 
-  const menu = (
-      <Menu style={{ textAlign: "center" }}>
-      <Menu.Item key="local" onClick={() => handleFilterChange("local")}>
-        {menuOptions.local}
-      </Menu.Item>
-      <Menu.Item
-        key="shared"
-        onClick={() => handleFilterChange("shared")}
-        disabled={!pubkey}
-      >
-        {menuOptions.shared}
-      </Menu.Item>
-      <Menu.Item
-        key="myForms"
-        onClick={() => handleFilterChange("myForms")}
-        disabled={!pubkey}
-      >
-        {menuOptions.myForms}
-      </Menu.Item>
-      <Menu.Item key="drafts" onClick={() => handleFilterChange("drafts")}>
-        {menuOptions.drafts}
-      </Menu.Item>
-      <Menu.Item
-        key="purchases"
-        onClick={() => handleFilterChange("purchases")}
-      >
-        {menuOptions.purchases}
-      </Menu.Item>
-      <Menu.Item
-        key="submissions"
-        onClick={() => handleFilterChange("submissions")}
-      >
-        {menuOptions.submissions}
-      </Menu.Item>
-    </Menu>
-  );
+  const filterOrder: FilterType[] = [
+    "local",
+    "shared",
+    "myForms",
+    "drafts",
+    "purchases",
+    "submissions",
+  ];
 
   return (
-    <DashboardStyleWrapper>
-      <div className="dashboard-container">
-        <div className="filter-dropdown-container">
-          <Dropdown
-            overlay={menu}
-            trigger={["click"]}
-            placement="bottomLeft"
-            overlayClassName="dashboard-filter-menu"
-          >
-            <Button>
-              {menuOptions[filter]}
-              <DownOutlined style={{ marginLeft: "8px", fontSize: "12px" }} />
-            </Button>
-          </Dropdown>
-          <Button
-            icon={<ImportOutlined style={{ marginTop: -5 }} />}
-            onClick={() => setShowImportModal(true)}
-            style={{ marginLeft: 8 }}
-          >
-            {t("dashboard.import")}
-          </Button>
-        </div>
-        {filter === "local" && isEncrypted && !pubkey && (
-          <Alert
-            message={t("dashboard.encryptedFormsTitle")}
-            description={
-              encryptionMeta?.encryptedBy
-                ? t("dashboard.encryptedFormsFor", {
-                    npub: (() => {
-                    try {
-                      const npub = nip19.npubEncode(encryptionMeta.encryptedBy);
-                      return npub.slice(0, 12) + "..." + npub.slice(-8);
-                    } catch {
-                      return (
-                        encryptionMeta.encryptedBy.slice(0, 8) +
-                        "..." +
-                        encryptionMeta.encryptedBy.slice(-8)
-                      );
-                    }
-                  })(),
-                  })
-                : t("dashboard.encryptedFormsDescription")
-            }
-            type="info"
-            showIcon
-            icon={<LockOutlined />}
-            style={{ marginBottom: 16 }}
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
+          mb: 2,
+        }}
+      >
+        <Tabs
+          value={filter}
+          onChange={(_e, value: FilterType) => handleFilterChange(value)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ minHeight: 40, "& .MuiTab-root": { minHeight: 40 } }}
+        >
+          {filterOrder.map((f) => (
+            <Tab
+              key={f}
+              value={f}
+              label={menuOptions[f]}
+              disabled={(f === "shared" || f === "myForms") && !pubkey}
+            />
+          ))}
+        </Tabs>
+        <Button
+          variant="outlined"
+          startIcon={<UploadFileOutlinedIcon />}
+          onClick={() => setShowImportModal(true)}
+          sx={{ flexShrink: 0 }}
+        >
+          {t("dashboard.import")}
+        </Button>
+      </Box>
+      {filter === "local" && isEncrypted && !pubkey && (
+        <Alert severity="info" icon={<LockOutlinedIcon />} sx={{ mb: 2 }}>
+          <strong>{t("dashboard.encryptedFormsTitle")}</strong>
+          <br />
+          {encryptionMeta?.encryptedBy
+            ? t("dashboard.encryptedFormsFor", {
+                npub: (() => {
+                  try {
+                    const npub = nip19.npubEncode(encryptionMeta.encryptedBy);
+                    return npub.slice(0, 12) + "..." + npub.slice(-8);
+                  } catch {
+                    return (
+                      encryptionMeta.encryptedBy.slice(0, 8) +
+                      "..." +
+                      encryptionMeta.encryptedBy.slice(-8)
+                    );
+                  }
+                })(),
+              })
+            : t("dashboard.encryptedFormsDescription")}
+        </Alert>
+      )}
+      <Box
+        className="form-cards-container"
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+          },
+          gap: 2,
+          alignItems: "start",
+        }}
+      >
+        {renderForms()}
+      </Box>
+      <>
+        {state && (
+          <FormDetails
+            isOpen={showFormDetails}
+            {...state}
+            onClose={() => {
+              setShowFormDetails(false);
+              refreshForms();
+            }}
           />
         )}
-        <div className="form-cards-container">{renderForms()}</div>
-        <>
-          {state && (
-            <FormDetails
-              isOpen={showFormDetails}
-              {...state}
-              onClose={() => {
-                setShowFormDetails(false);
-                refreshForms();
-              }}
-            />
-          )}
-        </>
-        <ImportFormModal
-          open={showImportModal}
-          onClose={() => setShowImportModal(false)}
-          onImported={() => {
-            refreshForms();
-          }}
-        />
-      </div>
-    </DashboardStyleWrapper>
+      </>
+      <ImportFormModal
+        open={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImported={() => {
+          refreshForms();
+        }}
+      />
+    </Box>
   );
 };

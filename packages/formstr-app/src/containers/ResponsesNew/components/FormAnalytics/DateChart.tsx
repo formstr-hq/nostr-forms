@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, Typography } from "antd";
 import {
   AreaChart,
   Area,
@@ -10,8 +9,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { DateBucket } from "./dataUtils";
-
-const { Text } = Typography;
+import { ChartCard } from "./ChartCard";
 
 interface Props {
   label: string;
@@ -49,20 +47,7 @@ export const DateChart: React.FC<Props> = ({
   totalAnswered,
 }) => {
   return (
-    <Card
-      size="small"
-      style={{ marginBottom: 16, borderRadius: 12 }}
-      title={
-        <div>
-          <Text strong style={{ fontSize: 14 }}>
-            {label}
-          </Text>
-          <Text type="secondary" style={{ fontSize: 11, marginLeft: 8 }}>
-            {fieldType} &bull; {totalAnswered} answered
-          </Text>
-        </div>
-      }
-    >
+    <ChartCard label={label} meta={`${fieldType} • ${totalAnswered} answered`}>
       <ResponsiveContainer width="100%" height={200}>
         <AreaChart
           data={data}
@@ -99,6 +84,6 @@ export const DateChart: React.FC<Props> = ({
           />
         </AreaChart>
       </ResponsiveContainer>
-    </Card>
+    </ChartCard>
   );
 };

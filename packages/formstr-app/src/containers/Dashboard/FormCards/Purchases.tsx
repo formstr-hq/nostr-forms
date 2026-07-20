@@ -2,15 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { StoredForm } from "./types";
 import axios from "../../../utils/axiosInstance";
 import { FormEventCard } from "../FormCards/FormEventCard";
-import { Typography, Skeleton } from "antd";
+import { Box, Skeleton, Typography } from "@mui/material";
 import { pool } from "../../../pool";
 import { SubCloser } from "nostr-tools/abstract-pool";
 import { Event } from "nostr-tools";
 import { useProfileContext } from "../../../hooks/useProfileContext";
 import { getDefaultRelays } from "../../../nostr/common";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 interface FormWithEvent {
   form: StoredForm;
@@ -46,7 +44,6 @@ const Flair: React.FC<{
         userSelect: "none",
         fontWeight: 500,
         paddingTop: 6,
-        boxShadow: "0 1px 3px rgba(0,0,0,0.1)", // subtle shadow
         ...style,
       }}
     >
@@ -109,87 +106,98 @@ export const Purchases: React.FC = () => {
     return { form, event: matchedEvent || null };
   });
   if (formsReady.length === 0) {
-    return <Text>{t("dashboardCards.noPurchases")}</Text>;
+    return (
+      <Typography color="text.secondary" sx={{ gridColumn: "1 / -1" }}>
+        {t("dashboardCards.noPurchases")}
+      </Typography>
+    );
   }
 
   return (
-    <div
-      style={{
-        padding: 16,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        marginLeft: 10,
-      }}
-    >
+    <>
       {formsReady.map(({ form, event }, index) => {
         const shortUrlColor = pastelColors[index % pastelColors.length];
         const expiresColor = pastelColors[(index + 1) % pastelColors.length];
         return (
-          <div key={form.id} style={{ marginLeft: 10, marginRight: 10 }}>
-            <div style={{ position: "relative" }}>
-              {event ? (
-                <FormEventCard
-                  event={event}
-                  viewKey={form.viewKey}
-                  shortLink={`/i/${form.slug}`}
-                />
-              ) : (
-                <div style={{ width: "80%", padding: 16 }}>
-                  <Skeleton active />
-                </div>
-              )}
-
-              <div
-                style={{
-                  marginTop: -12, // pulls the flairs up, overlapping card bottom a bit
-                  display: "flex",
-                  gap: 8,
-                  paddingLeft: 12, // align with card content
-                  flexWrap: "wrap",
-                }}
+          <Box key={form.id}>
+            {event ? (
+              <FormEventCard
+                event={event}
+                viewKey={form.viewKey}
+                shortLink={`/i/${form.slug}`}
+              />
+            ) : (
+              <Box sx={{ p: 2 }}>
+                <Skeleton variant="rounded" height={140} />
+              </Box>
+            )}
+            <Box
+              sx={{
+                mt: -1.5,
+                display: "flex",
+                gap: 1,
+                pl: 1.5,
+                flexWrap: "wrap",
+              }}
+            >
+              <Flair
+                color={shortUrlColor}
+                onClick={() =>
+                  window.open(
+                    `${window.location.origin}/i/${form.slug}`,
+                    "_blank",
+                  )
+                }
+                style={{ fontSize: 12, padding: "2px 8px" }}
               >
-                <Flair
-                  color={shortUrlColor}
-                  onClick={() =>
-                    window.open(
-                      `${window.location.origin}/i/${form.slug}`,
-                      "_blank"
-                    )
-                  }
-                  style={{ fontSize: 12, padding: "2px 8px" }}
+                <Typography
+                  component="span"
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mr: 0.5, fontSize: 12 }}
                 >
-                  <Text
-                    type="secondary"
-                    style={{ marginRight: 4, fontSize: 12 }}
-                  >
-                    {t("dashboardCards.url")}:
-                  </Text>
-                  <Text code style={{ fontSize: 12 }}>
-                    {`${window.location.origin}/i/${form.slug}`}
-                  </Text>
-                </Flair>
-                <Flair
-                  color={expiresColor}
-                  style={{ fontSize: 12, padding: "2px 8px" }}
+                  {t("dashboardCards.url")}:
+                </Typography>
+                <Typography
+                  component="span"
+                  variant="body2"
+                  sx={{
+                    fontSize: 12,
+                    fontFamily: "monospace",
+                    backgroundColor: "rgba(0,0,0,0.06)",
+                    px: 0.5,
+                    borderRadius: 0.5,
+                  }}
                 >
-                  <Text
-                    type="secondary"
-                    style={{ marginRight: 4, fontSize: 12 }}
-                  >
-                    {t("dashboardCards.urlExpiresOn")}:
-                  </Text>
-                  <Text style={{ fontSize: 12 }}>
-                    {form.expirationDate
-                      ? new Date(form.expirationDate).toLocaleDateString()
-                      : t("dashboardCards.never")}
-                  </Text>
-                </Flair>
-              </div>
-            </div>
-          </div>
+                  {`${window.location.origin}/i/${form.slug}`}
+                </Typography>
+              </Flair>
+              <Flair
+                color={expiresColor}
+                style={{ fontSize: 12, padding: "2px 8px" }}
+              >
+                <Typography
+                  component="span"
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mr: 0.5, fontSize: 12 }}
+                >
+                  {t("dashboardCards.urlExpiresOn")}:
+                </Typography>
+                <Typography
+                  component="span"
+                  variant="body2"
+                  sx={{ fontSize: 12 }}
+                >
+                  {form.expirationDate
+                    ? new Date(form.expirationDate).toLocaleDateString()
+                    : t("dashboardCards.never")}
+                </Typography>
+              </Flair>
+            </Box>
+          </Box>
         );
       })}
-    </div>
+    </>
   );
 };

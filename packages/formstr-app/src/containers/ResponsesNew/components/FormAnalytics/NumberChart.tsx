@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, Typography } from "antd";
 import {
   BarChart,
   Bar,
@@ -10,8 +9,7 @@ import {
   Cell,
 } from "recharts";
 import { NumberBucket } from "./dataUtils";
-
-const { Text } = Typography;
+import { ChartCard } from "./ChartCard";
 
 const COLOR = "#6366f1";
 
@@ -44,22 +42,13 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export const NumberChart: React.FC<Props> = ({ label, data, totalAnswered }) => {
+export const NumberChart: React.FC<Props> = ({
+  label,
+  data,
+  totalAnswered,
+}) => {
   return (
-    <Card
-      size="small"
-      style={{ marginBottom: 16, borderRadius: 12 }}
-      title={
-        <div>
-          <Text strong style={{ fontSize: 14 }}>
-            {label}
-          </Text>
-          <Text type="secondary" style={{ fontSize: 11, marginLeft: 8 }}>
-            number &bull; {totalAnswered} answered
-          </Text>
-        </div>
-      }
-    >
+    <ChartCard label={label} meta={`number • ${totalAnswered} answered`}>
       <ResponsiveContainer width="100%" height={200}>
         <BarChart
           data={data}
@@ -89,6 +78,6 @@ export const NumberChart: React.FC<Props> = ({ label, data, totalAnswered }) => 
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </Card>
+    </ChartCard>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Card, Col, Row, Typography } from "antd";
+import { Box, Card, CardContent, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { Tag } from "../../../../nostr/types";
 import {
@@ -17,8 +17,6 @@ import { NumberChart } from "./NumberChart";
 import { DateChart } from "./DateChart";
 import { GridHeatmap } from "./GridHeatmap";
 
-const { Text } = Typography;
-
 interface StatCardProps {
   title: string;
   value: string | number;
@@ -26,25 +24,28 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle }) => (
-  <Card
-    size="small"
-    style={{ borderRadius: 12, textAlign: "center" }}
-    bodyStyle={{ padding: "16px 12px" }}
-  >
-    <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-      {title}
-    </Text>
-    <Text
-      strong
-      style={{ fontSize: 28, display: "block", lineHeight: 1.2, marginTop: 4 }}
-    >
-      {value}
-    </Text>
-    {subtitle && (
-      <Text type="secondary" style={{ fontSize: 11 }}>
-        {subtitle}
-      </Text>
-    )}
+  <Card variant="outlined">
+    <CardContent sx={{ p: "16px 12px", textAlign: "center" }}>
+      <Typography variant="body2" sx={{ display: "block" }}>
+        {title}
+      </Typography>
+      <Typography
+        sx={{
+          fontSize: 28,
+          fontWeight: 600,
+          display: "block",
+          lineHeight: 1.2,
+          mt: 0.5,
+        }}
+      >
+        {value}
+      </Typography>
+      {subtitle && (
+        <Typography variant="caption" color="text.secondary">
+          {subtitle}
+        </Typography>
+      )}
+    </CardContent>
   </Card>
 );
 
@@ -57,50 +58,53 @@ export const FormAnalytics: React.FC<Props> = ({ responsesData, formSpec }) => {
   const { t } = useTranslation();
   const stats = useMemo(
     () => computeSummaryStats(responsesData, formSpec),
-    [responsesData, formSpec]
+    [responsesData, formSpec],
   );
 
   const fieldAnalytics = useMemo(
     () => computeAnalytics(responsesData, formSpec),
-    [responsesData, formSpec]
+    [responsesData, formSpec],
   );
 
   if (!responsesData.length) {
     return (
-      <div style={{ textAlign: "center", padding: 48, color: "#9ca3af" }}>
+      <Box sx={{ textAlign: "center", p: 6, color: "text.disabled" }}>
         {t("responses.analytics.noResponses")}
-      </div>
+      </Box>
     );
   }
 
   return (
-    <div style={{ padding: "0 16px 32px" }}>
-      <Row gutter={[12, 12]} style={{ marginBottom: 24 }}>
-        <Col xs={12} sm={8}>
-          <StatCard
-            title={t("responses.analytics.totalSubmissions")}
-            value={stats.totalSubmissions}
-          />
-        </Col>
-        <Col xs={12} sm={8}>
-          <StatCard
-            title={t("responses.analytics.uniqueResponders")}
-            value={stats.uniqueResponders}
-          />
-        </Col>
-        <Col xs={24} sm={8}>
+    <Box sx={{ px: 2, pb: 4 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" },
+          gap: 1.5,
+          mb: 3,
+        }}
+      >
+        <StatCard
+          title={t("responses.analytics.totalSubmissions")}
+          value={stats.totalSubmissions}
+        />
+        <StatCard
+          title={t("responses.analytics.uniqueResponders")}
+          value={stats.uniqueResponders}
+        />
+        <Box sx={{ gridColumn: { xs: "1 / -1", sm: "auto" } }}>
           <StatCard
             title={t("responses.analytics.fieldsAnswered")}
             value={`${stats.answeredFields} / ${stats.totalFields}`}
             subtitle={t("responses.analytics.answeredSubtitle")}
           />
-        </Col>
-      </Row>
+        </Box>
+      </Box>
 
       {fieldAnalytics.length === 0 && (
-        <div style={{ textAlign: "center", padding: 32, color: "#9ca3af" }}>
+        <Box sx={{ textAlign: "center", p: 4, color: "text.disabled" }}>
           {t("responses.analytics.noChartableFields")}
-        </div>
+        </Box>
       )}
 
       {fieldAnalytics.map((field) => {
@@ -172,6 +176,6 @@ export const FormAnalytics: React.FC<Props> = ({ responsesData, formSpec }) => {
 
         return null;
       })}
-    </div>
+    </Box>
   );
 };

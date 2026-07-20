@@ -1,9 +1,17 @@
-import { DeleteOutlined } from "@ant-design/icons";
-import { Button, Modal, message } from "antd";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+} from "@mui/material";
 import { useState } from "react";
 import { useLocalForms } from "../../../provider/LocalFormsProvider";
 import { IDeleteFormsLocal, IDeleteFormsTrigger } from "./types";
 import { useTranslation } from "react-i18next";
+import { useSnackbar } from "../../../providers/SnackbarProvider";
 
 function DeleteConfirmationLocal({
   formKey,
@@ -12,6 +20,7 @@ function DeleteConfirmationLocal({
 }: IDeleteFormsLocal) {
   const { t } = useTranslation();
   const { deleteLocalForm } = useLocalForms();
+  const { showMessage } = useSnackbar();
   const [loading, setLoading] = useState(false);
 
   const onDeleteForm = async () => {
@@ -20,22 +29,28 @@ function DeleteConfirmationLocal({
       await deleteLocalForm(formKey);
       onDeleted();
     } catch (e) {
-      message.error(t("dashboardCards.delete.failed"));
+      showMessage(t("dashboardCards.delete.failed"), "error");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal
-      title={t("dashboardCards.delete.title")}
-      open
-      onOk={onDeleteForm}
-      onCancel={onCancel}
-      confirmLoading={loading}
-    >
-      <p>{t("dashboardCards.delete.irreversible")}</p>
-    </Modal>
+    <Dialog open onClose={onCancel} maxWidth="xs" fullWidth>
+      <DialogTitle>{t("dashboardCards.delete.title")}</DialogTitle>
+      <DialogContent>{t("dashboardCards.delete.irreversible")}</DialogContent>
+      <DialogActions>
+        <Button onClick={onCancel}>{t("common.actions.cancel")}</Button>
+        <Button
+          onClick={onDeleteForm}
+          color="error"
+          variant="contained"
+          disabled={loading}
+        >
+          {t("common.actions.delete")}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
 
@@ -54,15 +69,14 @@ function DeleteFormTrigger({
   };
   return (
     <>
-      <Button
-        type={"text"}
-        onClick={(e) => {
-          updateDeleteConfirmationOpen(true);
-        }}
-        style={{ color: "red" }}
+      <IconButton
+        aria-label="delete form"
+        onClick={() => updateDeleteConfirmationOpen(true)}
+        size="small"
+        sx={{ color: "error.main" }}
       >
-        <DeleteOutlined />
-      </Button>
+        <DeleteOutlinedIcon />
+      </IconButton>
       {deleteConfirmationOpen && (
         <DeleteConfirmationLocal
           formKey={formKey}

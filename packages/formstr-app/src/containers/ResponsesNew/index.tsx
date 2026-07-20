@@ -3,10 +3,29 @@ import { Event, getPublicKey, nip19 } from "nostr-tools";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchFormResponses } from "../../nostr/responses";
-import SummaryStyle from "./summary.style";
-import { Button, Card, Divider, Table, Tabs, Typography, Spin, message } from "antd";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Divider,
+  IconButton,
+  Link,
+  Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
+  Tabs,
+  Typography,
+} from "@mui/material";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import { FormAnalytics } from "./components/FormAnalytics";
-import ResponseWrapper from "./Responses.style";
 import { isMobile } from "../../utils/utility";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
@@ -30,19 +49,34 @@ import { ResponseHeader } from "./components/ResponseHeader";
 import { AddressPointer } from "nostr-tools/nip19";
 import { SubCloser } from "nostr-tools/abstract-pool";
 import SafeMarkdown from "../../components/SafeMarkdown";
-import { ExportOutlined, DownloadOutlined } from "@ant-design/icons";
 import { decodeNKeys } from "../../utils/nkeys";
 import { downloadEncryptedFile } from "../../utils/fileDownload";
 import { formatLocalizedDateTime } from "../../i18n/format";
+import { useSnackbar } from "../../providers/SnackbarProvider";
 
-const { Text } = Typography;
+interface ResponseColumn {
+  key: string;
+  title: React.ReactNode;
+  width?: number;
+  render?: (data: string, record: any) => React.ReactNode;
+}
 
+/**
+ * MUI responses surface (ui-rewrite-mui Phase 4). Summary card + tabs
+ * (responses table / analytics); chart internals are unchanged recharts.
+ */
 export const Response = () => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [responses, setResponses] = useState<Event[] | undefined>(undefined);
   const [formEvent, setFormEvent] = useState<Event | undefined>(undefined);
   const [formSpec, setFormSpec] = useState<Tag[] | null | undefined>(undefined);
   const [editKey, setEditKey] = useState<string | undefined | null>();
+  const [activeTab, setActiveTab] = useState<"responses" | "analytics">(
+    "responses",
+  );
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   let { naddr, formSecret, identifier, pubKey } = useParams();
   let formId: string | undefined = identifier;
   let pubkey: string | undefined = pubKey;
@@ -124,12 +158,12 @@ export const Response = () => {
           event,
           userPubkey,
           null,
-          viewKeyParams
+          viewKeyParams,
         );
         setFormSpec(spec);
         setIsFormSpecLoading(false);
       },
-      relays?.length ? relays : relay ? [relay] : undefined
+      relays?.length ? relays : relay ? [relay] : undefined,
     );
   };
 
@@ -165,7 +199,7 @@ export const Response = () => {
       formId,
       handleResponseEvent,
       allowedPubkeys,
-      formRelays
+      formRelays,
     );
     setResponsesCloser(newCloser);
 
@@ -186,11 +220,11 @@ export const Response = () => {
       return;
     }
     const authorEvents = responses.filter(
-      (event) => event.pubkey === authorPubKey
+      (event) => event.pubkey === authorPubKey,
     );
     if (authorEvents.length === 0) return;
     const latestEvent = authorEvents.sort(
-      (a, b) => b.created_at - a.created_at
+      (a, b) => b.created_at - a.created_at,
     )[0];
 
     const inputsForModal = getInputsFromResponseEvent(latestEvent, editKey);
@@ -201,7 +235,7 @@ export const Response = () => {
 
   const handleFileDownload = async (metadataJson: string) => {
     if (!editKey) {
-      message.error(t("responses.fileDownloadUnavailable"));
+      showMessage(t("responses.fileDownloadUnavailable"), "error");
       return;
     }
 
@@ -209,7 +243,7 @@ export const Response = () => {
       const metadata: FileUploadMetadata = JSON.parse(metadataJson);
 
       if (!metadata.uploaderPubkey) {
-        message.error(t("responses.fileUploadedOldVersion"));
+        showMessage(t("responses.fileUploadedOldVersion"), "error");
         return;
       }
 
@@ -220,10 +254,11 @@ export const Response = () => {
       });
     } catch (error: any) {
       console.error("handleFileDownload error:", error);
-      message.error(
+      showMessage(
         t("responses.downloadFailed", {
           message: error.message || "Unknown error",
         }),
+        "error",
       );
     }
   };
@@ -244,7 +279,7 @@ export const Response = () => {
       let pubkeyResponses = responsePerPubkey.get(pub);
       if (!pubkeyResponses || pubkeyResponses.length === 0) return;
       let responseEvent = pubkeyResponses.sort(
-        (a, b) => b.created_at - a.created_at
+        (a, b) => b.created_at - a.created_at,
       )[0];
       let inputs = getInputsFromResponseEvent(responseEvent, editKey) as Tag[];
       if (inputs.length === 0 && responseEvent.content !== "" && !editKey) {
@@ -262,14 +297,14 @@ export const Response = () => {
         if (!Array.isArray(input) || input.length < 2) return;
         const { questionLabel, responseLabel, fieldId } = getResponseLabels(
           input,
-          formSpec
+          formSpec,
         );
         const displayKey = useLabels ? questionLabel : fieldId;
 
         // For file fields, store raw value (JSON metadata) instead of formatted label
         // The table's custom render will format it and add download button
         const questionField = formSpec.find(
-          (tag): tag is Field => tag[0] === "field" && tag[1] === fieldId
+          (tag): tag is Field => tag[0] === "field" && tag[1] === fieldId,
         );
         const isFileField = questionField && questionField[2] === "file";
 
@@ -287,69 +322,52 @@ export const Response = () => {
     return t("common.status.untitledForm");
   };
 
-  const getColumns = () => {
-    const columns: Array<{
-      key: string;
-      title: string | JSX.Element;
-      dataIndex: string;
-      fixed?: "left" | "right";
-      width?: number;
-      render?: (data: string, record: any) => JSX.Element;
-    }> = [
+  const getColumns = (): ResponseColumn[] => {
+    const columns: ResponseColumn[] = [
       {
         key: "author",
         title: t("common.labels.author"),
-        fixed: "left",
-        dataIndex: "authorPubkey",
         width: isMobile() ? 120 : 150,
         render: (data: string) => (
-          <a
+          <Link
             href={`https://njump.me/${data}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
           >
             {isMobile()
               ? `${data.substring(0, 10)}...${data.substring(data.length - 5)}`
               : data}
-          </a>
+          </Link>
         ),
       },
       {
         key: "responsesCount",
         title: t("responses.submissions"),
-        dataIndex: "responsesCount",
         width: isMobile() ? 90 : 120,
       },
     ];
-    const rightColumns: Array<{
-      key: string;
-      title: string | JSX.Element;
-      dataIndex: string;
-      fixed?: "left" | "right";
-      width?: number;
-      render?: (data: string, record: any) => JSX.Element;
-    }> = [
+    const rightColumns: ResponseColumn[] = [
       {
         key: "createdAt",
         title: t("common.labels.submittedAt"),
-        dataIndex: "createdAt",
         width: isMobile() ? 100 : 130,
       },
       {
         key: "action",
         title: t("common.labels.action"),
-        dataIndex: "action",
-        fixed: "right",
         width: 40,
         render: (_: string, record: any) => (
-          <div
+          <IconButton
+            size="small"
+            aria-label={t("common.labels.action")}
             onClick={(e) => {
               e.stopPropagation();
               handleRowClick(record);
             }}
           >
-            <ExportOutlined />
-          </div>
+            <OpenInNewOutlinedIcon fontSize="small" />
+          </IconButton>
         ),
       },
     ];
@@ -366,13 +384,7 @@ export const Response = () => {
 
     fieldsFromSpec.forEach((field) => {
       let [_, fieldId, fieldType, label] = field;
-      const column: {
-        key: string;
-        title: string | JSX.Element;
-        dataIndex: string;
-        width?: number;
-        render?: (data: string, record: any) => JSX.Element;
-      } = {
+      const column: ResponseColumn = {
         key: fieldId,
         title: label ? (
           <SafeMarkdown components={{ p: "span" }}>{label as any}</SafeMarkdown>
@@ -381,7 +393,6 @@ export const Response = () => {
             id: fieldId.substring(0, 5),
           })
         ),
-        dataIndex: fieldId,
         width: 150,
       };
 
@@ -405,11 +416,18 @@ export const Response = () => {
             const parsed = JSON.parse(value);
             if (typeof parsed === "object" && parsed !== null) {
               if (typeof parsed.normalizedValue === "number") {
-                return parseStars(Math.max(0, Math.min(parsed.normalizedValue, 1)));
+                return parseStars(
+                  Math.max(0, Math.min(parsed.normalizedValue, 1)),
+                );
               }
               if (typeof parsed.value === "number") {
-                if (typeof parsed.maxStars === "number" && parsed.maxStars > 0) {
-                  return parseStars((parsed.value / parsed.maxStars) * currentMaxStars);
+                if (
+                  typeof parsed.maxStars === "number" &&
+                  parsed.maxStars > 0
+                ) {
+                  return parseStars(
+                    (parsed.value / parsed.maxStars) * currentMaxStars,
+                  );
                 }
                 return parseStars(parsed.value);
               }
@@ -432,15 +450,28 @@ export const Response = () => {
               <div style={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                 {Array.from({ length: currentMaxStars }, (_, i) => {
                   const n = i + 1;
-                  const fillPercent = Math.max(0, Math.min(1, displayValue - (n - 1))) * 100;
+                  const fillPercent =
+                    Math.max(0, Math.min(1, displayValue - (n - 1))) * 100;
                   const gradientId = `response-star-${fieldId}-${n}`;
 
                   return (
                     <svg key={n} width={20} height={20} viewBox="0 0 28 28">
                       <defs>
-                        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset={`${fillPercent}%`} stopColor="#EF9F27" />
-                          <stop offset={`${fillPercent}%`} stopColor="transparent" />
+                        <linearGradient
+                          id={gradientId}
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="0%"
+                        >
+                          <stop
+                            offset={`${fillPercent}%`}
+                            stopColor="#EF9F27"
+                          />
+                          <stop
+                            offset={`${fillPercent}%`}
+                            stopColor="transparent"
+                          />
                         </linearGradient>
                       </defs>
                       <polygon
@@ -470,18 +501,21 @@ export const Response = () => {
             const metadata: FileUploadMetadata = JSON.parse(data);
             const sizeInMB = (metadata.size / (1024 * 1024)).toFixed(2);
             return (
-              <div
-                style={{ display: "flex", alignItems: "center", gap: 8 }}
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <span>📎 {metadata.filename} ({sizeInMB} MB)</span>
-                <Button
-                  type="link"
+                <span>
+                  📎 {metadata.filename} ({sizeInMB} MB)
+                </span>
+                <IconButton
                   size="small"
-                  icon={<DownloadOutlined />}
+                  aria-label={t("common.actions.download")}
                   onClick={() => handleFileDownload(data)}
-                />
-              </div>
+                >
+                  <DownloadOutlinedIcon fontSize="small" />
+                </IconButton>
+              </Box>
             );
           } catch (e) {
             return <span>{data}</span>;
@@ -499,7 +533,6 @@ export const Response = () => {
         title: t("responses.questionIdFallback", {
           id: fieldId.substring(0, 8),
         }),
-        dataIndex: fieldId,
         width: 150,
       });
     });
@@ -516,7 +549,6 @@ export const Response = () => {
             title: t("responses.questionIdFallback", {
               id: id.substring(0, 8),
             }),
-            dataIndex: id,
             width: 150,
           });
         }
@@ -525,7 +557,7 @@ export const Response = () => {
     return [...columns, ...rightColumns];
   };
   if (!(pubkey || secretKey) || !formId)
-    return <Text>{t("responses.invalidUrl")}</Text>;
+    return <Typography>{t("responses.invalidUrl")}</Typography>;
 
   if (
     formEvent &&
@@ -535,43 +567,44 @@ export const Response = () => {
     !editKey
   ) {
     return (
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <Text>
-          {t("responses.privateNotice")}
-        </Text>
+      <Box sx={{ textAlign: "center", mt: 2.5 }}>
+        <Typography>{t("responses.privateNotice")}</Typography>
         <Button
+          variant="contained"
           onClick={() => {
             requestPubkey();
           }}
-          style={{ marginTop: "10px" }}
+          sx={{ mt: 1.5 }}
         >
           {t("common.actions.login")}
         </Button>
-      </div>
+      </Box>
     );
   }
   if (isFormSpecLoading) {
     return (
-      <div
-        style={{
+      <Box
+        sx={{
           display: "flex",
+          flexDirection: "column",
+          gap: 1,
           justifyContent: "center",
           alignItems: "center",
           height: "80vh",
         }}
       >
-        <Spin size="large" tip="Loading form details..." />
-        <Spin size="large" tip={t("responses.loadingDetails")} />
-      </div>
+        <CircularProgress />
+        <Typography color="text.secondary">
+          {t("responses.loadingDetails")}
+        </Typography>
+      </Box>
     );
   }
   if (formSpec === null && formEvent && formEvent.content !== "") {
     return (
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <Text>
-          {t("responses.decryptFailed")}
-        </Text>
-      </div>
+      <Box sx={{ textAlign: "center", mt: 2.5 }}>
+        <Typography>{t("responses.decryptFailed")}</Typography>
+      </Box>
     );
   }
 
@@ -582,15 +615,20 @@ export const Response = () => {
     if (isMobile()) {
       if (responses === undefined) {
         return (
-          <div
-            style={{
+          <Box
+            sx={{
               display: "flex",
-              justifyContent: "center",
-              padding: "48px 0",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1,
+              py: 6,
             }}
           >
-            <Spin tip={t("responses.lookingForResponses")} />
-          </div>
+            <CircularProgress size={28} />
+            <Typography color="text.secondary">
+              {t("responses.lookingForResponses")}
+            </Typography>
+          </Box>
         );
       }
       return formSpec ? (
@@ -602,45 +640,138 @@ export const Response = () => {
         />
       ) : null;
     }
+
+    const columns = getColumns();
+    const rows = getData();
+    const pagedRows = rows.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage,
+    );
+
     return (
-      <div style={{ overflow: "scroll", marginBottom: 60 }}>
-        <Table
-          columns={getColumns()}
-          dataSource={getData()}
-          pagination={{ pageSize: 10 }}
-          loading={{
-            spinning: responses === undefined,
-            tip: t("responses.lookingForResponses"),
+      <Box sx={{ mb: 7 }}>
+        <TableContainer
+          sx={{
+            maxHeight: "calc(65vh)",
+            bgcolor: "background.paper",
+            border: 1,
+            borderColor: "divider",
+            borderRadius: 1.5,
           }}
-          scroll={{ x: isMobile() ? 900 : 1500, y: "calc(65% - 400px)" }}
+        >
+          <Table stickyHeader size="small" sx={{ minWidth: 650 }}>
+            <TableHead>
+              <TableRow>
+                {columns.map((col) => (
+                  <TableCell
+                    key={col.key}
+                    sx={col.width ? { minWidth: col.width } : undefined}
+                  >
+                    {col.title}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {responses === undefined ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} align="center">
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 1,
+                        py: 6,
+                      }}
+                    >
+                      <CircularProgress size={28} />
+                      <Typography color="text.secondary">
+                        {t("responses.lookingForResponses")}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                pagedRows.map((record) => (
+                  <TableRow
+                    key={record.key}
+                    hover
+                    onClick={() => handleRowClick(record)}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    {columns.map((col) => {
+                      const cellData =
+                        record[col.key === "action" ? "key" : col.key];
+                      return (
+                        <TableCell
+                          key={col.key}
+                          sx={{
+                            maxWidth: col.width ? col.width * 2 : undefined,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            // Limit media sizes in table cells to prevent overflow
+                            "& img, & audio, & video": {
+                              maxWidth: "100%",
+                              maxHeight: 200,
+                              objectFit: "contain",
+                            },
+                          }}
+                        >
+                          {col.render
+                            ? col.render(cellData, record)
+                            : cellData ?? ""}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          component="div"
+          count={rows.length}
+          page={page}
+          onPageChange={(_e, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+          rowsPerPageOptions={[10, 25, 50]}
         />
-      </div>
+      </Box>
     );
   };
 
   return (
-    <div>
-      <SummaryStyle>
-        <div className="summary-container">
-          <Card>
-            <Text className="heading">
+    <Box>
+      <Box sx={{ display: "flex", justifyContent: "center", my: 1 }}>
+        <Card variant="outlined" sx={{ width: { xs: "100%", sm: "60%" } }}>
+          <CardContent>
+            <Typography variant="h5" component="div">
               <SafeMarkdown components={{ p: "span" }}>
                 {getFormName()}
               </SafeMarkdown>
-            </Text>
-            <Divider />
-            <div className="response-count-container">
-              <Text className="response-count">
-                {responses === undefined ? t("common.status.searching") : getResponderCount()}{" "}
-              </Text>
-              <Text className="response-count-label">
+            </Typography>
+            <Divider sx={{ my: 1.5 }} />
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              <Typography variant="h5" component="div">
+                {responses === undefined
+                  ? t("common.status.searching")
+                  : getResponderCount()}{" "}
+              </Typography>
+              <Typography variant="body2">
                 {t("responses.responderLabel")}
-              </Text>
-            </div>
-          </Card>
-        </div>
-      </SummaryStyle>
-      <ResponseWrapper>
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+      <Box>
         <ResponseHeader
           hasResponses={!!hasResponses}
           onAiAnalysisClick={() => setIsChatVisible(true)}
@@ -648,26 +779,23 @@ export const Response = () => {
           formName={getFormName()}
         />
         <Tabs
-          defaultActiveKey="responses"
-          style={{ padding: "0 16px" }}
-          items={[
-            {
-              key: "responses",
-              label: t("responses.responsesTab"),
-              children: renderResponsesTab(),
-            },
-            {
-              key: "analytics",
-              label: t("responses.analyticsTab"),
-              children: formSpec ? (
-                <FormAnalytics
-                  responsesData={getData(true)}
-                  formSpec={formSpec}
-                />
-              ) : null,
-            },
-          ]}
-        />
+          value={activeTab}
+          onChange={(_e, value: "responses" | "analytics") =>
+            setActiveTab(value)
+          }
+          sx={{ px: 2 }}
+        >
+          <Tab value="responses" label={t("responses.responsesTab")} />
+          <Tab value="analytics" label={t("responses.analyticsTab")} />
+        </Tabs>
+        <Box role="tabpanel" hidden={activeTab !== "responses"}>
+          {activeTab === "responses" && renderResponsesTab()}
+        </Box>
+        <Box role="tabpanel" hidden={activeTab !== "analytics"}>
+          {activeTab === "analytics" && formSpec ? (
+            <FormAnalytics responsesData={getData(true)} formSpec={formSpec} />
+          ) : null}
+        </Box>
         <div ref={chatRef}>
           {isChatVisible && formSpec && (
             <AIAnalysisChat
@@ -678,7 +806,7 @@ export const Response = () => {
             />
           )}
         </div>
-      </ResponseWrapper>
+      </Box>
       {isModalOpen &&
         formSpec &&
         formSpec.length > 0 &&
@@ -697,6 +825,6 @@ export const Response = () => {
             editKey={editKey}
           />
         )}
-    </div>
+    </Box>
   );
 };

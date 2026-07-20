@@ -1,14 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
-import { Typography, Button } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { Box, Button, Typography } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import { useTranslation } from "react-i18next";
 import { ReactComponent as NoData } from "../../Images/no-forms.svg";
-import StyleWrapper from "./style";
 import { ROUTES } from "../../constants/routes";
 import { FormTemplate } from "../../templates";
 import TemplateCard from "../TemplateCard";
-
-const { Text } = Typography;
 
 interface EmptyScreenProps {
   message?: string;
@@ -18,20 +15,34 @@ interface EmptyScreenProps {
   onTemplateClick?: (template: FormTemplate) => void;
 }
 
-function EmptyScreen({ message, action, actionLabel, templates, onTemplateClick }: EmptyScreenProps) {
+function EmptyScreen({
+  message,
+  action,
+  actionLabel,
+  templates,
+  onTemplateClick,
+}: EmptyScreenProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const showTemplates = templates && templates.length > 0 && onTemplateClick;
 
   return (
-    <StyleWrapper>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "calc(100vh - 208px)",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       {showTemplates ? (
         <>
-          <Typography.Title level={4} style={{ marginBottom: "20px", textAlign: "center" }}>
+          <Typography variant="h4" sx={{ mb: 2.5, textAlign: "center" }}>
             {t("builder.templateEmptyTitle")}
-          </Typography.Title>
-          <div
-            style={{
+          </Typography>
+          <Box
+            sx={{
               display: "flex",
               flexWrap: "wrap",
               justifyContent: "center",
@@ -46,30 +57,37 @@ function EmptyScreen({ message, action, actionLabel, templates, onTemplateClick 
                 onClick={onTemplateClick}
               />
             ))}
-          </div>
+          </Box>
         </>
       ) : (
         <>
-          <NoData className="empty-screen" />
-          <Text className="no-data">
+          <Box
+            component={NoData}
+            sx={{ height: "40%", minHeight: 160, maxWidth: "100%" }}
+          />
+          <Typography
+            variant="h5"
+            color="text.secondary"
+            sx={{ textAlign: "center", my: 2 }}
+          >
             {message || t("builder.emptyState.createFirstForm")}
-          </Text>
+          </Typography>
           <Button
-            className="add-form"
-            type="primary"
-            icon={action ? null : <PlusOutlined style={{ paddingTop: "2px" }} />}
+            variant="contained"
+            startIcon={action ? undefined : <AddIcon />}
             onClick={() => {
               if (action) action();
               else {
                 navigate(ROUTES.CREATE_FORMS_NEW);
               }
             }}
+            sx={{ alignSelf: "center", minWidth: 160, my: 1 }}
           >
             {actionLabel || t("builder.emptyState.createForm")}
           </Button>
         </>
       )}
-    </StyleWrapper>
+    </Box>
   );
 }
 

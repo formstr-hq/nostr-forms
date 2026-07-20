@@ -1,11 +1,9 @@
-import { Button, Typography } from "antd";
 import EmptyScreen from "../../components/EmptyScreen";
 
 interface LoggedOutScreenProps {
   requestLogin: () => void;
 }
 
-const { Text } = Typography;
 export const LoggedOutScreen: React.FC<LoggedOutScreenProps> = ({
   requestLogin,
 }) => {

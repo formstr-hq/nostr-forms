@@ -1,8 +1,8 @@
 // packages/formstr-app/src/containers/ResponsesNew/components/ResponseHeader.tsx
-import React from 'react';
-import { Button, Space } from 'antd';
-import { RobotOutlined } from '@ant-design/icons';
-import { Export } from '../Export';
+import React from "react";
+import { Box, Button } from "@mui/material";
+import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
+import { Export } from "../Export";
 
 interface ResponseHeaderProps {
   hasResponses: boolean;
@@ -18,17 +18,24 @@ export const ResponseHeader: React.FC<ResponseHeaderProps> = ({
   formName,
 }) => {
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '15px' }}>
-      <Space>
-        <Button
-          icon={<RobotOutlined />}
-          disabled={!hasResponses}
-          onClick={onAiAnalysisClick}
-        >
-          AI Analysis
-        </Button>
-        <Export responsesData={responsesData} formName={formName} />
-      </Space>
-    </div>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "flex-end",
+        gap: 1,
+        px: 2,
+        py: 1,
+      }}
+    >
+      <Button
+        variant="outlined"
+        startIcon={<SmartToyOutlinedIcon />}
+        disabled={!hasResponses}
+        onClick={onAiAnalysisClick}
+      >
+        AI Analysis
+      </Button>
+      <Export responsesData={responsesData} formName={formName} />
+    </Box>
   );
 };
