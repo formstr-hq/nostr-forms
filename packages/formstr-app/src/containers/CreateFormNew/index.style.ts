@@ -5,6 +5,19 @@ export default styled.div<{
   $isOpen?: boolean;
   $isRightSettingsOpen?: boolean;
 }>`
+  /* The row owns the height; panes are height:100% of it. Any browser that
+     mishandles viewport units on a pane can no longer skew the layout —
+     worst case all three collapse *uniformly* to content height. */
+  .builder-row {
+    display: flex;
+    max-width: 100vw;
+    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
+  }
+  .builder-row > * {
+    min-height: 0;
+  }
+
   .left-sidebar {
     overflow: wrap;
     background-color: white;

@@ -5,9 +5,11 @@ export default styled.div`
     margin: 0;
   }
 
+  /* Height comes from .builder-row — percentage, not viewport units. */
+  height: 100%;
+
   .create-sidebar {
-    height: calc(100vh - 64px);
-    height: calc(100dvh - 64px);
+    height: 100%;
     border-inline-end: 1px solid rgba(5, 5, 5, 0.06);
     margin-top: 1px;
     background-color: white;

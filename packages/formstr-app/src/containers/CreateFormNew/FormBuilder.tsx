@@ -25,7 +25,7 @@ function FormBuilder() {
       $isOpen={isLeftMenuOpen}
       $isRightSettingsOpen={isRightSettingsOpen}
     >
-      <div style={{ display: "flex", maxWidth: "100vw" }}>
+      <div className="builder-row">
         <Sidebar ref={leftSidebarRef} />
         <QuestionsList />
         <Settings ref={rightSidebarRef} />

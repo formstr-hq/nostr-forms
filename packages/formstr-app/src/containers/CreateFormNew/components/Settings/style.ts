@@ -1,9 +1,8 @@
 import styled from "styled-components";
 
 export default styled.div`
-  /* vh fallback first — see QuestionsList/style.ts note. */
-  height: calc(100vh - 64px);
-  height: calc(100dvh - 64px);
+  /* Height comes from .builder-row — see QuestionsList/style.ts note. */
+  height: 100%;
   overflow: auto;
   background-color: white;
   width: 242px;

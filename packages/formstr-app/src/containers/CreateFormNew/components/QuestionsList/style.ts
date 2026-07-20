@@ -14,10 +14,9 @@ export default styled.div<{
   padding-left: 32px;
   padding-right: 32px;
   overflow: scroll;
-  /* vh first: browsers without dvh support drop unknown-unit declarations
-     entirely (height fell back to auto and the canvas collapsed). */
-  height: calc(100vh - 64px);
-  height: calc(100dvh - 64px);
+  /* Height comes from .builder-row (see index.style.ts) — percentage heights
+     work in every browser, unlike per-pane viewport units. */
+  height: 100%;
   width: calc(100vw - 482px);
 
     .form-title {
