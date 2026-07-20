@@ -10,6 +10,10 @@ flows end to end. These are **health checks**, not UI specs.
 - **sign-as-yourself** — submit a response as a logged-in user (signs up through
   the real login modal). The key guard for the signer migration.
 - **required-field** — a required field blocks submission until answered.
+- **sections** — a sectioned form renders the stepper, gates each step on
+  validation, and navigates by clicking step titles (next validates and
+  advances, back jumps freely, skipping ahead is blocked). Guards the fixed
+  step-click behaviour.
 - **all-field-types** — one of every field type is filled and verified to
   round-trip into the responses view (see notes below).
 
