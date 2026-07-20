@@ -1,4 +1,4 @@
-import { Radio, Checkbox } from "antd";
+import { Radio, Checkbox } from "@mui/material";
 import { useState, useEffect } from "react";
 import {
   AnswerTypes,
@@ -183,12 +183,14 @@ export const GridFiller: React.FC<GridFillerProps> = ({
               <MobileOptionRow key={colId}>
                 {answerType === AnswerTypes.multipleChoiceGrid ? (
                   <Radio
+                    size="small"
                     checked={isRadioChecked(rowId, colId)}
                     onChange={() => handleRadioChange(rowId, colId)}
                     disabled={disabled}
                   />
                 ) : (
                   <Checkbox
+                    size="small"
                     checked={isCheckboxChecked(rowId, colId)}
                     onChange={(e) =>
                       handleCheckboxChange(rowId, colId, e.target.checked)
@@ -228,12 +230,14 @@ export const GridFiller: React.FC<GridFillerProps> = ({
                 <td key={colId}>
                   {answerType === AnswerTypes.multipleChoiceGrid ? (
                     <Radio
+                      size="small"
                       checked={isRadioChecked(rowId, colId)}
                       onChange={() => handleRadioChange(rowId, colId)}
                       disabled={disabled}
                     />
                   ) : (
                     <Checkbox
+                      size="small"
                       checked={isCheckboxChecked(rowId, colId)}
                       onChange={(e) =>
                         handleCheckboxChange(rowId, colId, e.target.checked)

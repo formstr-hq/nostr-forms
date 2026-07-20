@@ -41,7 +41,7 @@ const fieldTag = (f: { id: string; label: string }, required = false) => [
 
 /** A step title inside the stepper (section titles also render in the card). */
 const stepTitle = (page: Page, title: string) =>
-  page.locator(".ant-steps .ant-steps-item-title", { hasText: title });
+  page.locator(".MuiStepButton-root", { hasText: title });
 
 /** The answer textbox of the currently rendered step's question. */
 const answerOf = (page: Page, label: string) =>

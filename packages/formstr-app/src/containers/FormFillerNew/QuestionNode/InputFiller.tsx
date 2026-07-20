@@ -1,5 +1,4 @@
-import { Input, InputNumber } from "antd";
-import TextArea from "antd/es/input/TextArea";
+import { TextField } from "@mui/material";
 import { ChangeEvent } from "react";
 import { ChoiceFiller } from "./InputTypes/ChoiceFiller";
 import { DropdownFiller } from "./InputTypes/DropdownFiller";
@@ -57,30 +56,41 @@ export const InputFiller: React.FC<InputFillerProps> = ({
     const INPUT_TYPE_COMPONENT_MAP: { [key in AnswerTypes]?: JSX.Element } = {
       [AnswerTypes.label]: <></>,
       [AnswerTypes.shortText]: (
-        <Input
-          value={defaultValue as string}
+        <TextField
+          value={(defaultValue as string) ?? ""}
           onChange={handleInputChange}
           placeholder={t("filler.inputs.responsePlaceholder")}
           disabled={disabled}
+          fullWidth
+          size="small"
+          variant="outlined"
           data-testid={`${testId}:text-input`}
         />
       ),
       [AnswerTypes.paragraph]: (
-        <TextArea
-          value={defaultValue as string}
+        <TextField
+          value={(defaultValue as string) ?? ""}
           onChange={handleInputChange}
           placeholder={t("filler.inputs.responsePlaceholder")}
           disabled={disabled}
+          fullWidth
+          multiline
+          minRows={3}
+          size="small"
+          variant="outlined"
           data-testid={`${testId}:text-area`}
         />
       ),
       [AnswerTypes.number]: (
-        <InputNumber
-          value={defaultValue as string}
-          onChange={handleValueChange}
-          style={{ width: "100%" }}
+        <TextField
+          type="number"
+          value={(defaultValue as string) ?? ""}
+          onChange={handleInputChange}
           placeholder={t("filler.inputs.responsePlaceholder")}
           disabled={disabled}
+          fullWidth
+          size="small"
+          variant="outlined"
           data-testid={`${testId}:number-input`}
         />
       ),

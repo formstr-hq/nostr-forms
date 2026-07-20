@@ -375,6 +375,7 @@ const resources = {
         anonymous: "Submit Anonymously",
         asYourself: "Submit As Yourself",
         updateResponse: "Update Response",
+        moreOptions: "More submit options",
       },
       validating: "Validating...",
       submitting: "Submitting...",

@@ -1,14 +1,14 @@
-import { getValidationRules } from "../validations";
-import { Form } from "antd";
 import { QuestionNode } from "../QuestionNode/QuestionNode";
 import { IFormSettings } from "../../CreateFormNew/components/FormSettings/types";
 import { Field, GridOptions, Option } from "../../../nostr/types";
+import { FieldErrors, FormValues } from "../validations";
 
 interface FormFieldsProps {
   fields: Array<Field>;
   handleInput: (questionId: string, answer: string, message?: string) => void;
   disabled?: boolean;
-  values?: { [fieldId: string]: any };
+  values?: FormValues;
+  errors?: FieldErrors;
   testId?: string;
   formSettings: IFormSettings;
   formAuthorPubkey?: string;
@@ -22,6 +22,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
   handleInput,
   disabled = false,
   values = {},
+  errors,
   testId = "form-fields",
   formSettings,
   formAuthorPubkey,
@@ -41,20 +42,8 @@ export const FormFields: React.FC<FormFieldsProps> = ({
       options = JSON.parse(optionsString || "[]");
       gridOptions = null;
     }
-    let rules = [
-      {
-        required: fieldConfig.required,
-        message: "This is a required question",
-      },
-      ...getValidationRules(fieldConfig.renderElement, fieldConfig),
-    ];
     return (
-      <Form.Item
-        key={fieldId}
-        rules={rules}
-        name={fieldId}
-        data-testid={`${testId}:form-item-${fieldId}`}
-      >
+      <div key={fieldId} data-testid={`${testId}:form-item-${fieldId}`}>
         <QuestionNode
           required={fieldConfig.required || false}
           label={label}
@@ -64,6 +53,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
           inputHandler={handleInput}
           disabled={disabled}
           value={values[fieldId]}
+          error={errors?.[fieldId]}
           testId={`${testId}:question-${fieldId}`}
           formSettings={formSettings}
           gridOptions={gridOptions}
@@ -72,7 +62,7 @@ export const FormFields: React.FC<FormFieldsProps> = ({
           responderSecretKey={responderSecretKey}
           uploaderPubkey={uploaderPubkey}
         />
-      </Form.Item>
+      </div>
     );
   });
 };

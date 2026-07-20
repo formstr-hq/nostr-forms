@@ -1,6 +1,4 @@
-import { Typography } from "antd";
-
-const { Text } = Typography;
+import { Typography } from "@mui/material";
 
 export type SaveStatus = "idle" | "saving" | "saved";
 
@@ -18,8 +16,12 @@ export const AutoSaveIndicator: React.FC<AutoSaveIndicatorProps> = ({
   }
 
   return (
-    <Text type="secondary" style={{ fontSize: 12, marginTop: 5 }}>
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      sx={{ display: "block", mt: "5px" }}
+    >
       {saveStatus === "saving" ? "Saving locally..." : "Saved"}
-    </Text>
+    </Typography>
   );
 };

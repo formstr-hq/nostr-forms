@@ -1,7 +1,6 @@
-import { Typography } from "antd";
+import { Typography } from "@mui/material";
 import StyleWrapper from "./style";
 import SafeMarkdown from "../SafeMarkdown";
-const { Text } = Typography;
 
 function FormBanner({
   imageUrl,
@@ -22,12 +21,13 @@ function FormBanner({
 
   return (
     <StyleWrapper className="form-title" $titleImageUrl={settings.image}>
-      <Text
+      <Typography
+        component="span"
         className="title-text"
-        style={{ color: titleColor || globalColor || "black" }}
+        sx={{ color: titleColor || globalColor || "black" }}
       >
         <SafeMarkdown>{settings.name}</SafeMarkdown>
-      </Text>
+      </Typography>
     </StyleWrapper>
   );
 }

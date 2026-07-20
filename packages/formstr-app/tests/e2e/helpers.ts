@@ -119,11 +119,11 @@ export async function completeSignupModal(
 }
 
 /**
- * Open the submit split-button's dropdown (its caret is an icon-only button
- * whose accessible name is "down") and click one of its options.
+ * Open the submit split-button's dropdown via its caret button and click one
+ * of its options.
  */
 export async function submitVia(page: Page, option: string | RegExp) {
-  await page.getByRole("button", { name: "down" }).last().click();
+  await page.getByTestId("submit-options-button").last().click();
   await page.getByRole("menuitem", { name: option }).click();
 }
 

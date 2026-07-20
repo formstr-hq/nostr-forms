@@ -1,10 +1,9 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Button, Spin, Typography } from "antd";
+import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { Event } from "nostr-tools";
 import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
 import { useProfileContext } from "../../hooks/useProfileContext";
-import { LoadingOutlined } from "@ant-design/icons";
 import { sendNotification } from "../../nostr/common";
 import { FormRendererContainer } from "./FormRendererContainer";
 import { ThankYouScreen } from "./ThankYouScreen";
@@ -12,8 +11,6 @@ import { ROUTES } from "../../constants/routes";
 import { appConfig } from "../../config";
 import { Response, Tag } from "../../nostr/types";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 interface CustomUrlFormProps {
   formSpec?: Tag[];
@@ -77,22 +74,18 @@ export const CustomUrlForm: React.FC<CustomUrlFormProps> = ({ formSpec }) => {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", paddingTop: "30vh" }}>
-        <Spin
-          indicator={
-            <LoadingOutlined style={{ fontSize: 48, color: "#F7931A" }} spin />
-          }
-        />
-      </div>
+      <Box sx={{ textAlign: "center", paddingTop: "30vh" }}>
+        <CircularProgress size={48} sx={{ color: "#F7931A" }} />
+      </Box>
     );
   }
 
   if (!formSpec && !formSlug) {
-    return <Text>{t("filler.customUrl.notEnoughData")}</Text>;
+    return <Typography>{t("filler.customUrl.notEnoughData")}</Typography>;
   }
 
   if (!metadata && !isPreview) {
-    return <Text>{t("filler.customUrl.metadataLoadFailed")}</Text>;
+    return <Typography>{t("filler.customUrl.metadataLoadFailed")}</Typography>;
   }
 
   if (
@@ -103,8 +96,10 @@ export const CustomUrlForm: React.FC<CustomUrlFormProps> = ({ formSpec }) => {
   ) {
     return (
       <>
-        <Text>{t("filler.customUrl.accessControlled")}</Text>
-        <Button onClick={requestPubkey}>{t("common.actions.login")}</Button>
+        <Typography>{t("filler.customUrl.accessControlled")}</Typography>
+        <Button variant="contained" onClick={requestPubkey}>
+          {t("common.actions.login")}
+        </Button>
       </>
     );
   }

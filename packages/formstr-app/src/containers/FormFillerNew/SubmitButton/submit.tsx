@@ -1,21 +1,29 @@
-import { LoadingOutlined, DownOutlined } from "@ant-design/icons";
-import { Button, FormInstance, Dropdown, MenuProps, Typography } from "antd";
+import {
+  Box,
+  Button,
+  ButtonGroup,
+  CircularProgress,
+  Menu,
+  MenuItem,
+} from "@mui/material";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import React, { useState } from "react";
 import { sendNRPCWebhook, sendResponses } from "../../../nostr/common";
 import { RelayPublishModal } from "../../../components/RelayPublishModal/RelaysPublishModal";
-import { Event, generateSecretKey } from "nostr-tools";
+import { Event } from "nostr-tools";
 import { Response, Tag } from "../../../nostr/types";
 import { getFormSettings } from "./utils";
 import { useProfileContext } from "../../../hooks/useProfileContext";
 import { useTranslation } from "react-i18next";
 import { recordSubmission } from "../../../utils/submissions";
 
-const { Text } = Typography;
-
 interface SubmitButtonProps {
   selfSign: boolean | undefined;
   edit: boolean;
-  form: FormInstance;
+  /** Runs required/rule validation over every field; true when the form is valid. */
+  validateForm: () => boolean;
+  /** Builds the response tags from the current answers. */
+  getResponses: () => Response[];
   formEvent: Event;
   onSubmit: () => Promise<void>;
   disabled?: boolean;
@@ -28,7 +36,8 @@ interface SubmitButtonProps {
 export const SubmitButton: React.FC<SubmitButtonProps> = ({
   selfSign,
   edit,
-  form,
+  validateForm,
+  getResponses,
   onSubmit,
   formEvent,
   disabled = false,
@@ -45,25 +54,16 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   const [acceptedRelays, setAcceptedRelays] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [validationMessage, setValidationMessage] = useState<string | null>(
-    null
+    null,
   );
   const [isValidated, setIsValidated] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 
   // --- Helpers ---
-  const buildResponses = (form: FormInstance): Response[] => {
-    const formResponses = form.getFieldsValue(true);
-    return Object.keys(formResponses).map((fieldId: string) => {
-      let answer = null;
-      let message = null;
-      if (formResponses[fieldId]) [answer, message] = formResponses[fieldId];
-      return ["response", fieldId, answer, JSON.stringify({ message })];
-    });
-  };
-
   const fireWebhook = async (
     formTemplate: Tag[],
     responses: Response[],
-    anonUser?: Uint8Array
+    anonUser?: Uint8Array,
   ) => {
     const relays = formEvent.tags
       .filter((value: Tag) => value[0] === "relay")
@@ -80,7 +80,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
     }
 
     const pubKey = formEvent.pubkey;
-    const responses = buildResponses(form);
+    const responses = getResponses();
     // Use the responderSecretKey passed from FormRendererContainer (same key used for file encryption)
     const anonUser = anonymous ? responderSecretKey : null;
 
@@ -92,14 +92,13 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       anonUser,
       true,
       relays,
-      (url: string) => setAcceptedRelays((prev) => [...prev, url])
+      (url: string) => setAcceptedRelays((prev) => [...prev, url]),
     );
     setIsSubmitting(false);
     recordSubmission({
       formId: formId!,
       formPubkey: pubKey,
-      formName:
-        formTemplate.find((t) => t[0] === "name")?.[1] || formId!,
+      formName: formTemplate.find((t) => t[0] === "name")?.[1] || formId!,
       relays,
       submittedAt: new Date().toISOString(),
       anonymous,
@@ -114,13 +113,15 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
     setValidationMessage(null);
 
     try {
-      await form.validateFields();
-      let errors = form.getFieldsError().filter((e) => e.errors.length > 0);
-      if (errors.length > 0) return;
+      if (!validateForm()) return;
       setIsValidating(true);
-      const responses = buildResponses(form);
+      const responses = getResponses();
       // Use responderSecretKey for validation too
-      const nrpcResponse = await fireWebhook(formTemplate, responses, responderSecretKey);
+      const nrpcResponse = await fireWebhook(
+        formTemplate,
+        responses,
+        responderSecretKey,
+      );
       setIsValidating(false);
 
       if (!nrpcResponse) {
@@ -162,13 +163,10 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
     }
 
     try {
-      await form.validateFields();
-
-      let errors = form.getFieldsError().filter((e) => e.errors.length > 0);
-      if (errors.length === 0) {
+      if (validateForm()) {
         setIsDisabled(true);
 
-        const responses = buildResponses(form);
+        const responses = getResponses();
         // Use the responderSecretKey for anonymous (same as file encryption)
         const anonUser = anonymous ? responderSecretKey : null;
 
@@ -188,8 +186,9 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
     }
   };
 
-  const handleMenuClick: MenuProps["onClick"] = async (e) => {
-    if (e.key === "signSubmition") {
+  const handleMenuSelect = async (key: string) => {
+    setMenuAnchor(null);
+    if (key === "signSubmition") {
       await submitForm(false);
     } else {
       await submitForm(true);
@@ -211,13 +210,9 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
         ? t("filler.submit.menu.updateResponse")
         : t("filler.submit.menu.asYourself"),
       key: "signSubmition",
+      disabled: false,
     },
   ];
-
-  const menuProps = {
-    items,
-    onClick: handleMenuClick,
-  };
 
   const settings = getFormSettings(formTemplate);
   const requireWebhookPass = settings?.requireWebhookPass ?? false;
@@ -227,64 +222,75 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       {/* If webhook required but not validated yet → show Validate button */}
       {requireWebhookPass && !isValidated ? (
         <Button
-          type="primary"
+          variant="contained"
+          color="success"
           onClick={validateWebhook}
           disabled={isDisabled}
           className="validate-button"
           data-testid="validate-button"
+          startIcon={
+            isValidating ? (
+              <CircularProgress size={16} color="inherit" />
+            ) : undefined
+          }
         >
-          {isValidating ? (
-            <>
-              <LoadingOutlined style={{ marginRight: 8 }} />
-              <span
-                style={{
-                  top: 10,
-                  marginTop: 10,
-                  marginLeft: 5,
-                  color: "white",
-                }}
-              >
-                {t("filler.submit.validating")}
-              </span>
-            </>
-          ) : (
-            <div style={{ top: 7 }}>
-              <Text
-                style={{
-                  top: 10,
-                  marginTop: 10,
-                  marginLeft: -2,
-                  color: "white",
-                }}
-              >
-                {t("common.actions.validate")}
-              </Text>
-            </div>
-          )}
+          {isValidating
+            ? t("filler.submit.validating")
+            : t("common.actions.validate")}
         </Button>
       ) : (
-        <Dropdown.Button
-          menu={menuProps}
-          type="primary"
-          onClick={handleButtonClick}
-          icon={<DownOutlined />}
-          disabled={isDisabled || disabled}
-          className="submit-button"
-          data-testid="submit-button"
-        >
-          {disabled ? (
-            disabledMessage || t("filler.submit.disabledFallback")
-          ) : isSubmitting ? (
-            <span>
-              <LoadingOutlined style={{ marginRight: 8 }} />
-              {t("filler.submit.submitting")}
-            </span>
-          ) : selfSign ? (
-            items[1].label
-          ) : (
-            t("common.actions.submit")
-          )}
-        </Dropdown.Button>
+        <>
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <ButtonGroup
+              variant="contained"
+              disabled={isDisabled || disabled}
+              data-testid="submit-button"
+            >
+              <Button onClick={handleButtonClick}>
+                {disabled ? (
+                  disabledMessage || t("filler.submit.disabledFallback")
+                ) : isSubmitting ? (
+                  <Box
+                    component="span"
+                    sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}
+                  >
+                    <CircularProgress size={16} color="inherit" />
+                    {t("filler.submit.submitting")}
+                  </Box>
+                ) : selfSign ? (
+                  items[1].label
+                ) : (
+                  t("common.actions.submit")
+                )}
+              </Button>
+              <Button
+                aria-label={t("filler.submit.menu.moreOptions")}
+                data-testid="submit-options-button"
+                onClick={(e) => setMenuAnchor(e.currentTarget)}
+                sx={{ minWidth: 36, px: 0.5 }}
+              >
+                <ArrowDropDownIcon />
+              </Button>
+            </ButtonGroup>
+          </Box>
+          <Menu
+            anchorEl={menuAnchor}
+            open={!!menuAnchor}
+            onClose={() => setMenuAnchor(null)}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+          >
+            {items.map((item) => (
+              <MenuItem
+                key={item.key}
+                disabled={item.disabled}
+                onClick={() => handleMenuSelect(item.key)}
+              >
+                {item.label}
+              </MenuItem>
+            ))}
+          </Menu>
+        </>
       )}
 
       {/* Feedback messages */}

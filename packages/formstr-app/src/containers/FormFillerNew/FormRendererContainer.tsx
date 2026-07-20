@@ -1,6 +1,11 @@
-import { Button, Form, Typography, message } from "antd";
+import { Button, Typography } from "@mui/material";
 import { Event, generateSecretKey } from "nostr-tools";
-import { FileUploadMetadata, Response, Tag } from "../../nostr/types";
+import {
+  Field,
+  FileUploadMetadata,
+  Response,
+  Tag,
+} from "../../nostr/types";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { getAllowedUsers, getFormSpec } from "../../utils/formUtils";
 import { SubmitButton } from "./SubmitButton/submit";
@@ -12,8 +17,12 @@ import { IFormSettings } from "../CreateFormNew/components/FormSettings/types";
 import { LOCAL_STORAGE_KEYS, getItem, setItem } from "../../utils/localStorage";
 import { BlossomClient } from "../../utils/blossom";
 import { createAuthEvent } from "../../utils/blossomAuth";
-
-const { Text } = Typography;
+import { useSnackbar } from "../../providers/SnackbarProvider";
+import {
+  FieldErrors,
+  FormValues,
+  validateFields,
+} from "./validations";
 
 // Helper to get the draft storage key for a form
 const getDraftStorageKey = (formEvent: Event): string => {
@@ -62,8 +71,17 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
   hideTitleImage,
 }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const { pubkey: userPubKey, requestPubkey } = useProfileContext();
-  const [form] = Form.useForm();
+  // React state replaces antd's Form.useForm: values holds the same
+  // [answer, message] tuples the antd store did. The ref mirrors state so
+  // debounced autosave and submit-time getters always read the latest.
+  const [values, setValues] = useState<FormValues>({});
+  const valuesRef = useRef<FormValues>({});
+  const [errors, setErrors] = useState<FieldErrors>({});
+  // Ids of every field that has rendered at least once (antd registered-
+  // fields semantics): responses are built for seen fields only.
+  const seenFieldsRef = useRef<Set<string>>(new Set());
   const [formTemplate, setFormTemplate] = useState<Tag[]>();
   const [settings, setSettings] = useState<IFormSettings>();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
@@ -83,6 +101,17 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
   const statusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const draftStorageKey = getDraftStorageKey(formEvent);
 
+  const updateValues = useCallback(
+    (updater: (prev: FormValues) => FormValues) => {
+      setValues((prev) => {
+        const next = updater(prev);
+        valuesRef.current = next;
+        return next;
+      });
+    },
+    [],
+  );
+
   const toggleAutoSave = useCallback(() => {
     setAutoSaveEnabled((prev) => {
       const newValue = !prev;
@@ -101,12 +130,10 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     if (!autoSaveEnabled) return;
     const savedDraft = getItem<DraftData>(draftStorageKey);
     if (savedDraft?.values) {
-      // Restore saved values to form
-      Object.entries(savedDraft.values).forEach(([fieldId, value]) => {
-        form.setFieldValue(fieldId, value);
-      });
+      // Restore saved values
+      updateValues((prev) => ({ ...prev, ...savedDraft.values }));
     }
-  }, [draftStorageKey, form, autoSaveEnabled]);
+  }, [draftStorageKey, autoSaveEnabled, updateValues]);
 
   // Debounced save to localStorage
   const saveDraft = useCallback(() => {
@@ -122,9 +149,8 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     setSaveStatus("saving");
 
     saveTimeoutRef.current = setTimeout(() => {
-      const values = form.getFieldsValue(true);
       const draftData: DraftData = {
-        values,
+        values: valuesRef.current,
         savedAt: Date.now(),
       };
       setItem(draftStorageKey, draftData);
@@ -135,7 +161,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         setSaveStatus("idle");
       }, 2000);
     }, 500); // Debounce 500ms
-  }, [form, draftStorageKey, autoSaveEnabled]);
+  }, [draftStorageKey, autoSaveEnabled]);
 
   // Clear draft (to be called on successful submit)
   const clearDraft = useCallback(() => {
@@ -240,27 +266,78 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     answer: string,
     message?: string,
   ) => {
-    if (!answer || answer === "") {
-      form.setFieldValue(questionId, null);
-    } else {
-      form.setFieldValue(questionId, [answer, message]);
-    }
+    updateValues((prev) => ({
+      ...prev,
+      [questionId]:
+        !answer || answer === ""
+          ? null
+          : ([answer, message] as [string, string | undefined]),
+    }));
+    // Clear the field's error on edit, like antd did on change
+    setErrors((prev) => {
+      if (!(questionId in prev)) return prev;
+      const next = { ...prev };
+      delete next[questionId];
+      return next;
+    });
     // Save draft after each input change
     saveDraft();
   };
 
+  // Tracks fields as the renderer mounts them (antd registered-fields semantics)
+  const handleFieldsRendered = useCallback((renderedFields: Field[]) => {
+    renderedFields.forEach((field) => seenFieldsRef.current.add(field[1]));
+  }, []);
+
+  // Per-step validation hook used by FormRenderer's step navigation
+  const handleValidateFields = useCallback(
+    (stepFields: Field[]): boolean => {
+      const stepErrors = validateFields(stepFields, valuesRef.current);
+      setErrors((prev) => {
+        const next = { ...prev };
+        stepFields.forEach((field) => {
+          const error = stepErrors[field[1]];
+          if (error) next[field[1]] = error;
+          else delete next[field[1]];
+        });
+        return next;
+      });
+      return Object.keys(stepErrors).length === 0;
+    },
+    [],
+  );
+
+  // Whole-form validation for the SubmitButton
+  const validateForm = useCallback((): boolean => {
+    const allFields = (formTemplate?.filter((tag) => tag[0] === "field") ||
+      []) as Field[];
+    const allErrors = validateFields(allFields, valuesRef.current);
+    setErrors(allErrors);
+    return Object.keys(allErrors).length === 0;
+  }, [formTemplate]);
+
+  // Builds response tags for every field the user has seen (rendered),
+  // replicating antd's getFieldsValue(true) over registered fields.
+  const getResponses = useCallback((): Response[] => {
+    const currentValues = valuesRef.current;
+    return Array.from(seenFieldsRef.current).map((fieldId) => {
+      let answer: string | null = null;
+      let message: string | undefined;
+      const value = currentValues[fieldId];
+      if (value) [answer, message] = value;
+      // Seen-but-unanswered fields keep the antd-era null answer.
+      return [
+        "response",
+        fieldId,
+        answer,
+        JSON.stringify({ message }),
+      ] as Response;
+    });
+  }, []);
+
   const onSubmit = async () => {
     try {
-      const formResponses = form.getFieldsValue(true);
-      const responses: Response[] = Object.keys(formResponses).map(
-        (fieldId) => {
-          let answer = null;
-          let message = null;
-          if (formResponses[fieldId])
-            [answer, message] = formResponses[fieldId];
-          return ["response", fieldId, answer, JSON.stringify({ message })];
-        },
-      );
+      const responses = getResponses();
       // Clear draft on successful submit
       clearDraft();
       onSubmitClick(responses, formTemplate!);
@@ -271,7 +348,7 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
   };
 
   const getUploadedFilesFromForm = (): FileUploadMetadata[] => {
-    const formValues = form.getFieldsValue(true);
+    const formValues = valuesRef.current;
 
     return Object.values(formValues).flatMap((value) => {
       if (!Array.isArray(value) || typeof value[0] !== "string") {
@@ -302,8 +379,9 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     );
 
     if (results.some((result) => result.status === "rejected")) {
-      message.warning(
+      showMessage(
         "Some uploaded files could not be removed from the server.",
+        "warning",
       );
     }
   };
@@ -315,7 +393,8 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
       await deleteUploadedFiles(uploadedFiles);
     }
 
-    form.resetFields();
+    updateValues(() => ({}));
+    setErrors({});
     clearDraft();
     setRendererKey((prev) => prev + 1);
   };
@@ -329,7 +408,8 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         selfSign={!!settings?.disallowAnonymous}
         edit={false}
         onSubmit={onSubmit}
-        form={form}
+        validateForm={validateForm}
+        getResponses={getResponses}
         relays={getResponseRelays(formEvent)}
         formEvent={formEvent}
         formTemplate={formTemplate!}
@@ -338,16 +418,16 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     );
   } else if (!userPubKey) {
     footer = (
-      <Button type="primary" onClick={requestPubkey}>
+      <Button variant="contained" onClick={requestPubkey}>
         {t("filler.loginToFill")}
       </Button>
     );
   } else if (!allowedUsers.includes(userPubKey)) {
     footer = (
       <div style={{ textAlign: "center", padding: "20px" }}>
-        <Text type="warning" style={{ fontSize: "16px" }}>
+        <Typography color="warning.main" sx={{ fontSize: "16px" }}>
           {t("filler.noPermission")}
-        </Text>
+        </Typography>
       </div>
     );
   } else {
@@ -356,7 +436,8 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
         selfSign={true}
         edit={false}
         onSubmit={onSubmit}
-        form={form}
+        validateForm={validateForm}
+        getResponses={getResponses}
         relays={getResponseRelays(formEvent)}
         formEvent={formEvent}
         formTemplate={formTemplate!}
@@ -377,13 +458,13 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
           gap: "16px",
         }}
       >
-        <Typography.Text style={{ fontSize: "16px" }}>
+        <Typography sx={{ fontSize: "16px" }}>
           {isFetchingKeys
             ? t("filler.fetchingKeys")
             : t("filler.encryptedNotice")}
-        </Typography.Text>
+        </Typography>
         {!userPubKey && !isFetchingKeys && (
-          <Button type="primary" onClick={handleLoginAndFetchKeys}>
+          <Button variant="contained" onClick={handleLoginAndFetchKeys}>
             {t("filler.loginToAccess")}
           </Button>
         )}
@@ -395,8 +476,11 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     <FormRenderer
       key={rendererKey}
       formTemplate={formTemplate}
-      form={form}
       onInput={handleInput}
+      values={values}
+      errors={errors}
+      onValidateFields={handleValidateFields}
+      onFieldsRendered={handleFieldsRendered}
       footer={footer}
       hideTitleImage={hideTitleImage}
       hideDescription={hideDescription}

@@ -1,12 +1,11 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Button, Spin, Typography } from "antd";
+import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { Event, nip19 } from "nostr-tools";
 import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { AddressPointer } from "nostr-tools/nip19";
-import { LoadingOutlined } from "@ant-design/icons";
 import { sendNotification } from "../../nostr/common";
 import { FormRendererContainer } from "./FormRendererContainer";
 import { ThankYouScreen } from "./ThankYouScreen";
@@ -44,8 +43,6 @@ function getViewKeyFromUrl(explicitProp?: string | null): string | null {
   return explicitProp ?? null;
 }
 
-const { Text } = Typography;
-
 interface FormFillerProps {
   formSpec?: Tag[];
   embedded?: boolean;
@@ -65,7 +62,7 @@ export const FormFiller: React.FC<FormFillerProps> = ({
   naddr = naddr || _naddr;
   const isPreview = !!formSpec;
   if (!isPreview && !naddr)
-    return <Text>{t("common.labels.invalidUrl")}</Text>;
+    return <Typography>{t("common.labels.invalidUrl")}</Typography>;
   let decodedData;
   if (!isPreview) decodedData = nip19.decode(naddr!).data as AddressPointer;
   const pubKey = decodedData?.pubkey;
@@ -115,12 +112,12 @@ export const FormFiller: React.FC<FormFillerProps> = ({
   };
 
   if ((!pubKey || !formId) && !isPreview) {
-    return <Text>{t("common.labels.invalidFormUrl")}</Text>;
+    return <Typography>{t("common.labels.invalidFormUrl")}</Typography>;
   }
   if (!formEvent && !isPreview) {
     return (
-      <div
-        style={{
+      <Box
+        sx={{
           position: "fixed",
           top: "50%",
           left: "50%",
@@ -131,22 +128,8 @@ export const FormFiller: React.FC<FormFillerProps> = ({
           alignItems: "center",
         }}
       >
-        <Text
-          style={{
-            textAlign: "center",
-            display: "block",
-          }}
-        >
-          <Spin
-            indicator={
-              <LoadingOutlined
-                style={{ fontSize: 48, color: "#F7931A" }}
-                spin
-              />
-            }
-          />
-        </Text>
-      </div>
+        <CircularProgress size={48} sx={{ color: "#F7931A" }} />
+      </Box>
     );
   } else if (
     !isPreview &&
@@ -156,10 +139,11 @@ export const FormFiller: React.FC<FormFillerProps> = ({
   ) {
     return (
       <>
-        <Text>
+        <Typography>
           {t("filler.accessControlled")}
-        </Text>
+        </Typography>
         <Button
+          variant="contained"
           onClick={() => {
             requestPubkey();
           }}

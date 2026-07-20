@@ -1,4 +1,4 @@
-import { Select } from "antd";
+import { FormControl, MenuItem, Select, Typography } from "@mui/material";
 import { Option } from "../../../../nostr/types";
 import { useTranslation } from "react-i18next";
 
@@ -18,19 +18,36 @@ export const DropdownFiller: React.FC<DropdownFillerProps> = ({
   testId = "dropdown-filler",
 }) => {
   const { t } = useTranslation();
+  const placeholder = t("filler.inputs.selectOption");
   return (
-    <>
+    <FormControl fullWidth size="small">
       <Select
-        onChange={onChange}
-        options={options.map((choice) => {
-          let [choiceId, label] = choice;
-          return { value: choiceId, label: label };
-        })}
-        value={defaultValue}
-        placeholder={t("filler.inputs.selectOption")}
+        value={defaultValue ?? ""}
+        onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
+        displayEmpty
         data-testid={`${testId}:select`}
-      />
-    </>
+        renderValue={(selected) => {
+          if (!selected) {
+            return (
+              <Typography component="span" color="text.disabled">
+                {placeholder}
+              </Typography>
+            );
+          }
+          const match = options.find((choice) => choice[0] === selected);
+          return match ? match[1] : selected;
+        }}
+      >
+        {options.map((choice) => {
+          let [choiceId, label] = choice;
+          return (
+            <MenuItem key={choiceId} value={choiceId}>
+              {label}
+            </MenuItem>
+          );
+        })}
+      </Select>
+    </FormControl>
   );
 };

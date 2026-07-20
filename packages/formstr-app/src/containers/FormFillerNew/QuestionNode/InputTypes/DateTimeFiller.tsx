@@ -1,4 +1,6 @@
-import { DatePicker } from "antd";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,14 +25,13 @@ export const DateTimeFiller: React.FC<DateTimeFillerProps> = ({
   testId = "datetime-filler",
 }) => {
   const { t } = useTranslation();
-  // Initialize date from default value if valid
-  
-  const getInitialDate = (): Dayjs | null => {
+
+  const parseDefault = (): Dayjs | null => {
     const defaultVal = fieldConfig?.defaultValue || defaultValue;
     if (!defaultVal) return null;
-    
+
     // If defaultValue is a Unix timestamp (seconds), convert it
-    if (typeof defaultVal === 'string' && /^\d+$/.test(defaultVal)) {
+    if (typeof defaultVal === "string" && /^\d+$/.test(defaultVal)) {
       const parsed = dayjs(parseInt(defaultVal) * 1000);
       return parsed.isValid() ? parsed : null;
     }
@@ -38,23 +39,11 @@ export const DateTimeFiller: React.FC<DateTimeFillerProps> = ({
     return parsed.isValid() ? parsed : null;
   };
 
-  const [date, setDate] = useState<Dayjs | null>(getInitialDate);
+  const [date, setDate] = useState<Dayjs | null>(parseDefault);
 
   useEffect(() => {
-    const defaultVal = fieldConfig?.defaultValue || defaultValue;
-    if (!defaultVal) {
-      setDate(null);
-      return;
-    }
-    let newDate: Dayjs | null = null;
-    if (typeof defaultVal === 'string' && /^\d+$/.test(defaultVal)) {
-      const parsed = dayjs(parseInt(defaultVal) * 1000);
-      newDate = parsed.isValid() ? parsed : null;
-    } else {
-      const parsed = dayjs(defaultVal);
-      newDate = parsed.isValid() ? parsed : null;
-    }
-    setDate(newDate);
+    setDate(parseDefault());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultValue, fieldConfig?.defaultValue]);
 
   // Emit initial value on mount
@@ -62,6 +51,7 @@ export const DateTimeFiller: React.FC<DateTimeFillerProps> = ({
     if (date) {
       onChange(String(Math.floor(date.valueOf() / 1000)));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle date (and time) change
@@ -76,16 +66,23 @@ export const DateTimeFiller: React.FC<DateTimeFillerProps> = ({
   };
 
   return (
-    <div>
-      <DatePicker
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <DateTimePicker
         value={date}
         onChange={handleChange}
-        showTime
-        style={{ marginBottom: 8, width: "100%" }}
+        format="YYYY-MM-DD HH:mm:ss"
         disabled={disabled}
-        placeholder={t("filler.inputs.pickDateTime")}
-        data-testid={`${testId}:picker`}
+        slotProps={{
+          textField: {
+            size: "small",
+            fullWidth: true,
+            placeholder: t("filler.inputs.pickDateTime"),
+            // @ts-expect-error data-testid is forwarded to the underlying div
+            "data-testid": `${testId}:picker`,
+          },
+        }}
+        sx={{ mb: 1, width: "100%" }}
       />
-    </div>
+    </LocalizationProvider>
   );
 };

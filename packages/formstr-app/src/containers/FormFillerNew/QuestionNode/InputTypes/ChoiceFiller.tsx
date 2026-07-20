@@ -1,14 +1,14 @@
 import {
+  Box,
   Button,
   Checkbox,
-  Input,
+  FormControlLabel,
+  FormGroup,
   Radio,
-  RadioChangeEvent,
-  RadioGroupProps,
-  Space,
-} from "antd";
-import { CheckboxGroupProps } from "antd/es/checkbox";
-import { CheckboxValueType } from "antd/es/checkbox/Group";
+  RadioGroup,
+  Stack,
+  TextField,
+} from "@mui/material";
 import ChoiceFillerStyle from "./choiceFiller.style";
 import { ChangeEvent, useEffect, useState } from "react";
 import SafeMarkdown from "../../../../components/SafeMarkdown";
@@ -41,16 +41,20 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
     setOtherMessage(defaultMessage || "");
   }, [defaultMessage]);
 
-  function handleChoiceChange(e: RadioChangeEvent): void;
+  const isCheckbox = answerType === AnswerTypes.checkboxes;
+  const selectedValues = isCheckbox
+    ? (defaultValue || "").split(";").filter(Boolean)
+    : [];
 
-  function handleChoiceChange(checkedValues: CheckboxValueType[]): void;
-
-  function handleChoiceChange(e: RadioChangeEvent | CheckboxValueType[]) {
-    if (Array.isArray(e)) {
-      onChange(e.sort().join(";"), otherMessage);
-      return;
-    }
+  function handleRadioChange(e: ChangeEvent<HTMLInputElement>): void {
     onChange(e.target.value, otherMessage);
+  }
+
+  function handleCheckboxToggle(choiceId: string, checked: boolean): void {
+    const next = checked
+      ? [...selectedValues, choiceId]
+      : selectedValues.filter((id) => id !== choiceId);
+    onChange(next.sort().join(";"), otherMessage);
   }
 
   function handleMessage(e: ChangeEvent<HTMLInputElement>) {
@@ -63,7 +67,7 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
 
   function isOtherSelected(choiceId: string) {
     if (!defaultValue) return false;
-    if (answerType === AnswerTypes.checkboxes) {
+    if (isCheckbox) {
       return defaultValue.split(";").includes(choiceId);
     }
     return defaultValue === choiceId;
@@ -74,70 +78,96 @@ export const ChoiceFiller: React.FC<ChoiceFillerProps> = ({
     onChange("", "");
   }
 
-  let ElementConfig:
-    | {
-        Element: typeof Radio;
-        defaultValue?: RadioGroupProps["defaultValue"];
-      }
-    | {
-        Element: typeof Checkbox;
-        defaultValue?: CheckboxGroupProps["defaultValue"];
-      } = {
-    Element: Radio,
-    defaultValue: defaultValue,
-  };
-  if (answerType === AnswerTypes.checkboxes) {
-    ElementConfig = {
-      Element: Checkbox,
-      defaultValue: defaultValue?.split(";"),
-    };
-  }
   return (
-    //@ts-ignore
     <ChoiceFillerStyle>
-      <ElementConfig.Element.Group
-        onChange={handleChoiceChange}
-        value={ElementConfig.defaultValue}
-        disabled={disabled}
-        data-testid={`${testId}:group`}
-      >
-        <Space direction="vertical">
-          {options.map((choice) => {
-            let [choiceId, label, configString] = choice;
-            let config = JSON.parse(configString || "{}");
-            return (
-              <ElementConfig.Element
-                key={choiceId}
-                value={choiceId}
-                disabled={disabled}
-                data-testid={`${testId}:option-${choiceId}`}
-              >
-                <SafeMarkdown>{label}</SafeMarkdown>
-                {config.isOther && (
-                  <Input
-                    placeholder={t("filler.inputs.optionalMessage")}
-                    value={otherMessage}
-                    onChange={handleMessage}
-                    disabled={disabled || !isOtherSelected(choiceId)}
-                    data-testid={`${testId}-other-input-${choiceId}`}
+      {isCheckbox ? (
+        <FormGroup data-testid={`${testId}:group`}>
+          <Stack spacing={1}>
+            {options.map((choice) => {
+              let [choiceId, label, configString] = choice;
+              let config = JSON.parse(configString || "{}");
+              return (
+                <Box key={choiceId}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={selectedValues.includes(choiceId)}
+                        onChange={(e) =>
+                          handleCheckboxToggle(choiceId, e.target.checked)
+                        }
+                        disabled={disabled}
+                        data-testid={`${testId}:option-${choiceId}`}
+                      />
+                    }
+                    label={<SafeMarkdown>{label}</SafeMarkdown>}
                   />
-                )}
-              </ElementConfig.Element>
-            );
-          })}
-        </Space>
-      </ElementConfig.Element.Group>
+                  {config.isOther && (
+                    <TextField
+                      size="small"
+                      placeholder={t("filler.inputs.optionalMessage")}
+                      value={otherMessage}
+                      onChange={handleMessage}
+                      disabled={disabled || !isOtherSelected(choiceId)}
+                      data-testid={`${testId}-other-input-${choiceId}`}
+                      sx={{ ml: 4 }}
+                    />
+                  )}
+                </Box>
+              );
+            })}
+          </Stack>
+        </FormGroup>
+      ) : (
+        <RadioGroup
+          value={defaultValue ?? ""}
+          onChange={handleRadioChange}
+          data-testid={`${testId}:group`}
+        >
+          <Stack spacing={1}>
+            {options.map((choice) => {
+              let [choiceId, label, configString] = choice;
+              let config = JSON.parse(configString || "{}");
+              return (
+                <Box key={choiceId}>
+                  <FormControlLabel
+                    value={choiceId}
+                    control={
+                      <Radio
+                        disabled={disabled}
+                        data-testid={`${testId}:option-${choiceId}`}
+                      />
+                    }
+                    disabled={disabled}
+                    label={<SafeMarkdown>{label}</SafeMarkdown>}
+                  />
+                  {config.isOther && (
+                    <TextField
+                      size="small"
+                      placeholder={t("filler.inputs.optionalMessage")}
+                      value={otherMessage}
+                      onChange={handleMessage}
+                      disabled={disabled || !isOtherSelected(choiceId)}
+                      data-testid={`${testId}-other-input-${choiceId}`}
+                      sx={{ ml: 4 }}
+                    />
+                  )}
+                </Box>
+              );
+            })}
+          </Stack>
+        </RadioGroup>
+      )}
       {defaultValue && !disabled && (
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
           <Button
-            type="link"
+            variant="text"
             size="small"
             onClick={handleClear}
-            style={{ padding: "4px 0", fontSize: "12px" }}
+            sx={{ px: 0, py: 0.5, fontSize: "12px" }}
           >
             {t("filler.inputs.clearSelection")}
           </Button>
-        </div>
+        </Box>
       )}
     </ChoiceFillerStyle>
   );

@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+import { Dialog } from "@mui/material";
 import ThankYouStyle from "./thankyou.style";
 import { Event } from "nostr-tools";
 import { IFormSettings } from "../../CreateFormNew/components/FormSettings/types";
@@ -49,7 +49,7 @@ export const ThankYouScreen = ({
     initialize();
   }, []);
   return (
-    <Modal open={isOpen} onCancel={onClose} closable={true} footer={null}>
+    <Dialog open={isOpen} onClose={onClose}>
       <ThankYouStyle>
         <div
           className="thank-you-image-container"
@@ -65,6 +65,6 @@ export const ThankYouScreen = ({
           />
         </div>
       </ThankYouStyle>
-    </Modal>
+    </Dialog>
   );
 };

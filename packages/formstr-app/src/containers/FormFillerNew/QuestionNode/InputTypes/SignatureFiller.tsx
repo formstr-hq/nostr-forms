@@ -1,14 +1,22 @@
-import { Button, Input, InputNumber, Typography, Collapse } from "antd";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Button,
+  TextField,
+  Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useState, useEffect } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import { IAnswerSettings } from "../../../CreateFormNew/components/AnswerSettings/types";
 import { Field } from "../../../../nostr/types";
 import { signerManager } from "../../../../signer";
-import { DatePicker } from "antd";
 import { useTranslation } from "react-i18next";
-
-const { TextArea } = Input;
-const { Text } = Typography;
 
 interface SignatureFillerProps {
   fieldConfig: IAnswerSettings;
@@ -26,12 +34,12 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
 }) => {
   const { t } = useTranslation();
   const sig = fieldConfig.signature || {};
-  
+
   const parseExistingSignature = (value: string | undefined) => {
     if (!value) return null;
     try {
       const parsed = JSON.parse(value);
-      if (parsed && typeof parsed === 'object' && parsed.content !== undefined) {
+      if (parsed && typeof parsed === "object" && parsed.content !== undefined) {
         return parsed;
       }
     } catch (e) {
@@ -40,18 +48,17 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
   };
 
   const existingSignature = parseExistingSignature(defaultValue);
-  
+
   const [content, setContent] = useState(
-    existingSignature?.content || sig.prefilledContent || ""
+    existingSignature?.content || sig.prefilledContent || "",
   );
   const [signedEvent, setSignedEvent] = useState<string | null>(
-    defaultValue || null
+    defaultValue || null,
   );
   const [kind, setKind] = useState<number>(
-    existingSignature?.kind ?? sig.kind ?? 22157
+    existingSignature?.kind ?? sig.kind ?? 22157,
   );
   const [isSigning, setIsSigning] = useState(false);
-
 
   const getInitialCreatedAt = (): Dayjs => {
     if (existingSignature?.created_at) {
@@ -106,52 +113,72 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
   const hasExistingSignature = !!existingSignature;
 
   return (
-    <div style={{ height: "auto" }}>
+    <Box sx={{ height: "auto" }}>
       {!hasExistingSignature && (
         <>
-          <TextArea
+          <TextField
             value={content}
             disabled={disabled || !sig.editableContent}
             onChange={(e) => setContent(e.target.value)}
+            multiline
             rows={4}
+            fullWidth
+            size="small"
           />
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap" }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 1,
+              mt: 1,
+            }}
+          >
             {sig.editableCreatedAt && (
               <>
-                <Text style={{ margin: 10 }}>
+                <Typography variant="body2">
                   {t("filler.inputs.signatureDate")}:
-                </Text>
-                <DatePicker
-                  value={createdAt}
-                  onChange={(date) => date && setCreatedAt(date)}
-                  showTime
-                  style={{ marginBottom: 8, width: "auto" }}
-                  disabled={disabled}
-                  placeholder={t("filler.inputs.pickDateTime")}
-                />
+                </Typography>
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DateTimePicker
+                    value={createdAt}
+                    onChange={(date) => date && setCreatedAt(date)}
+                    disabled={disabled}
+                    slotProps={{
+                      textField: {
+                        size: "small",
+                        placeholder: t("filler.inputs.pickDateTime"),
+                      },
+                    }}
+                  />
+                </LocalizationProvider>
               </>
             )}
             {sig.editableKind && (
               <>
-                <Text style={{ margin: 10 }}>
+                <Typography variant="body2">
                   {t("filler.inputs.signatureKind")}:
-                </Text>
-                <InputNumber
-                  min={0}
+                </Typography>
+                <TextField
+                  type="number"
+                  size="small"
                   value={kind}
-                  onChange={(v) => setKind(v ?? 22157)}
+                  onChange={(e) => {
+                    const parsed = parseInt(e.target.value, 10);
+                    setKind(Number.isNaN(parsed) ? 22157 : parsed);
+                  }}
                   disabled={disabled}
-                  style={{ marginBottom: 8 }}
+                  slotProps={{ htmlInput: { min: 0 } }}
+                  sx={{ width: 140 }}
                 />
               </>
             )}
-          </div>
+          </Box>
           <Button
-            type="primary"
-            loading={isSigning}
+            variant="contained"
             onClick={handleSign}
-            disabled={disabled}
-            style={{ marginTop: 8 }}
+            disabled={disabled || isSigning}
+            sx={{ mt: 1 }}
           >
             {isSigning
               ? t("filler.inputs.signing")
@@ -161,64 +188,90 @@ export const SignatureFiller: React.FC<SignatureFillerProps> = ({
       )}
 
       {hasExistingSignature && (
-        <div style={{ marginBottom: 12 }}>
-          <Text strong style={{ display: "block", marginBottom: 8 }}>
+        <Box sx={{ mb: 1.5 }}>
+          <Typography
+            sx={{ fontWeight: 600, display: "block", mb: 1 }}
+          >
             {`\u2713 ${t("filler.inputs.signatureAttached")}`}
-          </Text>
+          </Typography>
           {existingSignature.content && (
-            <div
-              style={{
+            <Box
+              sx={{
                 backgroundColor: "#f0f0f0",
-                padding: "12px",
-                borderRadius: 4,
-                marginBottom: 8,
+                p: 1.5,
+                borderRadius: 1,
+                mb: 1,
                 whiteSpace: "pre-wrap",
               }}
             >
-              <Text type="secondary" style={{ fontSize: "12px", display: "block", marginBottom: 4 }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", mb: 0.5 }}
+              >
                 {t("filler.inputs.signedContent")}:
-              </Text>
-              <Text>{existingSignature.content}</Text>
-            </div>
+              </Typography>
+              <Typography variant="body2">
+                {existingSignature.content}
+              </Typography>
+            </Box>
           )}
           {existingSignature.created_at && (
-            <Text type="secondary" style={{ fontSize: "12px", display: "block", marginBottom: 8 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "block", mb: 1 }}
+            >
               {t("filler.inputs.signedOn")}:{" "}
-              {dayjs(existingSignature.created_at * 1000).format("YYYY-MM-DD HH:mm:ss")}
-            </Text>
+              {dayjs(existingSignature.created_at * 1000).format(
+                "YYYY-MM-DD HH:mm:ss",
+              )}
+            </Typography>
           )}
           {sig.editableKind && existingSignature.kind !== undefined && (
-            <Text type="secondary" style={{ fontSize: "12px", display: "block", marginBottom: 8 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "block", mb: 1 }}
+            >
               {t("filler.inputs.signatureKind")}: {existingSignature.kind}
-            </Text>
+            </Typography>
           )}
-        </div>
+        </Box>
       )}
 
       {signedEvent && (
-        <Collapse
-          ghost
-          style={{ marginTop: 12 }}
-          items={[
-            {
-              key: "1",
-              label: <Text strong>{t("filler.inputs.viewSignedEvent")}</Text>,
-              children: (
-                <TextArea
-                  value={signedEvent}
-                  autoSize={{ minRows: 6, maxRows: 12 }}
-                  readOnly
-                  style={{
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{ mt: 1.5, "&:before": { display: "none" } }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography sx={{ fontWeight: 600 }}>
+              {t("filler.inputs.viewSignedEvent")}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <TextField
+              value={signedEvent}
+              multiline
+              minRows={6}
+              maxRows={12}
+              fullWidth
+              slotProps={{
+                input: {
+                  readOnly: true,
+                  sx: {
                     fontFamily: "monospace",
                     background: "#fafafa",
-                    borderRadius: 4,
-                  }}
-                />
-              ),
-            },
-          ]}
-        />
+                    borderRadius: 1,
+                  },
+                },
+              }}
+            />
+          </AccordionDetails>
+        </Accordion>
       )}
-    </div>
+    </Box>
   );
 };

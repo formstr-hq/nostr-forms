@@ -1,6 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Form } from "antd";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { FormRenderer } from "./FormRenderer";
@@ -44,17 +43,13 @@ const sectionedTemplate: Tag[] = [
   ["field", "q3", "Third question", "text"],
 ];
 
-const Harness = ({ formTemplate }: { formTemplate: Tag[] }) => {
-  const [form] = Form.useForm();
-  return (
-    <FormRenderer
-      formTemplate={formTemplate}
-      form={form}
-      onInput={() => {}}
-      footer={<button type="submit">Submit form</button>}
-    />
-  );
-};
+const Harness = ({ formTemplate }: { formTemplate: Tag[] }) => (
+  <FormRenderer
+    formTemplate={formTemplate}
+    onInput={() => {}}
+    footer={<button type="submit">Submit form</button>}
+  />
+);
 
 const visibleFields = () => screen.getByTestId("visible-fields").textContent;
 

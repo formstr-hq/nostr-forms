@@ -1,18 +1,34 @@
-import { Upload, Button, Typography, message, Steps, Space, Popconfirm } from "antd";
-import { UploadOutlined, CheckCircleOutlined, InboxOutlined, DownloadOutlined, FileOutlined, LockOutlined, SafetyCertificateOutlined, CloudUploadOutlined, CloudDownloadOutlined, DeleteOutlined } from "@ant-design/icons";
-import { useState, useEffect } from "react";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Stack,
+  Step,
+  StepLabel,
+  Stepper,
+  Typography,
+} from "@mui/material";
+import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import { useRef, useState, useEffect } from "react";
 import { IAnswerSettings } from "../../../CreateFormNew/components/AnswerSettings/types";
 import { Field, FileUploadMetadata } from "../../../../nostr/types";
 import { BlossomClient } from "../../../../utils/blossom";
 import { createAuthEvent } from "../../../../utils/blossomAuth";
-import { encryptFileToAuthor, decryptFileFromUploader } from "../../../../utils/blossomCrypto";
-import type { RcFile } from "antd/es/upload/interface";
+import {
+  encryptFileToAuthor,
+  decryptFileFromUploader,
+} from "../../../../utils/blossomCrypto";
 import { hexToBytes } from "nostr-tools/utils";
 import { DEFAULT_SERVERS } from "../../../CreateFormNew/components/AnswerSettings/settings/FileUploadSettings";
 import { useTranslation } from "react-i18next";
-
-const { Text, Paragraph } = Typography;
-const { Dragger } = Upload;
+import { useSnackbar } from "../../../../providers/SnackbarProvider";
 
 interface FileUploadFillerProps {
   fieldConfig: IAnswerSettings;
@@ -37,11 +53,14 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   uploaderPubkey,
 }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const blossomServer: string = fieldConfig.blossomServer || DEFAULT_SERVERS[0];
   const maxFileSize: number = (fieldConfig.maxFileSize || 10) * 1024 * 1024; // Convert MB to bytes
   const allowedTypes: string[] = fieldConfig.allowedTypes || [];
 
-  const parseExistingMetadata = (value: string | undefined): FileUploadMetadata | null => {
+  const parseExistingMetadata = (
+    value: string | undefined,
+  ): FileUploadMetadata | null => {
     if (!value) return null;
     try {
       const parsed = JSON.parse(value);
@@ -55,28 +74,29 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   };
 
   const existingMetadata = parseExistingMetadata(defaultValue);
-  const [uploadedMetadata, setUploadedMetadata] = useState<FileUploadMetadata | null>(
-    existingMetadata
-  );
+  const [uploadedMetadata, setUploadedMetadata] =
+    useState<FileUploadMetadata | null>(existingMetadata);
   const [uploading, setUploading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const uploadSteps = [
-    { title: t("filler.inputs.fileUpload.uploadSteps.reading"), icon: <FileOutlined /> },
-    { title: t("filler.inputs.fileUpload.uploadSteps.encrypting"), icon: <LockOutlined /> },
-    { title: t("filler.inputs.fileUpload.uploadSteps.preparing"), icon: <SafetyCertificateOutlined /> },
-    { title: t("filler.inputs.fileUpload.uploadSteps.uploading"), icon: <CloudUploadOutlined /> },
-    { title: t("filler.inputs.fileUpload.uploadSteps.complete"), icon: <CheckCircleOutlined /> },
+    t("filler.inputs.fileUpload.uploadSteps.reading"),
+    t("filler.inputs.fileUpload.uploadSteps.encrypting"),
+    t("filler.inputs.fileUpload.uploadSteps.preparing"),
+    t("filler.inputs.fileUpload.uploadSteps.uploading"),
+    t("filler.inputs.fileUpload.uploadSteps.complete"),
   ];
 
   const downloadSteps = [
-    { title: t("filler.inputs.fileUpload.downloadSteps.authenticating"), icon: <SafetyCertificateOutlined /> },
-    { title: t("filler.inputs.fileUpload.downloadSteps.downloading"), icon: <CloudDownloadOutlined /> },
-    { title: t("filler.inputs.fileUpload.downloadSteps.decrypting"), icon: <LockOutlined /> },
-    { title: t("filler.inputs.fileUpload.downloadSteps.saving"), icon: <FileOutlined /> },
-    { title: t("filler.inputs.fileUpload.downloadSteps.complete"), icon: <CheckCircleOutlined /> },
+    t("filler.inputs.fileUpload.downloadSteps.authenticating"),
+    t("filler.inputs.fileUpload.downloadSteps.downloading"),
+    t("filler.inputs.fileUpload.downloadSteps.decrypting"),
+    t("filler.inputs.fileUpload.downloadSteps.saving"),
+    t("filler.inputs.fileUpload.downloadSteps.complete"),
   ];
 
   useEffect(() => {
@@ -88,13 +108,14 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
     }
   }, [defaultValue]);
 
-  const validateFile = (file: RcFile): boolean => {
+  const validateFile = (file: File): boolean => {
     // Check file size
     if (file.size > maxFileSize) {
-      message.error(
+      showMessage(
         t("filler.inputs.fileUpload.sizeLimit", {
           size: fieldConfig.maxFileSize || 10,
         }),
+        "error",
       );
       return false;
     }
@@ -110,10 +131,11 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       });
 
       if (!isAllowed) {
-        message.error(
+        showMessage(
           t("filler.inputs.fileUpload.fileTypeNotAllowed", {
             type: file.type,
           }),
+          "error",
         );
         return false;
       }
@@ -122,9 +144,9 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
     return true;
   };
 
-  const handleUpload = async (file: RcFile) => {
+  const handleUpload = async (file: File) => {
     if (!validateFile(file)) {
-      return false;
+      return;
     }
 
     setUploading(true);
@@ -144,14 +166,19 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       const { ciphertext, uploaderPubkey } = await encryptFileToAuthor(
         fileBytes,
         formAuthorPubkey,
-        responderSecretKey
+        responderSecretKey,
       );
       setCurrentStep(2);
 
       // Step 2: Convert encrypted ciphertext to bytes for upload & create auth
       const encryptedBytes = new TextEncoder().encode(ciphertext);
       const sha256Hash = await calculateSHA256(encryptedBytes);
-      const authHeader = await createAuthEvent("upload", sha256Hash, 60, responderSecretKey);
+      const authHeader = await createAuthEvent(
+        "upload",
+        sha256Hash,
+        60,
+        responderSecretKey,
+      );
       setCurrentStep(3);
 
       // Step 3: Upload to Blossom server
@@ -178,24 +205,23 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       onChange(metadataString, file.name);
       setCurrentStep(4);
 
-      message.success(t("filler.inputs.fileUpload.uploadSuccess"));
+      showMessage(t("filler.inputs.fileUpload.uploadSuccess"), "success");
     } catch (error: any) {
       console.error("Upload failed:", error);
       if (error.isCorsError) {
-        message.error(t("filler.inputs.fileUpload.uploadCorsError"));
+        showMessage(t("filler.inputs.fileUpload.uploadCorsError"), "error");
       } else {
-        message.error(
+        showMessage(
           t("filler.inputs.fileUpload.uploadFailed", {
             message: error.message || t("common.status.unknownError"),
           }),
+          "error",
         );
       }
     } finally {
       setUploading(false);
       setTimeout(() => setCurrentStep(0), 1000);
     }
-
-    return false; // Prevent default upload behavior
   };
 
   const calculateSHA256 = async (data: Uint8Array): Promise<string> => {
@@ -207,11 +233,14 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
   const handleDownload = async () => {
     if (!uploadedMetadata) return;
     if (!formEditKey) {
-      message.error(t("filler.inputs.fileUpload.downloadKeyUnavailable"));
+      showMessage(
+        t("filler.inputs.fileUpload.downloadKeyUnavailable"),
+        "error",
+      );
       return;
     }
     if (!uploaderPubkey) {
-      message.error(t("filler.inputs.fileUpload.uploaderUnavailable"));
+      showMessage(t("filler.inputs.fileUpload.uploaderUnavailable"), "error");
       return;
     }
 
@@ -221,12 +250,20 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
     try {
       // Step 0: Create auth event for download (use formEditKey)
       const formEditKeyBytes = hexToBytes(formEditKey);
-      const authHeader = await createAuthEvent("get", uploadedMetadata.sha256, 60, formEditKeyBytes);
+      const authHeader = await createAuthEvent(
+        "get",
+        uploadedMetadata.sha256,
+        60,
+        formEditKeyBytes,
+      );
       setCurrentStep(1);
 
       // Step 1: Download from Blossom server
       const client = new BlossomClient(uploadedMetadata.server);
-      const encryptedBytes = await client.download(uploadedMetadata.sha256, authHeader);
+      const encryptedBytes = await client.download(
+        uploadedMetadata.sha256,
+        authHeader,
+      );
       setCurrentStep(2);
 
       // Step 2: Convert bytes to ciphertext string & decrypt
@@ -236,12 +273,14 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       const decryptedBytes = await decryptFileFromUploader(
         ciphertext,
         formEditKey,
-        uploaderPubkey
+        uploaderPubkey,
       );
       setCurrentStep(3);
 
       // Step 3: Trigger browser download with original filename
-      const blob = new Blob([decryptedBytes], { type: uploadedMetadata.mimeType });
+      const blob = new Blob([decryptedBytes], {
+        type: uploadedMetadata.mimeType,
+      });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -252,16 +291,17 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       URL.revokeObjectURL(url);
       setCurrentStep(4);
 
-      message.success(t("filler.inputs.fileUpload.downloadSuccess"));
+      showMessage(t("filler.inputs.fileUpload.downloadSuccess"), "success");
     } catch (error: any) {
       console.error("Download failed:", error);
       if (error.isCorsError) {
-        message.error(t("filler.inputs.fileUpload.downloadCorsError"));
+        showMessage(t("filler.inputs.fileUpload.downloadCorsError"), "error");
       } else {
-        message.error(
+        showMessage(
           t("filler.inputs.fileUpload.downloadFailed", {
             message: error.message || t("common.status.unknownError"),
           }),
+          "error",
         );
       }
     } finally {
@@ -286,7 +326,12 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
     setDeleting(true);
     try {
       // Create auth event for deletion
-      const authHeader = await createAuthEvent("delete", uploadedMetadata.sha256, 60, responderSecretKey);
+      const authHeader = await createAuthEvent(
+        "delete",
+        uploadedMetadata.sha256,
+        60,
+        responderSecretKey,
+      );
 
       // Delete from Blossom server
       const client = new BlossomClient(uploadedMetadata.server);
@@ -295,16 +340,17 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
       // Clear local state
       setUploadedMetadata(null);
       onChange("", ""); // Clear the form field value
-      message.success(t("filler.inputs.fileUpload.deleteSuccess"));
+      showMessage(t("filler.inputs.fileUpload.deleteSuccess"), "success");
     } catch (error: any) {
       console.error("Delete failed:", error);
       if (error.isCorsError) {
-        message.error(t("filler.inputs.fileUpload.deleteCorsError"));
+        showMessage(t("filler.inputs.fileUpload.deleteCorsError"), "error");
       } else {
-        message.error(
+        showMessage(
           t("filler.inputs.fileUpload.deleteFailed", {
             message: error.message || t("common.status.unknownError"),
           }),
+          "error",
         );
       }
     } finally {
@@ -312,158 +358,248 @@ export const FileUploadFiller: React.FC<FileUploadFillerProps> = ({
     }
   };
 
+  const handleFilePicked = (files: FileList | null) => {
+    const file = files?.[0];
+    if (file) {
+      void handleUpload(file);
+    }
+  };
+
   const hasUploadedFile = !!uploadedMetadata;
 
   return (
-    <div style={{ width: "100%" }}>
+    <Box sx={{ width: "100%" }}>
       {!hasUploadedFile && !uploading && (
-        <Dragger
-          beforeUpload={handleUpload}
-          showUploadList={false}
-          disabled={disabled}
-          accept={allowedTypes.join(",")}
-        >
-          <p className="ant-upload-drag-icon">
-            <InboxOutlined />
-          </p>
-          <p className="ant-upload-text">
-            {t("filler.inputs.fileUpload.clickOrDrag")}
-          </p>
-          <p className="ant-upload-hint">
-            {t("filler.inputs.fileUpload.encryptedHint")}
-          </p>
-          <p className="ant-upload-hint" style={{ fontSize: "12px" }}>
-            {t("filler.inputs.fileUpload.maxSize", {
-              size: fieldConfig.maxFileSize || 10,
-            })}
-            {allowedTypes.length > 0 && (
-              <>
-                {" "}
-                • {t("filler.inputs.fileUpload.allowed")}: {allowedTypes.join(", ")}
-              </>
-            )}
-          </p>
-        </Dragger>
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            accept={allowedTypes.join(",")}
+            disabled={disabled}
+            onChange={(e) => {
+              handleFilePicked(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <Box
+            role="button"
+            aria-disabled={disabled}
+            onClick={() => {
+              if (!disabled) fileInputRef.current?.click();
+            }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (!disabled) handleFilePicked(e.dataTransfer.files);
+            }}
+            sx={{
+              border: "1px dashed",
+              borderColor: "divider",
+              borderRadius: 2,
+              p: 4,
+              textAlign: "center",
+              cursor: disabled ? "default" : "pointer",
+              backgroundColor: "background.paper",
+              transition: "border-color 0.2s",
+              "&:hover": disabled
+                ? undefined
+                : { borderColor: "primary.main" },
+            }}
+          >
+            <InboxOutlinedIcon
+              sx={{ fontSize: 42, color: "primary.main", mb: 1 }}
+            />
+            <Typography variant="body1">
+              {t("filler.inputs.fileUpload.clickOrDrag")}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {t("filler.inputs.fileUpload.encryptedHint")}
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "block" }}
+            >
+              {t("filler.inputs.fileUpload.maxSize", {
+                size: fieldConfig.maxFileSize || 10,
+              })}
+              {allowedTypes.length > 0 && (
+                <>
+                  {" "}
+                  • {t("filler.inputs.fileUpload.allowed")}:{" "}
+                  {allowedTypes.join(", ")}
+                </>
+              )}
+            </Typography>
+          </Box>
+        </>
       )}
 
       {(uploading || downloading) && (
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <Text strong style={{ marginBottom: 16, display: "block" }}>
+        <Stack spacing={2} sx={{ width: "100%" }}>
+          <Typography sx={{ fontWeight: 600 }}>
             {uploading
               ? t("filler.inputs.fileUpload.uploading")
               : t("filler.inputs.fileUpload.downloading")}
-          </Text>
-          <style>
-            {`
-              @keyframes calmBlink {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.4; }
-              }
-              .ant-steps-item-process .ant-steps-item-icon {
-                animation: calmBlink 2s ease-in-out infinite;
-              }
-            `}
-          </style>
-          <Steps
-            current={currentStep}
-            size="small"
-            items={uploading ? uploadSteps : downloadSteps}
-          />
-        </Space>
+          </Typography>
+          <Stepper
+            activeStep={currentStep}
+            alternativeLabel
+            sx={{
+              "& .MuiStepLabel-root.Mui-active .MuiStepIcon-root": {
+                animation: "calmBlink 2s ease-in-out infinite",
+              },
+              "@keyframes calmBlink": {
+                "0%, 100%": { opacity: 1 },
+                "50%": { opacity: 0.4 },
+              },
+            }}
+          >
+            {(uploading ? uploadSteps : downloadSteps).map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        </Stack>
       )}
 
-      {hasUploadedFile && (
-        <div
-          style={{
+      {hasUploadedFile && uploadedMetadata && (
+        <Box
+          sx={{
             backgroundColor: "#f6ffed",
             border: "1px solid #b7eb8f",
-            borderRadius: 8,
-            padding: 16,
+            borderRadius: 2,
+            p: 2,
           }}
         >
-          <Space direction="vertical" size={8} style={{ width: "100%" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <CheckCircleOutlined style={{ color: "#52c41a", fontSize: 20 }} />
-              <Text strong style={{ fontSize: 16 }}>
+          <Stack spacing={1} sx={{ width: "100%" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CheckCircleOutlineOutlinedIcon
+                sx={{ color: "#52c41a", fontSize: 20 }}
+              />
+              <Typography sx={{ fontWeight: 600, fontSize: 16 }}>
                 {t("filler.inputs.fileUpload.uploaded")}
-              </Text>
-            </div>
+              </Typography>
+            </Box>
 
-            <div style={{ paddingLeft: 28 }}>
-              <Text strong>{t("filler.inputs.fileUpload.filename")}:</Text>{" "}
-              <Text>{uploadedMetadata.filename}</Text>
-            </div>
+            <Box sx={{ pl: 3.5 }}>
+              <Typography component="span" sx={{ fontWeight: 600 }}>
+                {t("filler.inputs.fileUpload.filename")}:
+              </Typography>{" "}
+              <Typography component="span">
+                {uploadedMetadata.filename}
+              </Typography>
+            </Box>
 
-            <div style={{ paddingLeft: 28 }}>
-              <Text strong>{t("filler.inputs.fileUpload.size")}:</Text>{" "}
-              <Text>{formatFileSize(uploadedMetadata.size)}</Text>
-            </div>
+            <Box sx={{ pl: 3.5 }}>
+              <Typography component="span" sx={{ fontWeight: 600 }}>
+                {t("filler.inputs.fileUpload.size")}:
+              </Typography>{" "}
+              <Typography component="span">
+                {formatFileSize(uploadedMetadata.size)}
+              </Typography>
+            </Box>
 
-            <div style={{ paddingLeft: 28 }}>
-              <Text strong>{t("filler.inputs.fileUpload.type")}:</Text>{" "}
-              <Text>{uploadedMetadata.mimeType}</Text>
-            </div>
+            <Box sx={{ pl: 3.5 }}>
+              <Typography component="span" sx={{ fontWeight: 600 }}>
+                {t("filler.inputs.fileUpload.type")}:
+              </Typography>{" "}
+              <Typography component="span">
+                {uploadedMetadata.mimeType}
+              </Typography>
+            </Box>
 
-            <div style={{ paddingLeft: 28 }}>
-              <Text strong>{t("filler.inputs.fileUpload.uploadedAt")}:</Text>{" "}
-              <Text>{formatDate(uploadedMetadata.uploadedAt)}</Text>
-            </div>
+            <Box sx={{ pl: 3.5 }}>
+              <Typography component="span" sx={{ fontWeight: 600 }}>
+                {t("filler.inputs.fileUpload.uploadedAt")}:
+              </Typography>{" "}
+              <Typography component="span">
+                {formatDate(uploadedMetadata.uploadedAt)}
+              </Typography>
+            </Box>
 
-            <div style={{ paddingLeft: 28 }}>
-              <Text strong>{t("filler.inputs.fileUpload.server")}:</Text>{" "}
-              <Text
-                style={{ fontSize: "12px", color: "#666", wordBreak: "break-all" }}
+            <Box sx={{ pl: 3.5 }}>
+              <Typography component="span" sx={{ fontWeight: 600 }}>
+                {t("filler.inputs.fileUpload.server")}:
+              </Typography>{" "}
+              <Typography
+                component="span"
+                sx={{
+                  fontSize: "12px",
+                  color: "text.secondary",
+                  wordBreak: "break-all",
+                }}
               >
                 {uploadedMetadata.server}
-              </Text>
-            </div>
+              </Typography>
+            </Box>
 
-            <div
-              style={{
-                paddingLeft: 28,
-                marginTop: 8,
-                paddingTop: 8,
+            <Box
+              sx={{
+                pl: 3.5,
+                mt: 1,
+                pt: 1,
                 borderTop: "1px solid #d9f7be",
               }}
             >
-              <Text type="secondary" style={{ fontSize: "12px" }}>
+              <Typography variant="caption" color="text.secondary">
                 {`\u2713 ${t("filler.inputs.fileUpload.encryptedLabel")}`}
-              </Text>
-            </div>
+              </Typography>
+            </Box>
 
-            <div style={{ paddingLeft: 28, marginTop: 12 }}>
-              <Space>
+            <Box sx={{ pl: 3.5, mt: 1.5 }}>
+              <Stack direction="row" spacing={1}>
                 <Button
-                  type="primary"
-                  icon={<DownloadOutlined />}
+                  variant="contained"
+                  startIcon={<DownloadOutlinedIcon />}
                   onClick={handleDownload}
-                  loading={downloading}
-                  disabled={deleting}
+                  disabled={downloading || deleting}
                 >
                   {t("filler.inputs.fileUpload.downloadFile")}
                 </Button>
-                <Popconfirm
-                  title={t("filler.inputs.fileUpload.clearUpload")}
-                  description={t("filler.inputs.fileUpload.clearUploadConfirm")}
-                  onConfirm={handleClearUpload}
-                  okText={t("filler.inputs.fileUpload.clearUploadOk")}
-                  cancelText={t("common.actions.cancel")}
+                <Button
+                  color="error"
+                  variant="outlined"
+                  startIcon={<DeleteOutlinedIcon />}
                   disabled={disabled || deleting}
+                  onClick={() => setConfirmClearOpen(true)}
                 >
-                  <Button
-                    danger
-                    icon={<DeleteOutlined />}
-                    disabled={disabled || deleting}
-                    loading={deleting}
-                  >
-                    {t("filler.inputs.fileUpload.clearUpload")}
-                  </Button>
-                </Popconfirm>
-              </Space>
-            </div>
-          </Space>
-        </div>
+                  {t("filler.inputs.fileUpload.clearUpload")}
+                </Button>
+              </Stack>
+            </Box>
+          </Stack>
+        </Box>
       )}
-    </div>
+
+      <Dialog
+        open={confirmClearOpen}
+        onClose={() => setConfirmClearOpen(false)}
+      >
+        <DialogTitle>{t("filler.inputs.fileUpload.clearUpload")}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {t("filler.inputs.fileUpload.clearUploadConfirm")}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmClearOpen(false)}>
+            {t("common.actions.cancel")}
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => {
+              setConfirmClearOpen(false);
+              void handleClearUpload();
+            }}
+          >
+            {t("filler.inputs.fileUpload.clearUploadOk")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };

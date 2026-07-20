@@ -1,7 +1,7 @@
-import { Rule } from "antd/es/form";
 import {
   AnswerSettings,
   AnswerTypes,
+  Field,
   GridOptions,
   GridResponse,
   MatchRule,
@@ -12,130 +12,145 @@ import {
   ValidationRuleTypes,
 } from "../../../nostr/types";
 
+/**
+ * A field's stored value in the filler: a [answer, message] tuple, or null
+ * when the answer was cleared. This mirrors what the antd Form instance used
+ * to hold per field.
+ */
+export type FormFieldValue = [string, string | undefined] | null;
+export type FormValues = Record<string, FormFieldValue>;
+export type FieldErrors = Record<string, string>;
+
+/**
+ * A validator returns an error message when the value fails, or null when it
+ * passes. (Replacement for antd's Rule/validator promises now that the filler
+ * no longer uses antd Form.)
+ */
+export type FieldValidator = (value: FormFieldValue) => string | null;
+
+/** Message shown when a required question has no answer. */
+export const REQUIRED_MESSAGE = "This is a required question";
+
+/** Empty means: never touched, explicitly cleared, or an empty-string answer. */
+export const isValueEmpty = (
+  value: FormFieldValue | undefined,
+): boolean => {
+  if (!value) return true;
+  const answer = value[0];
+  return answer === null || answer === undefined || answer === "";
+};
+
 //TODO: Find a method better than "any" with overloads for dynamic types
-function NumRange(rule: any): Rule;
-function NumRange(rule: RangeRule): Rule {
-  return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
-      if (!rule.min && !rule.max) return Promise.resolve();
-      if (rule.min && value[0] < rule.min) {
-        return Promise.reject(`Please enter number more than ${rule.min}`);
-      }
-      if (rule.max && value[0] > rule.max) {
-        return Promise.reject(`Please enter number less than ${rule.max}`);
-      }
-      return Promise.resolve();
-    },
+function NumRange(rule: any): FieldValidator;
+function NumRange(rule: RangeRule): FieldValidator {
+  return (value) => {
+    if (!value) return null;
+    if (!rule.min && !rule.max) return null;
+    // Stored answers are strings now (antd held numbers); JS used to coerce
+    // them in these comparisons, so coerce explicitly to keep behavior.
+    const num = Number(value[0]);
+    if (rule.min && num < rule.min) {
+      return `Please enter number more than ${rule.min}`;
+    }
+    if (rule.max && num > rule.max) {
+      return `Please enter number less than ${rule.max}`;
+    }
+    return null;
   };
 }
 
-function MinLength(rule: any): Rule;
-function MinLength(rule: MinRule): Rule {
-  return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
-      if (!rule.min) return Promise.resolve();
-      if (value[0].length < rule.min) {
-        return Promise.reject(`Please enter more than ${rule.min} chars`);
-      }
-      return Promise.resolve();
-    },
+function MinLength(rule: any): FieldValidator;
+function MinLength(rule: MinRule): FieldValidator {
+  return (value) => {
+    if (!value) return null;
+    if (!rule.min) return null;
+    if (value[0].length < rule.min) {
+      return `Please enter more than ${rule.min} chars`;
+    }
+    return null;
   };
 }
 
-function MaxLength(rule: any): Rule;
-function MaxLength(rule: MaxRule): Rule {
-  return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
-      if (!rule.max) return Promise.resolve();
-      if (value[0].length > rule.max) {
-        return Promise.reject(`Please enter less than ${rule.max} chars`);
-      }
-      return Promise.resolve();
-    },
+function MaxLength(rule: any): FieldValidator;
+function MaxLength(rule: MaxRule): FieldValidator {
+  return (value) => {
+    if (!value) return null;
+    if (!rule.max) return null;
+    if (value[0].length > rule.max) {
+      return `Please enter less than ${rule.max} chars`;
+    }
+    return null;
   };
 }
 
-function Regex(rule: any): Rule;
-function Regex(rule: RegexRule): Rule {
-  return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
-      if (!rule.pattern) return Promise.resolve();
-      if (!new RegExp(rule.pattern).test(value[0])) {
-        return Promise.reject(
-          rule.errorMessage || `Did not match the pattern: ${rule.pattern}`,
+function Regex(rule: any): FieldValidator;
+function Regex(rule: RegexRule): FieldValidator {
+  return (value) => {
+    if (!value) return null;
+    if (!rule.pattern) return null;
+    if (!new RegExp(rule.pattern).test(value[0])) {
+      return rule.errorMessage || `Did not match the pattern: ${rule.pattern}`;
+    }
+    return null;
+  };
+}
+
+function Match(rule: any, answerType?: AnswerTypes): FieldValidator;
+function Match(rule: MatchRule, answerType?: AnswerTypes): FieldValidator {
+  return (value) => {
+    if (!value) return null;
+    if (!rule.answer) return null;
+
+    const userValue = value[0];
+
+    // Handle grid questions - compare GridResponse objects
+    if (
+      answerType === AnswerTypes.multipleChoiceGrid ||
+      answerType === AnswerTypes.checkboxGrid
+    ) {
+      try {
+        const userResponse: GridResponse = JSON.parse(userValue);
+        const correctResponse: GridResponse = JSON.parse(
+          rule.answer as string,
         );
-      }
-      return Promise.resolve();
-    },
-  };
-}
 
-function Match(rule: any, answerType?: AnswerTypes): Rule;
-function Match(rule: MatchRule, answerType?: AnswerTypes): Rule {
-  return {
-    validator: (_: any, value: any) => {
-      if (!value) return Promise.resolve();
-      if (!rule.answer) return Promise.resolve();
+        // Check if all rows match
+        for (const [rowId, correctColumnIds] of Object.entries(
+          correctResponse,
+        )) {
+          const userColumnIds = userResponse[rowId];
 
-      const userValue = value[0];
-
-      // Handle grid questions - compare GridResponse objects
-      if (
-        answerType === AnswerTypes.multipleChoiceGrid ||
-        answerType === AnswerTypes.checkboxGrid
-      ) {
-        try {
-          const userResponse: GridResponse = JSON.parse(userValue);
-          const correctResponse: GridResponse = JSON.parse(
-            rule.answer as string,
-          );
-
-          // Check if all rows match
-          for (const [rowId, correctColumnIds] of Object.entries(
-            correctResponse,
-          )) {
-            const userColumnIds = userResponse[rowId];
-
-            if (!userColumnIds) {
-              return Promise.reject(
-                `This is not the correct answer for this question`,
-              );
-            }
-
-            // For checkbox grids, compare sorted arrays
-            const userIds = userColumnIds.split(";").filter(Boolean).sort();
-            const correctIds = correctColumnIds
-              .split(";")
-              .filter(Boolean)
-              .sort();
-
-            if (
-              userIds.length !== correctIds.length ||
-              !userIds.every((id, idx) => id === correctIds[idx])
-            ) {
-              return Promise.reject(
-                `This is not the correct answer for this question`,
-              );
-            }
+          if (!userColumnIds) {
+            return `This is not the correct answer for this question`;
           }
 
-          return Promise.resolve();
-        } catch (e) {
-          return Promise.reject(`Invalid grid response format`);
+          // For checkbox grids, compare sorted arrays
+          const userIds = userColumnIds.split(";").filter(Boolean).sort();
+          const correctIds = correctColumnIds
+            .split(";")
+            .filter(Boolean)
+            .sort();
+
+          if (
+            userIds.length !== correctIds.length ||
+            !userIds.every((id, idx) => id === correctIds[idx])
+          ) {
+            return `This is not the correct answer for this question`;
+          }
         }
-      }
 
-      // Simple comparison for non-grid questions
-      if (userValue === rule.answer) {
-        return Promise.resolve();
+        return null;
+      } catch (e) {
+        return `Invalid grid response format`;
       }
+    }
 
-      return Promise.reject(`This is not the correct answer for this question`);
-    },
+    // Simple comparison for non-grid questions
+    if (userValue === rule.answer) {
+      return null;
+    }
+
+    return `This is not the correct answer for this question`;
   };
 }
 
@@ -150,45 +165,41 @@ const RuleValidatorMap = {
 function createRule(
   ruleType: ValidationRuleTypes,
   validationRules: AnswerSettings["validationRules"],
-): Rule {
-  if (!validationRules) return {};
+): FieldValidator {
+  if (!validationRules) return () => null;
   const ruleCreator = RuleValidatorMap[ruleType];
   const rule = validationRules[ruleType];
-  if (!rule) return {};
+  if (!rule) return () => null;
   return ruleCreator(rule);
 }
 
-function GridValidator(gridOptions: GridOptions): Rule {
-  return {
-    validator: (_: any, value: any) => {
-      if (!value || !value[0]) return Promise.resolve();
+function GridValidator(gridOptions: GridOptions): FieldValidator {
+  return (value) => {
+    if (!value || !value[0]) return null;
 
-      try {
-        const responses: GridResponse = JSON.parse(value[0]);
+    try {
+      const responses: GridResponse = JSON.parse(value[0]);
 
-        // Check if all rows are answered
-        for (const [rowId, rowLabel] of gridOptions.rows) {
-          if (!responses[rowId] || responses[rowId] === "") {
-            return Promise.reject(
-              `Please answer all rows: "${rowLabel}" is missing`,
-            );
-          }
+      // Check if all rows are answered
+      for (const [rowId, rowLabel] of gridOptions.rows) {
+        if (!responses[rowId] || responses[rowId] === "") {
+          return `Please answer all rows: "${rowLabel}" is missing`;
         }
-
-        return Promise.resolve();
-      } catch (e) {
-        return Promise.reject("Invalid grid response format");
       }
-    },
+
+      return null;
+    } catch (e) {
+      return "Invalid grid response format";
+    }
   };
 }
 
 export const getValidationRules = (
-  answerType: AnswerTypes,
+  answerType: string | undefined,
   answerSettings: AnswerSettings,
   gridOptions?: GridOptions,
-) => {
-  let rules: Rule[] = [];
+): FieldValidator[] => {
+  let rules: FieldValidator[] = [];
 
   // Special handling for grid questions
   if (
@@ -209,4 +220,55 @@ export const getValidationRules = (
     }
   });
   return rules;
+};
+
+/**
+ * Validate a single field's value: required check first, then the field's
+ * configured validation rules (in declared order). Returns the first error
+ * message, or null when the value is valid. Non-required empty values always
+ * pass (every rule validator passes on empty, like antd's rules did).
+ */
+export const validateFieldValue = (
+  field: Field,
+  value: FormFieldValue | undefined,
+): string | null => {
+  const configString = field[5];
+  let fieldConfig: AnswerSettings;
+  try {
+    fieldConfig = JSON.parse(configString || "{}");
+  } catch {
+    fieldConfig = {} as AnswerSettings;
+  }
+
+  if (isValueEmpty(value)) {
+    return fieldConfig.required ? REQUIRED_MESSAGE : null;
+  }
+
+  const validators = getValidationRules(
+    fieldConfig.renderElement,
+    fieldConfig,
+  );
+  for (const validate of validators) {
+    const error = validate(value ?? null);
+    if (error) return error;
+  }
+  return null;
+};
+
+/**
+ * Validate a set of fields against current values. Returns a map of
+ * fieldId -> error message containing only the fields that failed.
+ */
+export const validateFields = (
+  fields: Field[],
+  values: FormValues,
+): FieldErrors => {
+  const errors: FieldErrors = {};
+  fields.forEach((field) => {
+    const error = validateFieldValue(field, values[field[1]]);
+    if (error) {
+      errors[field[1]] = error;
+    }
+  });
+  return errors;
 };

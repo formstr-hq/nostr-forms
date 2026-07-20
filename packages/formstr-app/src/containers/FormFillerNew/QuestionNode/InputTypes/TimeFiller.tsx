@@ -1,4 +1,6 @@
-import { TimePicker } from "antd";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useEffect, useState } from "react";
@@ -9,7 +11,7 @@ interface TimeFillerProps {
   defaultValue?: string;
   onChange: (answer: string, message?: string) => void;
   disabled?: boolean;
-  testId? : string;
+  testId?: string;
 }
 
 export const TimeFiller: React.FC<TimeFillerProps> = ({
@@ -19,30 +21,37 @@ export const TimeFiller: React.FC<TimeFillerProps> = ({
   testId = "time-filler",
 }) => {
   const [value, setValue] = useState<dayjs.Dayjs | null>(
-    defaultValue ? dayjs(defaultValue, "h:mm A") : null
+    defaultValue ? dayjs(defaultValue, "h:mm A") : null,
   );
 
   useEffect(() => {
     setValue(defaultValue ? dayjs(defaultValue, "h:mm A") : null);
   }, [defaultValue]);
 
-  useEffect(() => {
-    if (value) {
-      onChange(value.format("h:mm A"), "");
+  const handleChange = (val: dayjs.Dayjs | null) => {
+    setValue(val);
+    if (val && val.isValid()) {
+      onChange(val.format("h:mm A"), "");
     }
-  }, [value, onChange]);
+  };
 
   return (
-    <>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
       <TimePicker
-      use12Hours
-      format="h:mm A"
-      value={value}
-      onSelect={(val) => setValue(val)}
-      allowClear={false}
-      disabled={disabled}
-      data-testid={`${testId}:picker`}
-    />
-    </>
+        ampm
+        format="h:mm A"
+        value={value}
+        onChange={handleChange}
+        disabled={disabled}
+        slotProps={{
+          textField: {
+            size: "small",
+            fullWidth: true,
+            // @ts-expect-error data-testid is forwarded to the underlying div
+            "data-testid": `${testId}:picker`,
+          },
+        }}
+      />
+    </LocalizationProvider>
   );
 };

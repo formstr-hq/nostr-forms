@@ -1,9 +1,18 @@
-import { Button, Divider, Modal, Popover, Switch, Typography } from "antd";
-import { SettingOutlined } from "@ant-design/icons";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
+  Popover,
+  Switch,
+  Typography,
+} from "@mui/material";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 interface FormSettingsPopoverProps {
   autoSaveEnabled: boolean;
@@ -17,67 +26,34 @@ export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
   onClearForm,
 }) => {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  const closePopover = () => setAnchorEl(null);
 
   const handleClearClick = () => {
-    setOpen(false);
-    Modal.confirm({
-      title: t("filler.settings.clearAllTitle"),
-      content: t("filler.settings.clearAllBody"),
-      okText: t("filler.settings.clearForm"),
-      cancelText: t("common.actions.cancel"),
-      okButtonProps: { danger: true },
-      onOk: onClearForm,
-    });
+    closePopover();
+    setConfirmClear(true);
   };
 
-  const content = (
-    <div style={{ minWidth: 200 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <span>{t("filler.settings.autoSave")}</span>
-        <Switch
-          checked={autoSaveEnabled}
-          onChange={onToggleAutoSave}
-          size="small"
-        />
-      </div>
-      <Text
-        type="secondary"
-        style={{ fontSize: 11, display: "block", marginTop: 4 }}
-      >
-        {t("filler.settings.autoSaveHint")}
-      </Text>
-      {onClearForm && (
-        <>
-          <Divider style={{ margin: "12px 0" }} />
-          <Button danger block onClick={handleClearClick}>
-            {t("filler.settings.clearForm")}
-          </Button>
-        </>
-      )}
-    </div>
-  );
+  const handleConfirmClear = () => {
+    setConfirmClear(false);
+    onClearForm?.();
+  };
 
   return (
-    <Popover
-      content={content}
-      title={t("filler.settings.title")}
-      trigger="click"
-      placement="topRight"
-      open={open}
-      onOpenChange={setOpen}
-    >
-      <div
-        style={{
+    <>
+      <Box
+        component="button"
+        type="button"
+        aria-label={t("filler.settings.title")}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        sx={{
           width: 28,
           height: 28,
           borderRadius: "50%",
+          border: 0,
+          p: 0,
           background: "rgba(255, 255, 255, 0.65)",
           boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
           display: "flex",
@@ -86,8 +62,79 @@ export const FormSettingsPopover: React.FC<FormSettingsPopoverProps> = ({
           cursor: "pointer",
         }}
       >
-        <SettingOutlined style={{ fontSize: 14, color: "#666" }} />
-      </div>
-    </Popover>
+        <SettingsOutlinedIcon sx={{ fontSize: 14, color: "#666" }} />
+      </Box>
+      <Popover
+        open={!!anchorEl}
+        anchorEl={anchorEl}
+        onClose={closePopover}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Box sx={{ minWidth: 200, p: 2 }}>
+          <Typography variant="subtitle2" sx={{ mb: 1 }}>
+            {t("filler.settings.title")}
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="body2" color="text.primary">
+              {t("filler.settings.autoSave")}
+            </Typography>
+            <Switch
+              checked={autoSaveEnabled}
+              onChange={onToggleAutoSave}
+              size="small"
+            />
+          </Box>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mt: 0.5 }}
+          >
+            {t("filler.settings.autoSaveHint")}
+          </Typography>
+          {onClearForm && (
+            <>
+              <Divider sx={{ my: 1.5 }} />
+              <Button
+                color="error"
+                variant="outlined"
+                fullWidth
+                onClick={handleClearClick}
+              >
+                {t("filler.settings.clearForm")}
+              </Button>
+            </>
+          )}
+        </Box>
+      </Popover>
+
+      <Dialog
+        open={confirmClear}
+        onClose={() => setConfirmClear(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>{t("filler.settings.clearAllTitle")}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            {t("filler.settings.clearAllBody")}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmClear(false)}>
+            {t("common.actions.cancel")}
+          </Button>
+          <Button color="error" variant="contained" onClick={handleConfirmClear}>
+            {t("filler.settings.clearForm")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
