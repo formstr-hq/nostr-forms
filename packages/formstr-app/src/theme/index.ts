@@ -17,7 +17,11 @@ export const formstrTheme: ThemeConfig = {
     colorPrimary: FORMSTR_BRAND.primary,
     colorInfo: FORMSTR_BRAND.primary,
     colorLink: FORMSTR_BRAND.primary,
-    fontFamily: "'Anek Devanagari', sans-serif",
+    // UI font: antd's default system stack. NOT Anek Devanagari — that is an
+    // Indic *display* font whose line box is ~170% of em (vs ~115% for system
+    // fonts), which made text sit off-center in every button/menu/control.
+    // Anek stays for headings via CSS (h1-h5 in index.css), where its brand
+    // character matters and large sizes hide the metric quirks.
     borderRadius: 8,
     colorBgLayout: "#f5f5f5",
   },

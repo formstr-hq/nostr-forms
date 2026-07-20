@@ -4,6 +4,25 @@
     0 1px 6px -1px rgba(0, 0, 0, 0.02),
     0 2px 4px 0 rgba(0, 0, 0, 0.02);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 0;
+}
+
+/* Keep header content on the same centered grid as .app-container
+   (max-width 1200 + 16px side padding) so the logo's left edge lines
+   up with the page content below. */
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.header-actions {
+  flex-shrink: 0;
+  align-items: center;
+  /* antd Header inherits line-height: 64px; without resetting it, the
+     inline content inside each space-item baseline-aligns within a 64px
+     line box and sits ~6px above the header's optical center. */
+  line-height: normal;
 }
 
 .header-row {
@@ -38,7 +57,7 @@
 /* Mobile: keep the header on one line without overflow —
    icon-only Create button, tighter gaps. */
 @media (max-width: 575px) {
-  .header-style {
+  .header-inner {
     padding: 0 12px;
   }
 

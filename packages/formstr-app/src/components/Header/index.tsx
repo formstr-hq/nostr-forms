@@ -399,42 +399,44 @@ export const NostrHeader = () => {
   return (
     <>
       <Header className="header-style">
-        <Row
-          className="header-row"
-          justify="space-between"
-          align="middle"
-          wrap={false}
-        >
-          <Col>
-            <Link className="app-link" to="/">
-              <Logo />
-            </Link>
-          </Col>
-          <Col flex="auto" className="header-nav-col">
-            <Menu
-              mode="horizontal"
-              theme="light"
-              selectedKeys={selectedKeys}
-              overflowedIndicator={<MenuOutlined />}
-              items={getHeaderMenu(t)}
-              onClick={onMenuClick}
-              className="header-menu"
-            />
-            <Space size="middle" className="header-actions">
-              <Button
-                type="primary"
-                className="header-create-btn"
-                aria-label={t("header.createForm")}
-                icon={<PlusOutlined />}
-                onClick={openTemplateModal}
-              >
-                {t("header.createForm")}
-              </Button>
-              <NotificationsBell />
-              {userDropdown}
-            </Space>
-          </Col>
-        </Row>
+        <div className="header-inner">
+          <Row
+            className="header-row"
+            justify="space-between"
+            align="middle"
+            wrap={false}
+          >
+            <Col>
+              <Link className="app-link" to="/">
+                <Logo />
+              </Link>
+            </Col>
+            <Col flex="auto" className="header-nav-col">
+              <Menu
+                mode="horizontal"
+                theme="light"
+                selectedKeys={selectedKeys}
+                overflowedIndicator={<MenuOutlined />}
+                items={getHeaderMenu(t)}
+                onClick={onMenuClick}
+                className="header-menu"
+              />
+              <Space size="middle" align="center" className="header-actions">
+                <Button
+                  type="primary"
+                  className="header-create-btn"
+                  aria-label={t("header.createForm")}
+                  icon={<PlusOutlined />}
+                  onClick={openTemplateModal}
+                >
+                  {t("header.createForm")}
+                </Button>
+                <NotificationsBell />
+                {userDropdown}
+              </Space>
+            </Col>
+          </Row>
+        </div>
       </Header>
       <ThemedUniversalModal
         visible={isFAQModalVisible}
