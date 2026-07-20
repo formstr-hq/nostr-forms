@@ -1,4 +1,4 @@
-import { Card, CardContent, Divider, FormHelperText } from "@mui/material";
+import { Box, Card, CardContent, Divider, FormHelperText } from "@mui/material";
 import { InputFiller } from "./InputFiller";
 import { AnswerTypes } from "../../../constants";
 import SafeMarkdown from "../../../components/SafeMarkdown";
@@ -66,12 +66,20 @@ export const QuestionNode: React.FC<QuestionProps> = ({
       }}
     >
       <CardContent sx={{ "&:last-child": { pb: 2 } }}>
-        {required && (
-          <span style={{ color: FORMSTR_COLORS.primary }}>* &nbsp;</span>
-        )}
-        <div className="question-text">
+        <Box
+          className="question-text"
+          sx={{ display: "flex", alignItems: "flex-start", gap: 0.5 }}
+        >
+          {required && (
+            <Box
+              component="span"
+              sx={{ color: FORMSTR_COLORS.primary, fontWeight: 700 }}
+            >
+              *
+            </Box>
+          )}
           <SafeMarkdown>{label}</SafeMarkdown>
-        </div>
+        </Box>
         {fieldConfig.renderElement === AnswerTypes.label ? null : (
           <Divider sx={{ mt: 0, mb: 3 }} />
         )}

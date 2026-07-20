@@ -6,7 +6,8 @@ export default styled.div`
   }
 
   .create-sidebar {
-    height: calc(100vh - 67px);
+    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
     border-inline-end: 1px solid rgba(5, 5, 5, 0.06);
     margin-top: 1px;
     background-color: white;

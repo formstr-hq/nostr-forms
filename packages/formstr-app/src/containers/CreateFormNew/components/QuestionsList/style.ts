@@ -14,7 +14,10 @@ export default styled.div<{
   padding-left: 32px;
   padding-right: 32px;
   overflow: scroll;
-  height: calc(100dvh - 67px);
+  /* vh first: browsers without dvh support drop unknown-unit declarations
+     entirely (height fell back to auto and the canvas collapsed). */
+  height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
   width: calc(100vw - 482px);
 
     .form-title {

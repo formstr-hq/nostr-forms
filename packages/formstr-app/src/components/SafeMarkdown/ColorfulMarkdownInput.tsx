@@ -43,12 +43,25 @@ export const ColorfulMarkdownTextarea: React.FC<Props> = ({
         value={value}
         minRows={minRows}
         maxRows={maxRows}
-        slotProps={{ htmlInput: { style: { fontSize, color: globalColor } } }}
         onChange={handleTextChange}
         placeholder={placeholder}
         disabled={disabled}
-        variant="outlined"
-        size="small"
+        variant="standard"
+        slotProps={{
+          input: {
+            // Builder inline-editing look: no box, no padding, type-over text
+            // (matches the old borderless antd TextArea the wrappers styled).
+            disableUnderline: true,
+            sx: {
+              p: 0,
+              fontSize: fontSize ?? "inherit",
+              color: globalColor,
+              backgroundColor: "transparent",
+              "&.Mui-focused": { backgroundColor: "transparent" },
+            },
+          },
+        }}
+        sx={{ p: 0 }}
       />
     </div>
   );
