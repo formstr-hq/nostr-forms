@@ -7,12 +7,22 @@ export default styled.div`
 
   /* Height comes from .builder-row — percentage, not viewport units. */
   height: 100%;
+  overflow: hidden;
 
   .create-sidebar {
     height: 100%;
     border-inline-end: 1px solid rgba(5, 5, 5, 0.06);
     margin-top: 1px;
     background-color: white;
+    overflow: hidden;
+  }
+
+  /* The menu scrolls *inside* the sider — antd's default lets sider-children
+     size to content with overflow:visible, so a tall menu pushed past the
+     viewport and made the whole page scroll (left pane "longer" than the rest). */
+  .create-sidebar .ant-layout-sider-children {
+    height: 100%;
+    overflow-y: auto;
   }
 
   .create-sidebar .ant-menu .ant-menu-item-group .ant-menu-item-group-title {
