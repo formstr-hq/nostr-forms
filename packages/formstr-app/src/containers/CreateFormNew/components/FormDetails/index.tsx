@@ -16,6 +16,7 @@ import { CustomSlugForm } from "./payments/customSlugForm";
 import { useNavigate } from "react-router-dom";
 import { makeFormNAddr } from "../../../../utils/utility";
 import { useMyForms } from "../../../../provider/MyFormsProvider";
+import { useLocalForms } from "../../../../provider/LocalFormsProvider";
 import { EmbedWithSDKTab } from "./EmbedWithSDKTab";
 
 export const FormDetails = ({
@@ -43,9 +44,10 @@ export const FormDetails = ({
   const [savedLocally, setSavedLocally] = useState(false);
   const { pubkey: userPub, requestPubkey } = useProfileContext();
   const { saveToMyForms, inMyForms } = useMyForms();
+  const { refreshForms } = useLocalForms();
   const navigate = useNavigate();
   useEffect(() => {
-    saveToDevice(
+    void saveToDevice(
       pubKey,
       secretKey,
       formId,
@@ -53,6 +55,9 @@ export const FormDetails = ({
       relays,
       () => {
         setSavedLocally(true);
+        // Let the dashboard's "On this device" list see the form without a
+        // full reload — the provider caches forms in context state.
+        void refreshForms();
       },
       viewKey,
     );
