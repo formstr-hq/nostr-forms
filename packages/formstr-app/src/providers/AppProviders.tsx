@@ -1,19 +1,27 @@
 import { ConfigProvider } from "antd";
+import { CssBaseline, ThemeProvider as MuiThemeProvider } from "@mui/material";
 import React from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import i18n, { getAntdLocaleForLanguage } from "../i18n";
 import { formstrTheme } from "../theme";
+import { muiTheme } from "../theme/muiTheme";
 
 const ThemedProviders = ({ children }: { children: React.ReactNode }) => {
   const { i18n: instance } = useTranslation();
 
+  // MUI wraps antd during the rewrite (branch ui-rewrite-mui): new components
+  // take tokens from muiTheme; antd keeps rendering legacy surfaces until each
+  // phase ports them. antd's ConfigProvider is removed in Phase 6.
   return (
-    <ConfigProvider
-      theme={formstrTheme}
-      locale={getAntdLocaleForLanguage(instance.language)}
-    >
-      {children}
-    </ConfigProvider>
+    <MuiThemeProvider theme={muiTheme}>
+      <CssBaseline />
+      <ConfigProvider
+        theme={formstrTheme}
+        locale={getAntdLocaleForLanguage(instance.language)}
+      >
+        {children}
+      </ConfigProvider>
+    </MuiThemeProvider>
   );
 };
 

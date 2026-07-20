@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="740" viewBox="0 0 900 740" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <rect width="900" height="740" fill="#FAFAFA"/>
+  <text x="40" y="52" font-size="24" font-weight="600" fill="#1A1A1A" font-family="'Anek Devanagari', -apple-system, sans-serif">Design tokens — UI rewrite proposal</text>
+  <text x="40" y="76" font-size="13" fill="#6B6B6B">Single MUI theme · system font for UI text · Anek Devanagari for display headings only</text>
+
+  <!-- COLOR -->
+  <text x="40" y="118" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1.5">COLOR — BRAND</text>
+  <g font-size="11" fill="#6B6B6B">
+    <rect x="40" y="130" width="56" height="56" rx="8" fill="#FF5733"/><text x="40" y="202">Primary</text><text x="40" y="216" fill="#A3A3A3" font-family="Menlo, monospace">#FF5733</text>
+    <rect x="160" y="130" width="56" height="56" rx="8" fill="#E8492A"/><text x="160" y="202">Hover</text><text x="160" y="216" fill="#A3A3A3" font-family="Menlo, monospace">#E8492A</text>
+    <rect x="280" y="130" width="56" height="56" rx="8" fill="#FFF1EC" stroke="#F5D5CB"/><text x="280" y="202">Tint</text><text x="280" y="216" fill="#A3A3A3" font-family="Menlo, monospace">#FFF1EC</text>
+  </g>
+  <text x="500" y="118" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1.5">STATUS</text>
+  <g font-size="11" fill="#6B6B6B">
+    <rect x="500" y="130" width="56" height="56" rx="8" fill="#16A34A"/><text x="500" y="202">Success</text><text x="500" y="216" fill="#A3A3A3" font-family="Menlo, monospace">#16A34A</text>
+    <rect x="620" y="130" width="56" height="56" rx="8" fill="#D97706"/><text x="620" y="202">Warning</text><text x="620" y="216" fill="#A3A3A3" font-family="Menlo, monospace">#D97706</text>
+    <rect x="740" y="130" width="56" height="56" rx="8" fill="#DC2626"/><text x="740" y="202">Danger</text><text x="740" y="216" fill="#A3A3A3" font-family="Menlo, monospace">#DC2626</text>
+  </g>
+
+  <text x="40" y="262" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1.5">NEUTRALS (LIGHT)</text>
+  <g font-size="11" fill="#6B6B6B">
+    <rect x="40" y="274" width="56" height="56" rx="8" fill="#1A1A1A"/><text x="40" y="346">Ink</text><text x="40" y="360" fill="#A3A3A3" font-family="Menlo, monospace">#1A1A1A</text>
+    <rect x="160" y="274" width="56" height="56" rx="8" fill="#6B6B6B"/><text x="160" y="346">Secondary</text><text x="160" y="360" fill="#A3A3A3" font-family="Menlo, monospace">#6B6B6B</text>
+    <rect x="280" y="274" width="56" height="56" rx="8" fill="#A3A3A3"/><text x="280" y="346">Muted</text><text x="280" y="360" fill="#A3A3A3" font-family="Menlo, monospace">#A3A3A3</text>
+    <rect x="400" y="274" width="56" height="56" rx="8" fill="#E8E8E8"/><text x="400" y="346">Border</text><text x="400" y="360" fill="#A3A3A3" font-family="Menlo, monospace">#E8E8E8</text>
+    <rect x="520" y="274" width="56" height="56" rx="8" fill="#FAFAFA" stroke="#E8E8E8"/><text x="520" y="346">Page bg</text><text x="520" y="360" fill="#A3A3A3" font-family="Menlo, monospace">#FAFAFA</text>
+    <rect x="640" y="274" width="56" height="56" rx="8" fill="#FFFFFF" stroke="#E8E8E8"/><text x="640" y="346">Card</text><text x="640" y="360" fill="#A3A3A3" font-family="Menlo, monospace">#FFFFFF</text>
+  </g>
+  <g font-size="11" fill="#6B6B6B">
+    <rect x="760" y="274" width="56" height="56" rx="8" fill="#121212"/><text x="760" y="346">Dark bg</text><text x="760" y="360" fill="#A3A3A3" font-family="Menlo, monospace">#121212</text>
+  </g>
+
+  <!-- TYPOGRAPHY -->
+  <text x="40" y="412" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1.5">TYPOGRAPHY</text>
+  <text x="40" y="452" font-size="30" font-weight="600" fill="#1A1A1A" font-family="'Anek Devanagari', -apple-system, sans-serif">Form title display</text>
+  <text x="380" y="452" font-size="11" fill="#A3A3A3">Anek 30/600 — display only</text>
+  <text x="40" y="488" font-size="22" font-weight="600" fill="#1A1A1A" font-family="'Anek Devanagari', -apple-system, sans-serif">Page heading</text>
+  <text x="380" y="488" font-size="11" fill="#A3A3A3">Anek 22/600 — h1</text>
+  <text x="40" y="518" font-size="17" font-weight="600" fill="#1A1A1A">Section heading / question text</text>
+  <text x="380" y="518" font-size="11" fill="#A3A3A3">System 17/600 — h2</text>
+  <text x="40" y="544" font-size="15" fill="#1A1A1A">Body — descriptions, options, inputs</text>
+  <text x="380" y="544" font-size="11" fill="#A3A3A3">System 15/400</text>
+  <text x="40" y="568" font-size="13" fill="#6B6B6B">Meta — 24 responses · updated 2h ago</text>
+  <text x="380" y="568" font-size="11" fill="#A3A3A3">System 13/400 secondary</text>
+  <text x="40" y="592" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1">LABEL CAPS</text>
+  <text x="380" y="592" font-size="11" fill="#A3A3A3">System 11/700 muted</text>
+
+  <!-- BUTTONS / CHIPS -->
+  <text x="620" y="412" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1.5">BUTTONS</text>
+  <rect x="620" y="428" width="120" height="36" rx="8" fill="#FF5733"/><text x="680" y="451" font-size="14" font-weight="500" fill="#FFFFFF" text-anchor="middle">Primary</text>
+  <rect x="752" y="428" width="120" height="36" rx="8" fill="#FFFFFF" stroke="#E8E8E8"/><text x="812" y="451" font-size="14" font-weight="500" fill="#1A1A1A" text-anchor="middle">Secondary</text>
+  <rect x="620" y="476" width="120" height="36" rx="8" fill="#FFF1EC"/><text x="680" y="499" font-size="14" font-weight="500" fill="#FF5733" text-anchor="middle">Tint</text>
+  <rect x="752" y="476" width="120" height="36" rx="8" fill="#F5F5F5"/><text x="812" y="499" font-size="14" font-weight="500" fill="#A3A3A3" text-anchor="middle">Disabled</text>
+
+  <text x="620" y="548" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1.5">STATUS CHIPS</text>
+  <rect x="620" y="560" width="84" height="24" rx="12" fill="#EDF9F0"/><text x="662" y="576" font-size="12" font-weight="600" fill="#16A34A" text-anchor="middle">Published</text>
+  <rect x="716" y="560" width="64" height="24" rx="12" fill="#FDF4E7"/><text x="748" y="576" font-size="12" font-weight="600" fill="#D97706" text-anchor="middle">Draft</text>
+  <rect x="792" y="560" width="64" height="24" rx="12" fill="#F5F5F5"/><text x="824" y="576" font-size="12" font-weight="600" fill="#6B6B6B" text-anchor="middle">Closed</text>
+
+  <!-- RADIUS / SPACING -->
+  <text x="40" y="648" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1.5">RADIUS</text>
+  <rect x="40" y="660" width="44" height="44" rx="4" fill="#FFFFFF" stroke="#C9C9C9"/><text x="62" y="722" font-size="11" fill="#6B6B6B" text-anchor="middle">4 inputs</text>
+  <rect x="120" y="660" width="44" height="44" rx="8" fill="#FFFFFF" stroke="#C9C9C9"/><text x="142" y="722" font-size="11" fill="#6B6B6B" text-anchor="middle">8 buttons</text>
+  <rect x="200" y="660" width="44" height="44" rx="12" fill="#FFFFFF" stroke="#C9C9C9"/><text x="222" y="722" font-size="11" fill="#6B6B6B" text-anchor="middle">12 cards</text>
+
+  <text x="320" y="648" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1.5">SPACING SCALE</text>
+  <g fill="#FF5733" opacity="0.85">
+    <rect x="320" y="660" width="4" height="12"/><rect x="320" y="678" width="8" height="12"/><rect x="320" y="696" width="16" height="12"/><rect x="320" y="714" width="24" height="12"/>
+  </g>
+  <g font-size="11" fill="#6B6B6B">
+    <text x="356" y="670">4</text><text x="356" y="688">8</text><text x="356" y="706">16</text><text x="356" y="724">24 (card padding)</text>
+  </g>
+
+  <text x="620" y="648" font-size="11" font-weight="700" fill="#A3A3A3" letter-spacing="1.5">ELEVATION</text>
+  <text x="620" y="670" font-size="12" fill="#6B6B6B">Border-first: 1px #E8E8E8 on white.</text>
+  <text x="620" y="690" font-size="12" fill="#6B6B6B">Shadow reserved for dialogs/popovers only.</text>
+  <text x="620" y="710" font-size="12" fill="#6B6B6B">No gradients on buttons — flat brand color.</text>
+</svg>
