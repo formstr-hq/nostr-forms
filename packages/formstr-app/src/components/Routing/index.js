@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, Link } from "react-router-dom";
-import { Button, Result } from "antd";
+import { Box, Button, Typography } from "@mui/material";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import PublicForms from "../../containers/PublicForms";
 import { ROUTES } from "../../constants/routes";
 import { FormFiller } from "../../containers/FormFillerNew";
@@ -74,16 +75,23 @@ function Routing() {
 
 const DeprecatedRoute = () => {
   return (
-    <Result
-      status="warning"
-      title="Link Deprecated"
-      subTitle="This link is no longer supported. Please navigate to the dashboard or use the latest version of this page."
-      extra={
-        <Link to={ROUTES.DASHBOARD}>
-          <Button type="primary">Go to Dashboard</Button>
-        </Link>
-      }
-    />
+    <Box sx={{ textAlign: "center", py: 10 }}>
+      <WarningAmberIcon sx={{ fontSize: 48, color: "warning.main" }} />
+      <Typography variant="h5" sx={{ mt: 2 }}>
+        Link Deprecated
+      </Typography>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ mt: 1, mb: 3, maxWidth: 420, mx: "auto" }}
+      >
+        This link is no longer supported. Please navigate to the dashboard or
+        use the latest version of this page.
+      </Typography>
+      <Button component={Link} to={ROUTES.DASHBOARD} variant="contained">
+        Go to Dashboard
+      </Button>
+    </Box>
   );
 };
 

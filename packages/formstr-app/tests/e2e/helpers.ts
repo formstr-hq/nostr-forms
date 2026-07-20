@@ -138,11 +138,12 @@ export async function openUserMenu(page: Page) {
 /**
  * Reveal the "Accounts" submenu inside the already-open user menu. Its title
  * row is plain text ("Accounts: <npub>"), which also doubles as the readable
- * label for whichever account is currently active.
+ * label for whichever account is currently active. MUI menus open on click
+ * (the antd version expanded on hover).
  */
 async function openAccountsSubmenu(page: Page) {
   const accountsRow = page.getByText(/^Accounts:/);
-  await accountsRow.hover();
+  await accountsRow.click();
   await expect(page.getByText("Add account")).toBeVisible();
   return accountsRow;
 }

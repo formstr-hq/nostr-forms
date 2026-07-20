@@ -5,6 +5,7 @@ import { I18nextProvider, useTranslation } from "react-i18next";
 import i18n, { getAntdLocaleForLanguage } from "../i18n";
 import { formstrTheme } from "../theme";
 import { muiTheme } from "../theme/muiTheme";
+import { SnackbarProvider } from "./SnackbarProvider";
 
 const ThemedProviders = ({ children }: { children: React.ReactNode }) => {
   const { i18n: instance } = useTranslation();
@@ -15,12 +16,14 @@ const ThemedProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <MuiThemeProvider theme={muiTheme}>
       <CssBaseline />
-      <ConfigProvider
-        theme={formstrTheme}
-        locale={getAntdLocaleForLanguage(instance.language)}
-      >
-        {children}
-      </ConfigProvider>
+      <SnackbarProvider>
+        <ConfigProvider
+          theme={formstrTheme}
+          locale={getAntdLocaleForLanguage(instance.language)}
+        >
+          {children}
+        </ConfigProvider>
+      </SnackbarProvider>
     </MuiThemeProvider>
   );
 };

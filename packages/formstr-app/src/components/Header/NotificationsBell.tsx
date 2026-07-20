@@ -1,13 +1,23 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge, Dropdown, Typography, Button } from "antd";
-import { BellOutlined } from "@ant-design/icons";
+import {
+  Badge,
+  Box,
+  Button,
+  ClickAwayListener,
+  Divider,
+  IconButton,
+  Paper,
+  Popper,
+  Typography,
+} from "@mui/material";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import { useTranslation } from "react-i18next";
 import { useNotifications } from "../../provider/NotificationsProvider";
 import { responsePath } from "../../utils/formUtils";
 import { makeFormNAddr, naddrUrl } from "../../utils/utility";
 import type { INotification } from "../../utils/notifications";
-
-const { Text } = Typography;
+import { FORMSTR_COLORS } from "../../theme/muiTheme";
 
 /**
  * Header bell for the two in-app notification types: a response landed on a
@@ -16,12 +26,18 @@ const { Text } = Typography;
  * (local-only-form) notifications need to be reachable with no identity
  * active, same reasoning as the "Local" dashboard tab already being
  * available logged out.
+ *
+ * Uses a non-modal Popper (not Popover): the page must stay interactive
+ * while the panel is open, like the antd Dropdown it replaces — a modal
+ * Popover aria-hides the rest of the document, which also breaks the bell's
+ * own aria-label lookup for anything polling the unread count.
  */
 export const NotificationsBell = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { notifications, unreadCount, markRead, markAllRead, findOwnedForm } =
     useNotifications();
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const destinationFor = (notification: INotification): string => {
     if (notification.type === "response") {
@@ -47,98 +63,106 @@ export const NotificationsBell = () => {
 
   const handleSelect = (notification: INotification) => {
     markRead(notification.id);
+    setAnchorEl(null);
     navigate(destinationFor(notification));
   };
 
-  const panel = (
-    <div
-      style={{
-        width: 320,
-        maxHeight: 420,
-        overflowY: "auto",
-        background: "white",
-        borderRadius: 8,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "8px 12px",
-          borderBottom: "1px solid #f0f0f0",
-        }}
+  return (
+    <>
+      <IconButton
+        aria-label={t("notifications.bellLabel", { count: unreadCount })}
+        onClick={(e) => setAnchorEl(anchorEl ? null : e.currentTarget)}
+        size="small"
+        sx={{ color: "text.secondary" }}
       >
-        <Text strong>{t("notifications.title")}</Text>
-        <Button type="link" size="small" onClick={markAllRead}>
-          {t("notifications.markAllRead")}
-        </Button>
-      </div>
-      {notifications.length === 0 ? (
-        <div style={{ padding: 16, textAlign: "center" }}>
-          <Text type="secondary">{t("notifications.empty")}</Text>
-        </div>
-      ) : (
-        notifications.map((notification) => (
-          <div
-            key={notification.id}
-            role="button"
-            tabIndex={0}
-            onClick={() => handleSelect(notification)}
+        <Badge badgeContent={unreadCount} color="primary">
+          <NotificationsNoneIcon />
+        </Badge>
+      </IconButton>
+      <Popper
+        open={!!anchorEl}
+        anchorEl={anchorEl}
+        placement="bottom-end"
+        sx={{ zIndex: (theme) => theme.zIndex.modal }}
+      >
+        <ClickAwayListener onClickAway={() => setAnchorEl(null)}>
+          <Paper
+            elevation={8}
+            sx={{ borderRadius: 3, mt: 1, overflow: "hidden" }}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleSelect(notification);
-              }
-            }}
-            style={{
-              padding: "8px 12px",
-              cursor: "pointer",
-              borderBottom: "1px solid #f5f5f5",
-              background: notification.seenAt ? undefined : "#fff7e6",
+              if (e.key === "Escape") setAnchorEl(null);
             }}
           >
-            <Text>
-              {notification.type === "response"
-                ? t("notifications.responseText", {
-                    formName: notification.formName,
-                  })
-                : t("notifications.shareText", {
-                    formName: notification.formName,
-                  })}
-            </Text>
-            <br />
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              {new Date(notification.createdAt * 1000).toLocaleString()}
-            </Text>
-          </div>
-        ))
-      )}
-    </div>
-  );
-
-  return (
-    <Dropdown dropdownRender={() => panel} trigger={["click"]}>
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label={t("notifications.bellLabel", { count: unreadCount })}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            e.currentTarget.click();
-          }
-        }}
-      >
-        <Badge count={unreadCount} size="small" offset={[-2, 2]}>
-          <BellOutlined style={{ fontSize: 18 }} />
-        </Badge>
-      </div>
-    </Dropdown>
+            <Box sx={{ width: 320, maxHeight: 420, overflowY: "auto" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  px: 1.5,
+                  py: 1,
+                }}
+              >
+                <Typography variant="subtitle2">
+                  {t("notifications.title")}
+                </Typography>
+                <Button size="small" onClick={markAllRead}>
+                  {t("notifications.markAllRead")}
+                </Button>
+              </Box>
+              <Divider />
+              {notifications.length === 0 ? (
+                <Box sx={{ p: 2, textAlign: "center" }}>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("notifications.empty")}
+                  </Typography>
+                </Box>
+              ) : (
+                notifications.map((notification, index) => (
+                  <Box key={notification.id}>
+                    {index > 0 && <Divider />}
+                    <Box
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleSelect(notification)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleSelect(notification);
+                        }
+                      }}
+                      sx={{
+                        px: 1.5,
+                        py: 1,
+                        cursor: "pointer",
+                        bgcolor: notification.seenAt
+                          ? undefined
+                          : FORMSTR_COLORS.primaryTint,
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      <Typography variant="body2">
+                        {notification.type === "response"
+                          ? t("notifications.responseText", {
+                              formName: notification.formName,
+                            })
+                          : t("notifications.shareText", {
+                              formName: notification.formName,
+                            })}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {new Date(
+                          notification.createdAt * 1000,
+                        ).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                ))
+              )}
+            </Box>
+          </Paper>
+        </ClickAwayListener>
+      </Popper>
+    </>
   );
 };

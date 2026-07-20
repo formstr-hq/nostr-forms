@@ -93,6 +93,15 @@ export const muiTheme = createTheme({
         },
       },
     },
+    MuiDialog: {
+      styleOverrides: { paper: { borderRadius: 12 } },
+    },
+    MuiMenu: {
+      styleOverrides: { paper: { borderRadius: 12 } },
+    },
+    MuiPopover: {
+      styleOverrides: { paper: { borderRadius: 12 } },
+    },
   },
 });
 

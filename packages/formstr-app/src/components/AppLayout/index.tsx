@@ -1,4 +1,4 @@
-import { Layout } from "antd";
+import { Box, Container } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import { NostrHeader } from "../Header";
 
@@ -9,13 +9,11 @@ import { NostrHeader } from "../Header";
  */
 export const AppLayout = () => {
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <NostrHeader />
-      <Layout.Content>
-        <div className="app-container">
-          <Outlet />
-        </div>
-      </Layout.Content>
-    </Layout>
+      <Container component="main" maxWidth="lg" sx={{ py: 3, flex: 1 }}>
+        <Outlet />
+      </Container>
+    </Box>
   );
 };

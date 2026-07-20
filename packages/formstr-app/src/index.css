@@ -48,26 +48,6 @@ code {
     monospace;
 }
 
-/* App content container — replaces ad-hoc "margin: 10%" / "min-width: 390px" layouts */
-.app-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 16px;
-}
-
-/* Brand gradient on primary buttons.
-   background-image only, so antd's token-derived colors (incl. disabled
-   state) keep working underneath. */
-.ant-btn-primary:not(:disabled) {
-  background-image: linear-gradient(180deg, #FF6B00 0%, #FF2E00 60.92%);
-  transition: opacity 0.3s;
-}
-
-.ant-btn-primary:not(:disabled):hover {
-  opacity: 0.85;
-}
-
 .form-details {
   display: flex;
   align-items: center;
