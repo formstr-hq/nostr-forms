@@ -20,6 +20,7 @@ import { IFormSettings } from "../containers/CreateFormNew/components/FormSettin
 import { signerManager } from "../signer";
 import { AbstractRelay } from "nostr-tools/abstract-relay";
 import { pool } from "../pool";
+import { DEFAULT_RELAYS } from "../constants/relays";
 
 declare global {
   interface Window {
@@ -32,17 +33,6 @@ declare global {
   }
 }
 
-const defaultRelays = [
-  "wss://relay.damus.io/",
-  "wss://relay.primal.net/",
-  "wss://nos.lol",
-  "wss://relay.nostr.wirednet.jp/",
-  "wss://nostr-01.yakihonne.com",
-  "wss://relay.snort.social",
-  "wss://relay.nostr.band",
-  "wss://nostr21.com",
-];
-
 export const getDefaultRelays = () => {
   // Allow overriding the relay set at build time (e.g. point e2e tests at a
   // local relay). Unset in production, so the hardcoded list is used.
@@ -54,7 +44,7 @@ export const getDefaultRelays = () => {
       .filter(Boolean);
     if (relays.length) return relays;
   }
-  return defaultRelays;
+   return DEFAULT_RELAYS;
 };
 
 export function toHexNpub(npubOrHex: string): string {
@@ -202,7 +192,7 @@ const getDisplayAnswer = (answer: string | number | boolean, field: Field) => {
 const fetchDmRelays = async (hexPubkey: string): Promise<string[]> => {
   try {
     const event = await pool.get(
-      defaultRelays,
+      DEFAULT_RELAYS,
       { kinds: [10050], authors: [hexPubkey] },
       { maxWait: 4000 },
     );
@@ -252,7 +242,7 @@ export const sendNotification = async (
       sig: "",
     };
     const kind4Event = finalizeEvent(baseKind4Event, newSk);
-    pool.publish(defaultRelays, kind4Event);
+    pool.publish(DEFAULT_RELAYS, kind4Event);
   };
 
   // Notify each recipient. Prefer NIP-17 gift-wrapped DMs for those who have
@@ -391,7 +381,7 @@ export const sendResponses = async (
   const fullEvent = await signEvent(baseEvent, responderSecretKey);
   let relayList = relays;
   if (relayList.length === 0) {
-    relayList = defaultRelays;
+    relayList = DEFAULT_RELAYS;
   }
   const messages = await Promise.allSettled(
     customPublish(relayList, fullEvent!, onAcceptedRelays, responderSecretKey),
@@ -595,7 +585,7 @@ export async function fetchNRPCMethods(relays: string[], serverPubkey: string) {
 export async function publishKind0(
   signer: import("../signer/types").NostrSigner,
   metadata: { name?: string; username?: string; about?: string; picture?: string },
-  relays: string[] = defaultRelays,
+  relays: string[] = DEFAULT_RELAYS,
 ): Promise<void> {
   const baseEvent: EventTemplate = {
     kind: 0,

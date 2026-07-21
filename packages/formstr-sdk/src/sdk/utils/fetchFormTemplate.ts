@@ -4,20 +4,10 @@ import { decodeNKeys } from "./nkeys.js";
 import { Tag } from "../types.js";
 import { hexToBytes } from "@noble/hashes/utils.js";
 import { pool } from "../pool.js";
-
-const defaultRelays = [
-  "wss://relay.damus.io/",
-  "wss://relay.primal.net/",
-  "wss://nos.lol",
-  "wss://relay.nostr.wirednet.jp/",
-  "wss://nostr-01.yakihonne.com",
-  "wss://relay.snort.social",
-  "wss://relay.nostr.band",
-  "wss://nostr21.com",
-];
+import { DEFAULT_RELAYS } from "../constants/relays.js";
 
 export const getDefaultRelays = () => {
-  return defaultRelays;
+  return DEFAULT_RELAYS;
 };
 
 const decryptFormEvent = (event: Event, nkeys?: string) => {
