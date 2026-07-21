@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip } from 'antd';
+import { Tooltip } from '@mui/material';
 import { RelayStatus } from '../../containers/CreateFormNew/providers/FormBuilder/typeDefs'; // Adjust path as needed
 import StyledRelayStatusDot from './style';
 

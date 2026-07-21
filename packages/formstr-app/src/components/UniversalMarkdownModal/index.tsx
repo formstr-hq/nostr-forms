@@ -1,12 +1,18 @@
 // src/components/UniversalMarkdownModal.tsx
-import { Modal, Collapse, Typography, Spin, ConfigProvider } from "antd";
 import { useEffect, useState } from "react";
-import { CaretRightOutlined } from "@ant-design/icons";
-import styled from "styled-components";
-import { useToken } from "antd/es/theme/internal";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SafeMarkdown from "../SafeMarkdown";
-
-const { Panel } = Collapse;
 
 interface Props {
   visible: boolean;
@@ -20,35 +26,6 @@ interface Section {
   body: string;
 }
 
-// Styled components
-const ModalBody = styled.div<{ token: any }>`
-  padding: ${(props) => props.token.paddingLG}px;
-  background: ${(props) => props.token.colorBgContainerDisabled};
-  border-radius: ${(props) => props.token.borderRadiusLG}px;
-`;
-
-const StyledCollapse = styled(Collapse)<{ token: any }>`
-  background: transparent;
-`;
-
-const StyledPanel = styled(Panel)<{ token: any }>`
-  background: ${(props) => props.token.colorBgContainer};
-  border-radius: ${(props) => props.token.borderRadiusMD}px;
-  margin-bottom: ${(props) => props.token.marginMD}px;
-  border: 1px solid ${(props) => props.token.colorBorderSecondary};
-  box-shadow: 0 2px 8px ${(props) => props.token.boxShadowTertiary};
-`;
-
-const PanelHeader = styled.span<{ token: any }>`
-  font-size: ${(props) => props.token.fontSizeLG}px;
-  font-weight: 500;
-  color: ${(props) => props.token.colorPrimary};
-`;
-
-const PanelContent = styled(Typography.Paragraph)<{ token: any }>`
-  color: ${(props) => props.token.colorTextSecondary};
-`;
-
 const UniversalMarkdownModal: React.FC<Props> = ({
   visible,
   onClose,
@@ -59,7 +36,6 @@ const UniversalMarkdownModal: React.FC<Props> = ({
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [, token] = useToken();
 
   useEffect(() => {
     const fetchContent = async () => {
@@ -110,78 +86,67 @@ const UniversalMarkdownModal: React.FC<Props> = ({
   const isCollapsible = sections.length > 0;
 
   return (
-    <Modal
-      title={
-        <Typography.Title
-          level={3}
-          style={{ margin: 0, color: token.colorPrimary }}
-        >
+    <Dialog open={visible} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>
+        <Typography variant="h3" component="span" color="primary">
           {title}
-        </Typography.Title>
-      }
-      open={visible}
-      onCancel={onClose}
-      footer={null}
-      width={700}
-    >
-      <ModalBody token={token}>
-        {loading ? (
-          <Spin tip="Loading..." />
-        ) : error ? (
-          <Typography.Text type="danger">{error}</Typography.Text>
-        ) : isCollapsible ? (
-          <StyledCollapse
-            bordered={false}
-            defaultActiveKey={["1"]}
-            expandIcon={({ isActive }) => (
-              <CaretRightOutlined
-                rotate={isActive ? 90 : 0}
-                style={{ color: token.colorPrimary }}
-              />
-            )}
-            token={token}
-          >
-            {sections.map((item, idx) => (
-              <StyledPanel
-                header={<PanelHeader token={token}>{item.heading}</PanelHeader>}
+        </Typography>
+      </DialogTitle>
+      <DialogContent>
+        <Box
+          sx={{
+            p: 3,
+            background: (theme) => theme.palette.action.hover,
+            borderRadius: 3,
+          }}
+        >
+          {loading ? (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CircularProgress size={20} />
+              <Typography>Loading...</Typography>
+            </Box>
+          ) : error ? (
+            <Typography color="error">{error}</Typography>
+          ) : isCollapsible ? (
+            sections.map((item, idx) => (
+              <Accordion
                 key={String(idx)}
-                token={token}
+                defaultExpanded={idx === 0}
+                disableGutters
+                sx={{ mb: 1.5, borderRadius: 1.5, "&:before": { display: "none" } }}
               >
-                <SafeMarkdown
-                  components={{
-                    p: ({ children }) => (
-                      <PanelContent token={token}>{children}</PanelContent>
-                    ),
-                    a: (props) => (
-                      <a {...props} target="_blank" rel="noopener noreferrer">
-                        {props.children}
-                      </a>
-                    ),
-                  }}
-                >
-                  {item.body}
-                </SafeMarkdown>
-              </StyledPanel>
-            ))}
-          </StyledCollapse>
-        ) : (
-          <SafeMarkdown>{rawContent}</SafeMarkdown>
-        )}
-      </ModalBody>
-    </Modal>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography color="primary" sx={{ fontWeight: 500 }}>
+                    {item.heading}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <SafeMarkdown
+                    components={{
+                      p: ({ children }) => (
+                        <Typography color="text.secondary" sx={{ mb: 2 }}>
+                          {children}
+                        </Typography>
+                      ),
+                      a: (props) => (
+                        <a {...props} target="_blank" rel="noopener noreferrer">
+                          {props.children}
+                        </a>
+                      ),
+                    }}
+                  >
+                    {item.body}
+                  </SafeMarkdown>
+                </AccordionDetails>
+              </Accordion>
+            ))
+          ) : (
+            <SafeMarkdown>{rawContent}</SafeMarkdown>
+          )}
+        </Box>
+      </DialogContent>
+    </Dialog>
   );
 };
 
-const ThemedUniversalModal: React.FC<Props> = (props) => (
-  <ConfigProvider
-    theme={{
-      token: {
-        borderRadiusLG: 12,
-      },
-    }}
-  >
-    <UniversalMarkdownModal {...props} />
-  </ConfigProvider>
-);
-
-export default ThemedUniversalModal;
+export default UniversalMarkdownModal;

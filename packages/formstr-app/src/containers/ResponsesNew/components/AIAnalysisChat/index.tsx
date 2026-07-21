@@ -24,9 +24,8 @@ import { useTranslation } from "react-i18next";
 import { useSnackbar } from "../../../../providers/SnackbarProvider";
 
 /**
- * MUI chat card (ui-rewrite-mui Phase 4). ModelSelector/OllamaSettings stay
- * antd until Phase 6 — the footer sx keeps the antd settings panel anchored
- * above the footer in the meantime.
+ * MUI chat card (ui-rewrite-mui Phase 4). The footer sx anchors the
+ * OllamaSettings accordion panel above the footer.
  */
 const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
   isVisible,
@@ -297,9 +296,9 @@ const AIAnalysisChat: React.FC<AIAnalysisChatProps> = ({
               sx={{
                 flexGrow: 1,
                 position: "relative",
-                // OllamaSettings is antd until Phase 6 — keep its panel
-                // anchored above the footer.
-                "& .ant-collapse-content": {
+                // Anchor the OllamaSettings accordion body above the footer so
+                // it floats over the chat instead of pushing the footer down.
+                "& .MuiCollapse-root": {
                   position: "absolute",
                   bottom: "calc(100%)",
                   left: 0,

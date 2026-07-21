@@ -7,7 +7,6 @@ import React, {
   useEffect,
 } from "react";
 import { LOCAL_STORAGE_KEYS, getItem, setItem } from "../utils/localStorage";
-import { Modal } from "antd";
 import { Filter } from "nostr-tools";
 import type { StoredAccount } from "@formstr/signer";
 import { pool } from "../pool";
@@ -202,21 +201,6 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
       }}
     >
       {children}
-      {/* <Modal
-        open={usingNip07}
-        footer={null}
-        onCancel={() => setUsingNip07(false)}
-      >
-        {" "}
-        Check your NIP07 Extension. If you do not have one, or wish to read
-        more, checkout these{" "}
-        <a
-          href="https://github.com/aljazceru/awesome-nostr?tab=readme-ov-file#nip-07-browser-extensions"
-          target="_blank noreferrer"
-        >
-          Awesome Nostr Recommendations
-        </a>
-      </Modal> */}
       <LoginModal
         open={showLooginModal}
         onClose={() => {

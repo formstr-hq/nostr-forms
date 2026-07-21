@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from 'antd';
-import { ThunderboltOutlined } from '@ant-design/icons';
+import Button from '@mui/material/Button';
+import BoltIcon from '@mui/icons-material/Bolt';
 import { SupportUsModal, prefetchSupportInfo } from './SupportUsModal';
 
 const FORMSTR_NPUB = 'npub1qu7dsd44275lms4x9snnwvnnmgx926nsppmr7lcw9dlj36n4fltqgs7p98';
 
+// Kept as the antd-style union for call-site compatibility; mapped to MUI variants.
+type LegacyButtonType = 'primary' | 'default' | 'dashed' | 'link' | 'text';
+
 interface SupportUsButtonProps {
   npub?: string;
   buttonText?: string;
-  type?: 'primary' | 'default' | 'dashed' | 'link' | 'text';
+  type?: LegacyButtonType;
   style?: React.CSSProperties;
 }
+
+const VARIANT_BY_TYPE: Record<LegacyButtonType, 'contained' | 'outlined' | 'text'> = {
+  primary: 'contained',
+  default: 'outlined',
+  dashed: 'outlined',
+  link: 'text',
+  text: 'text',
+};
 
 export const SupportUsButton: React.FC<SupportUsButtonProps> = ({
   npub = FORMSTR_NPUB,
@@ -27,13 +38,12 @@ export const SupportUsButton: React.FC<SupportUsButtonProps> = ({
   return (
     <>
       <Button
-        type={type}
+        variant={VARIANT_BY_TYPE[type]}
         onClick={() => setIsModalOpen(true)}
         style={style}
+        endIcon={<BoltIcon sx={{ color: '#fadb14' }} />}
       >
-        <span>{buttonText}</span>
-        {/* Override Ant Design's automatic gap behavior with inline styles */}
-        <ThunderboltOutlined style={{ color: '#fadb14', marginLeft: '4px' }} />
+        {buttonText}
       </Button>
 
       <SupportUsModal

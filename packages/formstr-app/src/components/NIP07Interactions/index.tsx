@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+import { Dialog, DialogContent } from "@mui/material";
 import { Event, UnsignedEvent } from "nostr-tools";
 import { useEffect, useState } from "react";
 import { signerManager } from "../../signer";
@@ -82,8 +82,8 @@ export const NIP07Interactions: React.FC<NIP07InteractionProps> = ({
   const [showModal, setShowModal] = useState<boolean>(false);
 
   return (
-    <Modal open={showModal} footer={null} closable={false}>
-      {ModalMessage}
-    </Modal>
+    <Dialog open={showModal}>
+      <DialogContent>{ModalMessage}</DialogContent>
+    </Dialog>
   );
 };

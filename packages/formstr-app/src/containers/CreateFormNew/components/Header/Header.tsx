@@ -1,5 +1,18 @@
-import { Box, Button, IconButton, Tab, Tabs, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tab,
+  Tabs,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Link } from "react-router-dom";
 import { HEADER_MENU_KEYS } from "./config";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
@@ -18,9 +31,11 @@ import { MEDIA_QUERY_MOBILE } from "../../../../utils/css";
 export const CreateFormHeader: React.FC = () => {
   const { t } = useTranslation();
   const { showMessage } = useSnackbar();
+  const isMobile = useMediaQuery("(max-width:768px)", { noSsr: true });
   const [isPostPublishModalOpen, setIsPostPublishModalOpen] = useState(false);
   const [acceptedRelays, setAcceptedRelays] = useState<string[]>([]);
   const [publishFailed, setPublishFailed] = useState(false);
+  const [overflowAnchor, setOverflowAnchor] = useState<HTMLElement | null>(null);
 
   const {
     saveForm,
@@ -59,6 +74,13 @@ export const CreateFormHeader: React.FC = () => {
     }
   };
 
+  const isPreview = selectedTab === HEADER_MENU_KEYS.PREVIEW;
+  const togglePreview = () => {
+    setSelectedTab(
+      isPreview ? HEADER_MENU_KEYS.BUILDER : HEADER_MENU_KEYS.PREVIEW,
+    );
+  };
+
   return (
     <Box
       className="create-form-header"
@@ -83,42 +105,89 @@ export const CreateFormHeader: React.FC = () => {
         <Typography>{t("builder.header.allForms")}</Typography>
       </Box>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Button
-          variant="contained"
-          onClick={handlePublishClick}
-          disabled={isPostPublishModalOpen}
-        >
-          {t("builder.header.publish")}
-        </Button>
-        <Button onClick={() => setIsImportModalVisible(true)}>
-          {t("builder.header.importForms")}
-        </Button>
-        <Button onClick={() => setIsAiModalOpen(true)}>
-          {t("builder.header.aiBuilder")}
-        </Button>
-        <Tabs
-          value={selectedTab}
-          onChange={(_e, value) => {
-            if (
-              value === HEADER_MENU_KEYS.BUILDER ||
-              value === HEADER_MENU_KEYS.PREVIEW
-            ) {
-              setSelectedTab(value);
-            }
-          }}
-          sx={{ minHeight: 40, "& .MuiTab-root": { minHeight: 40 } }}
-        >
-          <Tab
-            value={HEADER_MENU_KEYS.BUILDER}
-            label={t("builder.header.formBuilder")}
-          />
-          <Tab
-            value={HEADER_MENU_KEYS.PREVIEW}
-            label={t("builder.header.preview")}
-          />
-        </Tabs>
-      </Box>
+      {isMobile ? (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+          <IconButton
+            onClick={togglePreview}
+            aria-label={isPreview ? t("builder.header.formBuilder") : t("builder.header.preview")}
+          >
+            {isPreview ? <EditOutlinedIcon /> : <VisibilityOutlinedIcon />}
+          </IconButton>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={handlePublishClick}
+            disabled={isPostPublishModalOpen}
+          >
+            {t("builder.header.publish")}
+          </Button>
+          <IconButton
+            aria-label="more actions"
+            onClick={(e) => setOverflowAnchor(e.currentTarget)}
+          >
+            <MoreVertIcon />
+          </IconButton>
+          <Menu
+            anchorEl={overflowAnchor}
+            open={Boolean(overflowAnchor)}
+            onClose={() => setOverflowAnchor(null)}
+          >
+            <MenuItem
+              onClick={() => {
+                setIsImportModalVisible(true);
+                setOverflowAnchor(null);
+              }}
+            >
+              {t("builder.header.importForms")}
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setIsAiModalOpen(true);
+                setOverflowAnchor(null);
+              }}
+            >
+              {t("builder.header.aiBuilder")}
+            </MenuItem>
+          </Menu>
+        </Box>
+      ) : (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Button
+            variant="contained"
+            onClick={handlePublishClick}
+            disabled={isPostPublishModalOpen}
+          >
+            {t("builder.header.publish")}
+          </Button>
+          <Button onClick={() => setIsImportModalVisible(true)}>
+            {t("builder.header.importForms")}
+          </Button>
+          <Button onClick={() => setIsAiModalOpen(true)}>
+            {t("builder.header.aiBuilder")}
+          </Button>
+          <Tabs
+            value={selectedTab}
+            onChange={(_e, value) => {
+              if (
+                value === HEADER_MENU_KEYS.BUILDER ||
+                value === HEADER_MENU_KEYS.PREVIEW
+              ) {
+                setSelectedTab(value);
+              }
+            }}
+            sx={{ minHeight: 40, "& .MuiTab-root": { minHeight: 40 } }}
+          >
+            <Tab
+              value={HEADER_MENU_KEYS.BUILDER}
+              label={t("builder.header.formBuilder")}
+            />
+            <Tab
+              value={HEADER_MENU_KEYS.PREVIEW}
+              label={t("builder.header.preview")}
+            />
+          </Tabs>
+        </Box>
+      )}
 
       <RelayPublishModal
         relays={relayList.map((r) => r.url)}

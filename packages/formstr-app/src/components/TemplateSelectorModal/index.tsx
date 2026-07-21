@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Typography } from "antd";
+import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { FormTemplate, getAvailableTemplates } from "../../templates";
 import TemplateCard from "../TemplateCard";
@@ -24,35 +24,29 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   };
 
   return (
-    <Modal
-      title={
-        <Typography.Title level={4} style={{ textAlign: "center", margin: 0 }}>
-          {t("templates.chooseTemplate")}
-        </Typography.Title>
-      }
-      open={visible}
-      onCancel={onClose}
-      footer={null}
-      width={600}
-      centered
-    >
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          padding: "20px 0",
-        }}
-      >
-        {availableTemplates.map((template) => (
-          <TemplateCard
-            key={template.id}
-            template={template}
-            onClick={handleCardClick}
-          />
-        ))}
-      </div>
-    </Modal>
+    <Dialog open={visible} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle sx={{ textAlign: "center" }}>
+        {t("templates.chooseTemplate")}
+      </DialogTitle>
+      <DialogContent>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            py: 2.5,
+          }}
+        >
+          {availableTemplates.map((template) => (
+            <TemplateCard
+              key={template.id}
+              template={template}
+              onClick={handleCardClick}
+            />
+          ))}
+        </Box>
+      </DialogContent>
+    </Dialog>
   );
 };
 

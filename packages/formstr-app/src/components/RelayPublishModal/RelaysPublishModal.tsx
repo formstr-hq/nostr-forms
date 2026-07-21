@@ -1,5 +1,15 @@
-import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
-import { Button, Modal, Row, Spin, Typography } from "antd";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
 import { normalizeURL } from "nostr-tools/utils";
 import { useTranslation } from "react-i18next";
 
@@ -24,8 +34,6 @@ export const RelayPublishModal: React.FC<RelayPublishModalProps> = ({
 
   const canClose = allRelaysAccepted || publishFailed;
 
-  const { Text } = Typography;
-
   const renderRelays = () => {
     if (!relays) return null;
 
@@ -35,68 +43,58 @@ export const RelayPublishModal: React.FC<RelayPublishModalProps> = ({
       const showFailed = publishFailed && !isAccepted;
 
       return (
-        <Row key={url} align="middle" style={{ marginBottom: 8 }}>
+        <Box
+          key={url}
+          sx={{ display: "flex", alignItems: "center", mb: 1 }}
+        >
           {isAccepted ? (
-            <CheckCircleOutlined
-              style={{
-                color: "#52c41a",
-                marginRight: 8,
-                fontSize: "16px",
-              }}
-            />
+            <CheckCircleIcon sx={{ color: "#52c41a", mr: 1, fontSize: 16 }} />
           ) : showFailed ? (
-            <CloseCircleOutlined
-              style={{
-                color: "#ff4d4f",
-                marginRight: 8,
-                fontSize: "16px",
-              }}
-            />
+            <CancelIcon sx={{ color: "#ff4d4f", mr: 1, fontSize: 16 }} />
           ) : (
-            <Spin size="small" style={{ marginRight: 8 }} />
+            <CircularProgress size={16} sx={{ mr: 1 }} />
           )}
-          <Text>{url}</Text>
-        </Row>
+          <Typography>{url}</Typography>
+        </Box>
       );
     });
   };
 
   return (
-    <Modal
-      title={t("relayPublish.title")}
+    <Dialog
       open={isOpen}
-      footer={
-        canClose ? (
+      onClose={canClose ? onClose : undefined}
+      maxWidth="sm"
+      fullWidth
+    >
+      <DialogTitle>{t("relayPublish.title")}</DialogTitle>
+      <DialogContent>
+        <Typography sx={{ fontWeight: 600, display: "block", mb: 2 }}>
+          {t("relayPublish.relays")}{" "}
+          {allRelaysAccepted && `(${t("relayPublish.complete")})`}
+        </Typography>
+        {renderRelays()}
+        {publishFailed && acceptedRelays.length === 0 && (
+          <Typography color="error" sx={{ display: "block", mt: 2 }}>
+            {t("relayPublish.noRelaysAccepted")}
+          </Typography>
+        )}
+      </DialogContent>
+      {canClose && (
+        <DialogActions>
           <Button
-            type="primary"
-            danger={publishFailed && acceptedRelays.length === 0}
+            variant="contained"
+            color={
+              publishFailed && acceptedRelays.length === 0 ? "error" : "primary"
+            }
             onClick={onClose}
           >
             {publishFailed && acceptedRelays.length === 0
               ? t("common.actions.close")
               : t("common.actions.done")}
           </Button>
-        ) : null
-      }
-      closable={canClose}
-      maskClosable={canClose}
-      onCancel={onClose}
-    >
-      <div>
-        <Text strong style={{ display: "block", marginBottom: 16 }}>
-          {t("relayPublish.relays")}{" "}
-          {allRelaysAccepted && `(${t("relayPublish.complete")})`}
-        </Text>
-        {renderRelays()}
-        {publishFailed && acceptedRelays.length === 0 && (
-          <Text
-            type="danger"
-            style={{ display: "block", marginTop: 16 }}
-          >
-            {t("relayPublish.noRelaysAccepted")}
-          </Text>
-        )}
-      </div>
-    </Modal>
+        </DialogActions>
+      )}
+    </Dialog>
   );
 };

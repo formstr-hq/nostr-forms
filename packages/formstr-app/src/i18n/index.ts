@@ -1,6 +1,5 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import enUS from "antd/locale/en_US";
 import { getItem, LOCAL_STORAGE_KEYS, setItem } from "../utils/localStorage";
 
 type TranslationResources = typeof import("./resources/en").default;
@@ -8,14 +7,12 @@ type TranslationResources = typeof import("./resources/en").default;
 export interface SupportedLocale {
   code: string;
   label: string;
-  antdLocale: typeof enUS;
 }
 
 export const SUPPORTED_LOCALES: SupportedLocale[] = [
   {
     code: "en",
     label: "English",
-    antdLocale: enUS,
   },
 ];
 
@@ -49,14 +46,6 @@ export const resolveAppLocale = () => {
   const navigatorLocale =
     window.navigator.languages?.[0] || window.navigator.language;
   return normalizeLocale(navigatorLocale);
-};
-
-export const getAntdLocaleForLanguage = (language?: string) => {
-  const normalized = normalizeLocale(language);
-  return (
-    SUPPORTED_LOCALES.find((item) => item.code === normalized)?.antdLocale ||
-    enUS
-  );
 };
 
 const LOCALE_LOADERS: Record<

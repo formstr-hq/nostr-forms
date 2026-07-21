@@ -60,12 +60,15 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
     }
   }
   const {
+    questionIdInFocus,
     setQuestionIdInFocus,
     sections,
     getSectionForQuestion,
     moveQuestionToSection,
     formSettings,
   } = useFormBuilderContext();
+
+  const isSelected = questionIdInFocus === question[1];
 
   const currentSectionId = getSectionForQuestion(question[1]);
 
@@ -117,6 +120,14 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
         m: "10px",
         textAlign: "left",
         backgroundColor: `rgba(255, 255, 255,${formSettings.cardTransparency})`,
+        // Selected state (docs/ui-rewrite §3): orange ring + left accent bar.
+        transition: "box-shadow 0.15s, border-color 0.15s",
+        borderColor: isSelected ? "primary.main" : undefined,
+        borderLeft: isSelected ? "3px solid" : undefined,
+        borderLeftColor: isSelected ? "primary.main" : undefined,
+        boxShadow: isSelected
+          ? (theme) => `0 0 0 1px ${theme.palette.primary.main}`
+          : "none",
       }}
     >
       <CardContent sx={{ pt: "7px" }}>

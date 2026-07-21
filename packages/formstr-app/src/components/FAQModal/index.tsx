@@ -1,13 +1,18 @@
 // src/components/FAQModal.tsx
-import { Modal, Collapse, Typography, Spin, ConfigProvider } from "antd";
-import { ReactPropTypes, useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import { CaretRightOutlined } from "@ant-design/icons";
-import styled from "styled-components";
-import { useToken } from "antd/es/theme/internal";
+import { useEffect, useState } from "react";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import SafeMarkdown from "../SafeMarkdown";
-
-const { Panel } = Collapse;
 
 interface FAQModalProps {
   visible: boolean;
@@ -19,82 +24,10 @@ interface FAQItem {
   answer: string;
 }
 
-// Styled components with Antd theme tokens
-const ModalBody = styled.div<{ token: any }>`
-  padding: ${(props) => props.token.paddingLG}px;
-  background: ${(props) => props.token.colorBgContainerDisabled};
-  border-radius: ${(props) => props.token.borderRadiusLG}px;
-`;
-
-const ContentWrapper = styled.div`
-  min-height: 250px;
-`;
-
-const LoadingWrapper = styled.div<{ token: any }>`
-  text-align: center;
-  padding: ${(props) => props.token.paddingXL}px 0;
-`;
-
-const ErrorWrapper = styled.div<{ token: any }>`
-  padding: ${(props) => props.token.paddingMD}px;
-  background: ${(props) => props.token.colorErrorBg};
-  border-radius: ${(props) => props.token.borderRadiusMD}px;
-  box-shadow: 0 2px 8px ${(props) => props.token.boxShadowTertiary};
-
-  & h4 {
-    color: ${(props) => props.token.colorError};
-    margin-bottom: ${(props) => props.token.marginXS}px;
-  }
-  & p {
-    color: ${(props) => props.token.colorError};
-  }
-`;
-
-const EmptyWrapper = styled.div<{ token: any }>`
-  padding: ${(props) => props.token.paddingMD}px;
-  background: ${(props) => props.token.colorWarningBg};
-  border-radius: ${(props) => props.token.borderRadiusMD}px;
-  box-shadow: 0 2px 8px ${(props) => props.token.boxShadowTertiary};
-
-  & h4 {
-    color: ${(props) => props.token.colorWarning};
-    margin-bottom: ${(props) => props.token.marginXS}px;
-  }
-  & p {
-    color: ${(props) => props.token.colorWarning};
-  }
-`;
-
-const StyledCollapse = styled(Collapse)<{ token: any }>`
-  background: transparent;
-`;
-
-const StyledPanel = styled(Panel)<{ token: any }>`
-  background: ${(props) => props.token.colorBgContainer};
-  border-radius: ${(props) => props.token.borderRadiusMD}px;
-  margin-bottom: ${(props) => props.token.marginMD}px;
-  border: 1px solid ${(props) => props.token.colorBorderSecondary};
-  box-shadow: 0 2px 8px ${(props) => props.token.boxShadowTertiary};
-  overflow: hidden;
-`;
-
-const PanelHeader = styled.span<{ token: any }>`
-  font-size: ${(props) => props.token.fontSizeLG}px;
-  font-weight: 500;
-  color: ${(props) => props.token.colorPrimary};
-`;
-
-const PanelContent = styled(Typography.Paragraph)<{ token: any }>`
-  color: ${(props) => props.token.colorTextSecondary};
-`;
-
 const FAQModal: React.FC<FAQModalProps> = ({ visible, onClose }) => {
   const [faqItems, setFaqItems] = useState<FAQItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Access Antd theme tokens
-  const [, token] = useToken();
 
   useEffect(() => {
     const fetchFAQContent = async () => {
@@ -149,103 +82,100 @@ const FAQModal: React.FC<FAQModalProps> = ({ visible, onClose }) => {
   }, []);
 
   return (
-    <Modal
-      title={
-        <Typography.Title
-          level={3}
-          style={{ margin: 0, color: token.colorPrimary }}
-        >
+    <Dialog open={visible} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>
+        <Typography variant="h3" component="span" color="primary">
           Frequently Asked Questions
-        </Typography.Title>
-      }
-      open={visible}
-      onCancel={onClose}
-      footer={null}
-      width={700}
-    >
-      <ModalBody token={token}>
-        <ContentWrapper>
+        </Typography>
+      </DialogTitle>
+      <DialogContent>
+        <Box
+          sx={{
+            p: 3,
+            background: (theme) => theme.palette.action.hover,
+            borderRadius: 3,
+            minHeight: 250,
+          }}
+        >
           {loading && (
-            <LoadingWrapper token={token}>
-              <Spin size="large" tip="Loading FAQ..." />
-            </LoadingWrapper>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1,
+                py: 4,
+              }}
+            >
+              <CircularProgress size={24} />
+              <Typography>Loading FAQ...</Typography>
+            </Box>
           )}
 
           {!loading && error && (
-            <ErrorWrapper token={token}>
-              <Typography.Title level={4}>
+            <Box sx={{ p: 2, bgcolor: "error.light", borderRadius: 2 }}>
+              <Typography variant="h6" color="error">
                 Oops, Something Went Wrong
-              </Typography.Title>
-              <Typography.Paragraph>{`Failed to load FAQ: ${error}`}</Typography.Paragraph>
-            </ErrorWrapper>
+              </Typography>
+              <Typography color="error">{`Failed to load FAQ: ${error}`}</Typography>
+            </Box>
           )}
 
           {!loading && !error && faqItems.length === 0 && (
-            <EmptyWrapper token={token}>
-              <Typography.Title level={4}>
+            <Box sx={{ p: 2, bgcolor: "warning.light", borderRadius: 2 }}>
+              <Typography variant="h6" color="warning.dark">
                 No FAQ Content Found
-              </Typography.Title>
-              <Typography.Paragraph>
+              </Typography>
+              <Typography color="warning.dark">
                 The FAQ file appears to be empty or incorrectly formatted.
-              </Typography.Paragraph>
-            </EmptyWrapper>
+              </Typography>
+            </Box>
           )}
 
           {!loading && !error && faqItems.length > 0 && (
-            <StyledCollapse
-              bordered={false}
-              defaultActiveKey={["1"]}
-              expandIcon={({ isActive }) => (
-                <CaretRightOutlined
-                  rotate={isActive ? 90 : 0}
-                  style={{ color: token.colorPrimary }}
-                />
-              )}
-              token={token}
-            >
+            <>
               {faqItems.map((item, index) => (
-                <StyledPanel
-                  header={
-                    <PanelHeader token={token}>{item.question}</PanelHeader>
-                  }
+                <Accordion
                   key={String(index + 1)}
-                  token={token}
+                  defaultExpanded={index === 0}
+                  disableGutters
+                  sx={{
+                    mb: 1.5,
+                    borderRadius: 1.5,
+                    "&:before": { display: "none" },
+                  }}
                 >
-                  <SafeMarkdown
-                    components={{
-                      p: ({ children }) => (
-                        <PanelContent token={token}>{children}</PanelContent>
-                      ),
-                      a: ({ node, ...props }) => (
-                        <a {...props} target="_blank" rel="noopener noreferrer">
-                          {props.children}
-                        </a>
-                      ),
-                    }}
-                  >
-                    {item.answer}
-                  </SafeMarkdown>
-                </StyledPanel>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography color="primary" sx={{ fontWeight: 500 }}>
+                      {item.question}
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <SafeMarkdown
+                      components={{
+                        p: ({ children }) => (
+                          <Typography color="text.secondary" sx={{ mb: 2 }}>
+                            {children}
+                          </Typography>
+                        ),
+                        a: ({ node, ...props }) => (
+                          <a {...props} target="_blank" rel="noopener noreferrer">
+                            {props.children}
+                          </a>
+                        ),
+                      }}
+                    >
+                      {item.answer}
+                    </SafeMarkdown>
+                  </AccordionDetails>
+                </Accordion>
               ))}
-            </StyledCollapse>
+            </>
           )}
-        </ContentWrapper>
-      </ModalBody>
-    </Modal>
+        </Box>
+      </DialogContent>
+    </Dialog>
   );
 };
 
-// Export with ConfigProvider, passing props through
-const ThemedFAQModal: React.FC<FAQModalProps> = ({ visible, onClose }) => (
-  <ConfigProvider
-    theme={{
-      token: {
-        borderRadiusLG: 12,
-      },
-    }}
-  >
-    <FAQModal visible={visible} onClose={onClose} />
-  </ConfigProvider>
-);
-
-export default ThemedFAQModal;
+export default FAQModal;

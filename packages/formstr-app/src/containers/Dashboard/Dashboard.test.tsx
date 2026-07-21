@@ -61,7 +61,7 @@ jest.mock("../../nostr/common", () => ({
   getDefaultRelays: () => ["wss://relay.mock"],
 }));
 
-// antd until Phase 6 — keep it out of this test's tree.
+// Heavy modal with its own provider deps — keep it out of this test's tree.
 jest.mock("../../components/ImportFormModal", () => ({
   __esModule: true,
   default: () => null,
@@ -90,7 +90,7 @@ jest.mock("../../utils/utility", () => ({
   truncateNpub: (pk: string) => pk,
 }));
 
-// antd until Phase 6 — keep it out of this test's tree.
+// Heavy modal with its own coverage hooks — keep it out of this test's tree.
 jest.mock("../../components/BroadcastModal", () => ({
   BroadcastModal: () => null,
 }));

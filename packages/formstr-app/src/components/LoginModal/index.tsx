@@ -1,32 +1,48 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Modal, Button, Typography, Space, Input, Tabs, message, Alert, Divider } from "antd";
-import { KeyOutlined, LinkOutlined, LockOutlined } from "@ant-design/icons";
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  Divider,
+  IconButton,
+  Stack,
+  Tab,
+  Tabs,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import LinkIcon from "@mui/icons-material/Link";
+import LockIcon from "@mui/icons-material/Lock";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import QRCode from "qrcode.react";
 import { useTranslation } from "react-i18next";
 import { signerManager } from "../../signer";
+import { useSnackbar } from "../../providers/SnackbarProvider";
 import ThemedUniversalModal from "../UniversalMarkdownModal";
 
 const DEFAULT_NOSTR_CONNECT_RELAY = "wss://relay.nsec.app";
-
-const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
 
 // Reusable login option button
 const LoginOptionButton: React.FC<{
   icon: React.ReactNode;
   text: string;
   onClick: () => void;
-  type?: "primary" | "default";
+  variant?: "contained" | "outlined";
   loading?: boolean;
-}> = ({ icon, text, onClick, type = "default", loading = false }) => (
+}> = ({ icon, text, onClick, variant = "outlined", loading = false }) => (
   <Button
-    type={type}
-    icon={icon}
-    block
+    variant={variant}
+    startIcon={icon}
+    fullWidth
     size="large"
     onClick={onClick}
-    style={{ marginBottom: 8 }}
-    loading={loading}
+    disabled={loading}
+    sx={{ mb: 1 }}
   >
     {text}
   </Button>
@@ -38,6 +54,7 @@ interface Nip46SectionProps {
 }
 const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [activeTab, setActiveTab] = useState("manual");
   const [bunkerUri, setBunkerUri] = useState("");
   const [loadingConnect, setLoadingConnect] = useState(false);
@@ -62,7 +79,7 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
   const startNostrConnect = async () => {
     const relays = parseRelays(relaysInput);
     if (relays.length === 0) {
-      message.error(t("auth.nip46.enterRelayError"));
+      showMessage(t("auth.nip46.enterRelayError"), "error");
       return;
     }
     abortRef.current?.abort();
@@ -76,11 +93,11 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
         (uri) => setQrUri(uri),
         controller.signal,
       );
-      message.success(t("auth.nip46.connected"));
+      showMessage(t("auth.nip46.connected"), "success");
       onSuccess();
     } catch (err) {
       if (!controller.signal.aborted) {
-        message.error(t("auth.nip46.connectionFailed"));
+        showMessage(t("auth.nip46.connectionFailed"), "error");
       }
     } finally {
       setQrConnecting(false);
@@ -89,29 +106,29 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
 
   const connectToBunkerUri = async (bunkerUri: string) => {
     await signerManager.loginWithNip46(bunkerUri);
-    message.success(t("auth.nip46.connected"));
+    showMessage(t("auth.nip46.connected"), "success");
     onSuccess();
   };
 
   const handleConnectManual = async () => {
     if (!bunkerUri) {
-      message.error(t("auth.nip46.enterBunkerUriError"));
+      showMessage(t("auth.nip46.enterBunkerUriError"), "error");
       return;
     }
     setLoadingConnect(true);
     try {
       await connectToBunkerUri(bunkerUri);
     } catch (err) {
-      message.error(t("auth.nip46.connectionFailed"));
+      showMessage(t("auth.nip46.connectionFailed"), "error");
     } finally {
       setLoadingConnect(false);
     }
   };
   return (
-    <div style={{ marginTop: 16 }}>
+    <Box sx={{ mt: 2 }}>
       <Tabs
-        activeKey={activeTab}
-        onChange={(tab: string) => {
+        value={activeTab}
+        onChange={(_e, tab: string) => {
           abortRef.current?.abort();
           setActiveTab(tab);
           if (tab === "qr") {
@@ -119,49 +136,59 @@ const Nip46Section: React.FC<Nip46SectionProps> = ({ onSuccess }) => {
           }
         }}
       >
-        <TabPane tab={t("auth.nip46.pasteUri")} key="manual">
-          <Space direction="vertical" style={{ width: "100%" }}>
-            <Input
-              placeholder={t("auth.nip46.enterBunkerUri")}
-              value={bunkerUri}
-              onChange={(e) => setBunkerUri(e.target.value)}
-            />
-            <Button
-              type="primary"
-              onClick={handleConnectManual}
-              loading={loadingConnect}
-            >
-              {t("common.actions.connect")}
-            </Button>
-          </Space>
-        </TabPane>
-        <TabPane tab={t("auth.nip46.qrCode")} key="qr">
-          <Space direction="vertical" style={{ width: "100%" }}>
-            <Input
-              placeholder={t("auth.nip46.relaysPlaceholder")}
-              value={relaysInput}
-              onChange={(e) => setRelaysInput(e.target.value)}
-              onPressEnter={startNostrConnect}
-            />
-            <Button size="small" onClick={startNostrConnect} loading={qrConnecting}>
-              {t("auth.nip46.regenerate")}
-            </Button>
-            <div style={{ textAlign: "center", marginTop: 8 }}>
-              {qrUri ? (
-                <QRCode value={qrUri} size={180} />
-              ) : (
-                <Text type="secondary">{t("auth.nip46.generatingQr")}</Text>
-              )}
-              <div style={{ marginTop: 8 }}>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  {t("auth.nip46.usingRelay")}
-                </Text>
-              </div>
-            </div>
-          </Space>
-        </TabPane>
+        <Tab value="manual" label={t("auth.nip46.pasteUri")} />
+        <Tab value="qr" label={t("auth.nip46.qrCode")} />
       </Tabs>
-    </div>
+      {activeTab === "manual" && (
+        <Stack spacing={1} sx={{ width: "100%", mt: 2 }}>
+          <TextField
+            size="small"
+            fullWidth
+            placeholder={t("auth.nip46.enterBunkerUri")}
+            value={bunkerUri}
+            onChange={(e) => setBunkerUri(e.target.value)}
+          />
+          <Button
+            variant="contained"
+            onClick={handleConnectManual}
+            disabled={loadingConnect}
+          >
+            {t("common.actions.connect")}
+          </Button>
+        </Stack>
+      )}
+      {activeTab === "qr" && (
+        <Stack spacing={1} sx={{ width: "100%", mt: 2 }}>
+          <TextField
+            size="small"
+            fullWidth
+            placeholder={t("auth.nip46.relaysPlaceholder")}
+            value={relaysInput}
+            onChange={(e) => setRelaysInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") startNostrConnect();
+            }}
+          />
+          <Button size="small" onClick={startNostrConnect} disabled={qrConnecting}>
+            {t("auth.nip46.regenerate")}
+          </Button>
+          <Box sx={{ textAlign: "center", mt: 1 }}>
+            {qrUri ? (
+              <QRCode value={qrUri} size={180} />
+            ) : (
+              <Typography color="text.secondary">
+                {t("auth.nip46.generatingQr")}
+              </Typography>
+            )}
+            <Box sx={{ mt: 1 }}>
+              <Typography color="text.secondary" sx={{ fontSize: 12 }}>
+                {t("auth.nip46.usingRelay")}
+              </Typography>
+            </Box>
+          </Box>
+        </Stack>
+      )}
+    </Box>
   );
 };
 
@@ -171,71 +198,90 @@ interface NcryptsecSectionProps {
 }
 const NcryptsecSection: React.FC<NcryptsecSectionProps> = ({ onSuccess }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [ncryptsec, setNcryptsec] = useState(() => signerManager.getSavedNcryptsec() ?? "");
   const [storedNcryptsec, setStoredNcryptsec] = useState(() => !!signerManager.getSavedNcryptsec());
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmForget, setConfirmForget] = useState(false);
 
   const handleLogin = async () => {
     if (!ncryptsec.trim() || !password) {
-      message.error(t("auth.ncryptsec.enterCredentials"));
+      showMessage(t("auth.ncryptsec.enterCredentials"), "error");
       return;
     }
     setLoading(true);
     try {
       await signerManager.loginWithNcryptsec(ncryptsec.trim(), password);
-      message.success(t("auth.ncryptsec.loginSuccess"));
+      showMessage(t("auth.ncryptsec.loginSuccess"), "success");
       onSuccess();
     } catch {
-      message.error(t("auth.ncryptsec.loginFailed"));
+      showMessage(t("auth.ncryptsec.loginFailed"), "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleForget = () => {
-    Modal.confirm({
-      title: t("auth.ncryptsec.forgetSavedKey"),
-      content: t("auth.ncryptsec.forgetSavedKeyBody"),
-      okText: t("auth.ncryptsec.forgetSavedKeyAction"),
-      okType: "danger",
-      cancelText: t("common.actions.cancel"),
-      async onOk() {
-        await signerManager.forgetSavedNcryptsec();
-        setNcryptsec("");
-        setStoredNcryptsec(false);
-      },
-    });
+  const handleForget = async () => {
+    await signerManager.forgetSavedNcryptsec();
+    setNcryptsec("");
+    setStoredNcryptsec(false);
+    setConfirmForget(false);
   };
 
   return (
-    <div style={{ marginTop: 16 }}>
-      <Space direction="vertical" style={{ width: "100%" }}>
-        <Input
+    <Box sx={{ mt: 2 }}>
+      <Stack spacing={1} sx={{ width: "100%" }}>
+        <TextField
+          size="small"
+          fullWidth
           placeholder={t("auth.ncryptsec.encryptedKeyPlaceholder")}
           value={ncryptsec}
           onChange={(e) => setNcryptsec(e.target.value)}
         />
         {storedNcryptsec && (
-          <Text
-            type="secondary"
-            style={{ fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
-            onClick={handleForget}
+          <Typography
+            color="text.secondary"
+            sx={{ fontSize: 12, cursor: "pointer", textDecoration: "underline" }}
+            onClick={() => setConfirmForget(true)}
           >
             {t("auth.ncryptsec.forgetSavedKeyLink")}
-          </Text>
+          </Typography>
         )}
-        <Input.Password
+        <TextField
+          size="small"
+          fullWidth
+          type="password"
           placeholder={t("auth.ncryptsec.passwordPlaceholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          onPressEnter={handleLogin}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleLogin();
+          }}
         />
-        <Button type="primary" block loading={loading} onClick={handleLogin}>
+        <Button variant="contained" fullWidth disabled={loading} onClick={handleLogin}>
           {t("auth.ncryptsec.signIn")}
         </Button>
-      </Space>
-    </div>
+      </Stack>
+      <Dialog open={confirmForget} onClose={() => setConfirmForget(false)}>
+        <DialogContent>
+          <Typography variant="h6" gutterBottom>
+            {t("auth.ncryptsec.forgetSavedKey")}
+          </Typography>
+          <Typography color="text.secondary">
+            {t("auth.ncryptsec.forgetSavedKeyBody")}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmForget(false)}>
+            {t("common.actions.cancel")}
+          </Button>
+          <Button color="error" variant="contained" onClick={handleForget}>
+            {t("auth.ncryptsec.forgetSavedKeyAction")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 
@@ -246,6 +292,7 @@ interface SignUpSectionProps {
 
 const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [step, setStep] = useState<"form" | "backup">("form");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -258,11 +305,11 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
 
   const handleCreate = async () => {
     if (!password) {
-      message.error(t("auth.signUp.passwordRequired"));
+      showMessage(t("auth.signUp.passwordRequired"), "error");
       return;
     }
     if (password !== confirmPassword) {
-      message.error(t("auth.signUp.passwordMismatch"));
+      showMessage(t("auth.signUp.passwordMismatch"), "error");
       return;
     }
     setLoading(true);
@@ -277,7 +324,7 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
       setStep("backup");
     } catch (err) {
       console.error(err);
-      message.error(t("auth.signUp.creationFailed"));
+      showMessage(t("auth.signUp.creationFailed"), "error");
     } finally {
       setLoading(false);
     }
@@ -285,92 +332,108 @@ const SignUpSection: React.FC<SignUpSectionProps> = ({ onLogin }) => {
 
   if (step === "backup") {
     return (
-      <Space direction="vertical" style={{ width: "100%" }}>
-        <Alert
-          type="warning"
-          showIcon
-          message={
-            <Text strong>
-              {t("auth.signup.backupWarning")}
-            </Text>
-          }
-        />
-        <Text type="secondary" style={{ fontSize: 12 }}>
+      <Stack spacing={1} sx={{ width: "100%" }}>
+        <Alert severity="warning">
+          <Typography sx={{ fontWeight: 600 }}>
+            {t("auth.signup.backupWarning")}
+          </Typography>
+        </Alert>
+        <Typography color="text.secondary" sx={{ fontSize: 12 }}>
           {t("auth.signup.backupLabel")}
-        </Text>
-        <Paragraph
-          copyable
-          style={{
+        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 1,
             background: "#f5f5f5",
-            padding: 8,
-            borderRadius: 4,
-            wordBreak: "break-all",
-            fontSize: 12,
+            p: 1,
+            borderRadius: 1,
           }}
         >
-          {ncryptsec}
-        </Paragraph>
-        <Button type="primary" block onClick={onLogin}>
+          <Typography
+            sx={{ wordBreak: "break-all", fontSize: 12, flex: 1 }}
+          >
+            {ncryptsec}
+          </Typography>
+          <Tooltip title={t("common.actions.copy", "Copy")}>
+            <IconButton
+              size="small"
+              onClick={() => navigator.clipboard.writeText(ncryptsec)}
+            >
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+        <Button variant="contained" fullWidth onClick={onLogin}>
           {t("auth.signup.savedKeyButton")}
         </Button>
-      </Space>
+      </Stack>
     );
   }
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }}>
-      <Alert
-        type="info"
-        showIcon
-        message={
-          <Text style={{ fontSize: 12 }}>
-            {t("auth.signup.publicInfo")}
-          </Text>
-        }
-        style={{ marginBottom: 4 }}
-      />
-      <Input
+    <Stack spacing={1} sx={{ width: "100%" }}>
+      <Alert severity="info" sx={{ mb: 0.5 }}>
+        <Typography sx={{ fontSize: 12 }}>{t("auth.signup.publicInfo")}</Typography>
+      </Alert>
+      <TextField
+        size="small"
+        fullWidth
         placeholder={t("auth.signUp.namePlaceholder")}
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      <Input
+      <TextField
+        size="small"
+        fullWidth
         placeholder={t("auth.signUp.usernamePlaceholder")}
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />
-      <Input.TextArea
+      <TextField
+        size="small"
+        fullWidth
+        multiline
+        rows={2}
         placeholder={t("auth.signUp.aboutPlaceholder")}
         value={about}
         onChange={(e) => setAbout(e.target.value)}
-        rows={2}
       />
-      <Input
+      <TextField
+        size="small"
+        fullWidth
         placeholder={t("auth.signUp.picturePlaceholder")}
         value={picture}
         onChange={(e) => setPicture(e.target.value)}
       />
 
-      <Divider style={{ margin: "8px 0" }} />
+      <Divider sx={{ my: 1 }} />
 
-      <Text type="secondary" style={{ fontSize: 12 }}>
+      <Typography color="text.secondary" sx={{ fontSize: 12 }}>
         {t("auth.signup.passwordHint")}
-      </Text>
-      <Input.Password
+      </Typography>
+      <TextField
+        size="small"
+        fullWidth
+        type="password"
         placeholder={t("auth.ncryptsec.passwordPlaceholder")}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <Input.Password
+      <TextField
+        size="small"
+        fullWidth
+        type="password"
         placeholder={t("auth.signUp.confirmPasswordPlaceholder")}
         value={confirmPassword}
         onChange={(e) => setConfirmPassword(e.target.value)}
       />
 
-      <Button type="primary" block loading={loading} onClick={handleCreate}>
+      <Button variant="contained" fullWidth disabled={loading} onClick={handleCreate}>
         {t("auth.signUp.createAccount")}
       </Button>
-    </Space>
+    </Stack>
   );
 };
 
@@ -380,19 +443,20 @@ const FooterInfo: React.FC = () => {
   const [isFAQModalVisible, setIsFAQModalVisible] = useState(false);
 
   return (
-    <div style={{ marginTop: 24, textAlign: "center" }}>
-      <Text type="secondary" style={{ fontSize: 12 }}>
+    <Box sx={{ mt: 3, textAlign: "center" }}>
+      <Typography color="text.secondary" sx={{ fontSize: 12 }}>
         {t("auth.footer.keysStayWithYou")}
-      </Text>
+      </Typography>
       <br />
-      <a
-        style={{ fontSize: 12 }}
+      <Typography
+        component="a"
+        sx={{ fontSize: 12, cursor: "pointer", color: "primary.main" }}
         onClick={() => {
           setIsFAQModalVisible(true);
         }}
       >
         {t("auth.footer.needHelp")}
-      </a>
+      </Typography>
       <ThemedUniversalModal
         visible={isFAQModalVisible}
         onClose={() => {
@@ -401,7 +465,7 @@ const FooterInfo: React.FC = () => {
         filePath="/docs/faq.md"
         title={t("header.faqTitle")}
       />
-    </div>
+    </Box>
   );
 };
 
@@ -413,6 +477,8 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
+  const [activeTab, setActiveTab] = useState("signin");
   const [showNip46, setShowNip46] = useState(false);
   const [showNcryptsec, setShowNcryptsec] = useState(() => !!signerManager.getSavedNcryptsec());
 
@@ -424,55 +490,88 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
       setLoadingNip07(true);
       try {
         await signerManager.loginWithNip07();
-        message.success(t("auth.messages.nip07Success"));
+        showMessage(t("auth.messages.nip07Success"), "success");
         onLogin();
       } catch (err) {
-        message.error(t("auth.messages.nip07Failed"));
+        showMessage(t("auth.messages.nip07Failed"), "error");
         onClose();
       } finally {
         setLoadingNip07(false);
       }
     } else {
-      message.error(t("auth.messages.nip07Missing"));
+      showMessage(t("auth.messages.nip07Missing"), "error");
     }
   };
 
   return (
-    <Modal open={open} onCancel={onClose} footer={null} centered width={420} zIndex={1100} destroyOnClose>
-      <div style={{ textAlign: "center", marginBottom: 16 }}>
-        <Title level={4}>{t("auth.welcomeTitle")}</Title>
-        <Text type="secondary">{t("auth.title")}</Text>
-      </div>
-      <Tabs defaultActiveKey="signin">
-        <TabPane tab={t("auth.signInTab")} key="signin">
-          <Space direction="vertical" style={{ width: "100%" }}>
-            <LoginOptionButton
-              icon={<KeyOutlined />}
-              text={t("auth.options.nip07")}
-              type="primary"
-              onClick={handleNip07}
-              loading={loadingNip07}
-            />
-            <LoginOptionButton
-              icon={<LockOutlined />}
-              text={t("auth.options.ncryptsec")}
-              onClick={() => { setShowNcryptsec(!showNcryptsec); setShowNip46(false); }}
-            />
-            {showNcryptsec && <NcryptsecSection onSuccess={onLogin} />}
-            <LoginOptionButton
-              icon={<LinkOutlined />}
-              text={t("auth.options.remoteSigner")}
-              onClick={() => { setShowNip46(!showNip46); setShowNcryptsec(false); }}
-            />
-            {showNip46 && <Nip46Section onSuccess={() => { onLogin(); }} />}
-          </Space>
-          <FooterInfo />
-        </TabPane>
-        <TabPane tab={t("auth.createAccountTab")} key="signup">
-          <SignUpSection onLogin={onLogin} />
-        </TabPane>
-      </Tabs>
-    </Modal>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
+      fullWidth
+      sx={{ zIndex: 1100 }}
+      slotProps={{
+        transition: {
+          onExited: () => {
+            setShowNip46(false);
+            setShowNcryptsec(!!signerManager.getSavedNcryptsec());
+            setActiveTab("signin");
+          },
+        },
+      }}
+    >
+      <DialogContent>
+        <Box sx={{ textAlign: "center", mb: 2 }}>
+          <Typography variant="h4">{t("auth.welcomeTitle")}</Typography>
+          <Typography color="text.secondary">{t("auth.title")}</Typography>
+        </Box>
+        <Tabs
+          value={activeTab}
+          onChange={(_e, tab: string) => setActiveTab(tab)}
+          variant="fullWidth"
+        >
+          <Tab value="signin" label={t("auth.signInTab")} />
+          <Tab value="signup" label={t("auth.createAccountTab")} />
+        </Tabs>
+        {activeTab === "signin" && (
+          <Box sx={{ mt: 2 }}>
+            <Stack spacing={1} sx={{ width: "100%" }}>
+              <LoginOptionButton
+                icon={<VpnKeyIcon />}
+                text={t("auth.options.nip07")}
+                variant="contained"
+                onClick={handleNip07}
+                loading={loadingNip07}
+              />
+              <LoginOptionButton
+                icon={<LockIcon />}
+                text={t("auth.options.ncryptsec")}
+                onClick={() => {
+                  setShowNcryptsec(!showNcryptsec);
+                  setShowNip46(false);
+                }}
+              />
+              {showNcryptsec && <NcryptsecSection onSuccess={onLogin} />}
+              <LoginOptionButton
+                icon={<LinkIcon />}
+                text={t("auth.options.remoteSigner")}
+                onClick={() => {
+                  setShowNip46(!showNip46);
+                  setShowNcryptsec(false);
+                }}
+              />
+              {showNip46 && <Nip46Section onSuccess={() => { onLogin(); }} />}
+            </Stack>
+            <FooterInfo />
+          </Box>
+        )}
+        {activeTab === "signup" && (
+          <Box sx={{ mt: 2 }}>
+            <SignUpSection onLogin={onLogin} />
+          </Box>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 

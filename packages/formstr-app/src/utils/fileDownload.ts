@@ -1,4 +1,4 @@
-import { message } from "antd";
+import { showSnackbar } from "../providers/SnackbarProvider";
 import { hexToBytes } from "nostr-tools/utils";
 import { FileUploadMetadata } from "../nostr/types";
 import { BlossomClient } from "./blossom";
@@ -126,15 +126,16 @@ export const downloadEncryptedFile = async ({
     URL.revokeObjectURL(url);
     onProgress?.(4);
 
-    message.success("File downloaded successfully!");
+    showSnackbar("File downloaded successfully!", "success");
   } catch (error: any) {
     console.error("Download failed:", error);
     if (error.isCorsError) {
-      message.error(
-        "CORS error: The server may not allow downloads from this origin"
+      showSnackbar(
+        "CORS error: The server may not allow downloads from this origin",
+        "error"
       );
     } else {
-      message.error(`Download failed: ${error.message || "Unknown error"}`);
+      showSnackbar(`Download failed: ${error.message || "Unknown error"}`, "error");
     }
     throw error; // Re-throw so caller can handle if needed
   }

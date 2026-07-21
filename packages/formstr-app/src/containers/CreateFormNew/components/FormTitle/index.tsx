@@ -16,8 +16,14 @@ function FormTitle({
   formTitle?: string;
 }) {
   const { t } = useTranslation();
-  const { formSettings, formName, updateFormName, toggleSettingsWindow } =
-    useFormBuilderContext();
+  const {
+    formSettings,
+    formName,
+    updateFormName,
+    toggleSettingsWindow,
+    isRightSettingsOpen,
+    setQuestionIdInFocus,
+  } = useFormBuilderContext();
 
   const settings = {
     name: edit ? formName : formTitle,
@@ -26,6 +32,13 @@ function FormTitle({
 
   const handleTitleChange = (name: string) => {
     updateFormName(name);
+  };
+
+  // The gear always opens Form settings: clearing the focused question makes
+  // the settings pane/sheet render FormSettings instead of AnswerSettings.
+  const openFormSettings = () => {
+    setQuestionIdInFocus(undefined);
+    if (!isRightSettingsOpen) toggleSettingsWindow();
   };
 
   return (
@@ -53,7 +66,8 @@ function FormTitle({
         {edit && (
           <IconButton
             title={t("builder.formSettings.title")}
-            onClick={toggleSettingsWindow}
+            aria-label={t("builder.formSettings.title")}
+            onClick={openFormSettings}
             size="small"
             sx={{
               bgcolor: "rgba(255,255,255,0.7)",

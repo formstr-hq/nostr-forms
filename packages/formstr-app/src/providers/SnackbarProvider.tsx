@@ -3,6 +3,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from "react";
 
@@ -17,6 +18,17 @@ const SnackbarContext = createContext<SnackbarContextValue>({
 });
 
 export const useSnackbar = () => useContext(SnackbarContext);
+
+/**
+ * Imperative bridge for non-component callers (e.g. utils/fileDownload.ts)
+ * that can't use the useSnackbar() hook. The mounted SnackbarProvider
+ * registers its handler here; showSnackbar() no-ops until then.
+ */
+let imperativeShowMessage: SnackbarContextValue["showMessage"] | null = null;
+
+export const showSnackbar = (text: string, severity?: SnackbarSeverity) => {
+  imperativeShowMessage?.(text, severity);
+};
 
 interface SnackbarState {
   open: boolean;
@@ -46,6 +58,13 @@ export const SnackbarProvider = ({
     },
     [],
   );
+
+  useEffect(() => {
+    imperativeShowMessage = showMessage;
+    return () => {
+      if (imperativeShowMessage === showMessage) imperativeShowMessage = null;
+    };
+  }, [showMessage]);
 
   const handleClose = (
     _event?: React.SyntheticEvent | Event,

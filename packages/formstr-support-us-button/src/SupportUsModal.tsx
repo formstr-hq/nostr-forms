@@ -1,10 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Modal, InputNumber, Button, Typography, message, Spin, Alert, Tooltip, Divider } from 'antd';
+import React, { useState, useEffect } from 'react';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
+import Snackbar from '@mui/material/Snackbar';
+import TextField from '@mui/material/TextField';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import BoltIcon from '@mui/icons-material/Bolt';
 import { QRCodeSVG } from 'qrcode.react';
 import { nip19, SimplePool } from 'nostr-tools';
-import { CopyOutlined, ThunderboltOutlined } from '@ant-design/icons';
-
-const { Text, Title } = Typography;
 
 // Define relays to fetch kind 0
 const RELAYS = ['wss://purplepag.es', 'wss://relay.damus.io', 'wss://relay.nostr.band'];
@@ -66,6 +78,7 @@ export const SupportUsModal: React.FC<SupportUsModalProps> = ({ open, npub, onCl
   const [error, setError] = useState<string | null>(null);
   const [zapEndpoint, setZapEndpoint] = useState<string | null>(null);
   const [lud16, setLud16] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   // Load from cache or fetch on first open
   useEffect(() => {
@@ -157,7 +170,7 @@ export const SupportUsModal: React.FC<SupportUsModalProps> = ({ open, npub, onCl
         await (window as any).webln.enable();
         const response = await (window as any).webln.sendPayment(pr);
         if (response?.preimage) {
-          message.success('Payment successful! Thank you for your support. ⚡');
+          setToast('Payment successful! Thank you for your support. ⚡');
           onClose();
         }
       }
@@ -169,137 +182,156 @@ export const SupportUsModal: React.FC<SupportUsModalProps> = ({ open, npub, onCl
   const handleCopy = () => {
     if (invoice) {
       navigator.clipboard.writeText(invoice);
-      message.success('Invoice copied to clipboard');
+      setToast('Invoice copied to clipboard');
     }
   };
 
   return (
-    <Modal
-      title={
-        <span>
-          <ThunderboltOutlined style={{ color: '#fadb14', marginRight: 8 }} />
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle>
+        <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center' }}>
+          <BoltIcon sx={{ color: '#fadb14', mr: 1 }} />
           Support Formstr
-        </span>
-      }
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      destroyOnClose={false}
-    >
-      <div style={{ textAlign: 'center', padding: '16px 0' }}>
-        {loading && !invoice && <Spin tip="Loading..." />}
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        <Box sx={{ textAlign: 'center', py: 2 }}>
+          {loading && !invoice && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+              <CircularProgress size={20} />
+              <Typography>Loading...</Typography>
+            </Box>
+          )}
 
-        {error && (
-          <Alert type="error" message={error} style={{ marginBottom: 16 }} />
-        )}
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
 
-        {!loading && !error && !invoice && (
-          <>
-            <Title level={5}>Send some sats to show your support! ⚡</Title>
-            <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
-              Recipient: {lud16 || 'Resolving...'}
-            </Text>
-            <div style={{ marginBottom: 24 }}>
-              <div
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '8px',
-                  justifyContent: 'center',
-                }}
-              >
-                {[21, 100, 500, 1000, 5000].map((amt) => (
-                  <Button
-                    key={amt}
-                    type={amountSats === amt ? 'primary' : 'default'}
-                    onClick={() => setAmountSats(amt)}
-                    style={{
-                      borderRadius: '8px',
-                      padding: '4px 16px',
-                      height: 'auto',
-                      fontSize: '16px',
-                      fontWeight: amountSats === amt ? 'bold' : 'normal',
-                    }}
-                  >
-                    {amt.toLocaleString()}
-                  </Button>
-                ))}
-              </div>
+          {!loading && !error && !invoice && (
+            <>
+              <Typography variant="h6">Send some sats to show your support! ⚡</Typography>
+              <Typography color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                Recipient: {lud16 || 'Resolving...'}
+              </Typography>
+              <Box sx={{ mb: 3 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 1,
+                    justifyContent: 'center',
+                  }}
+                >
+                  {[21, 100, 500, 1000, 5000].map((amt) => (
+                    <Button
+                      key={amt}
+                      variant={amountSats === amt ? 'contained' : 'outlined'}
+                      onClick={() => setAmountSats(amt)}
+                      sx={{
+                        borderRadius: '8px',
+                        px: 2,
+                        py: 0.5,
+                        fontSize: '16px',
+                        fontWeight: amountSats === amt ? 'bold' : 'normal',
+                      }}
+                    >
+                      {amt.toLocaleString()}
+                    </Button>
+                  ))}
+                </Box>
 
-              <Divider style={{ margin: '16px 0', borderBlockColor: '#f0f0f0' }} />
+                <Divider sx={{ my: 2 }} />
 
-              <InputNumber
-                min={1}
-                value={amountSats}
-                onChange={(val) => setAmountSats(val)}
-                placeholder="Custom amount"
-                addonAfter="sats"
-                style={{ width: '100%', maxWidth: '300px' }}
-                size="large"
-              />
-            </div>
-            <Button
-              type="primary"
-              size="large"
-              onClick={handleGenerateInvoice}
-              loading={loading}
-              disabled={!zapEndpoint || !amountSats || amountSats <= 0}
-            >
-              Generate Invoice
-            </Button>
-          </>
-        )}
-
-        {invoice && (
-          <div>
-            <Title level={5}>Scan to Pay {amountSats} sats</Title>
-            <div style={{ margin: '24px 0' }}>
-              <QRCodeSVG value={invoice} size={220} />
-            </div>
-
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 8,
-                flexWrap: 'wrap',
-                marginBottom: 16,
-              }}
-            >
-              <pre
-                style={{
-                  overflowX: 'auto',
-                  whiteSpace: 'nowrap',
-                  padding: 8,
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: 4,
-                  fontSize: 12,
-                  maxWidth: '100%',
-                  margin: 0,
-                }}
-              >
-                {invoice}
-              </pre>
-              <Tooltip title="Copy invoice">
-                <Button
-                  icon={<CopyOutlined />}
-                  size="small"
-                  onClick={handleCopy}
-                  style={{ flexShrink: 0 }}
+                <TextField
+                  type="number"
+                  value={amountSats ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAmountSats(val === '' ? null : Number(val));
+                  }}
+                  placeholder="Custom amount"
+                  slotProps={{
+                    input: {
+                      endAdornment: <InputAdornment position="end">sats</InputAdornment>,
+                    },
+                    htmlInput: { min: 1 },
+                  }}
+                  sx={{ width: '100%', maxWidth: '300px' }}
                 />
-              </Tooltip>
-            </div>
+              </Box>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleGenerateInvoice}
+                disabled={loading || !zapEndpoint || !amountSats || amountSats <= 0}
+                startIcon={loading ? <CircularProgress size={16} color="inherit" /> : undefined}
+              >
+                Generate Invoice
+              </Button>
+            </>
+          )}
 
-            <Button onClick={() => attemptWebLN(invoice)} style={{ marginRight: 8 }}>
-              Open Wallet
-            </Button>
-            <Button type="default" onClick={() => setInvoice(null)}>
-              Back
-            </Button>
-          </div>
-        )}
-      </div>
-    </Modal>
+          {invoice && (
+            <Box>
+              <Typography variant="h6">Scan to Pay {amountSats} sats</Typography>
+              <Box sx={{ my: 3 }}>
+                <QRCodeSVG value={invoice} size={220} />
+              </Box>
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 1,
+                  flexWrap: 'wrap',
+                  mb: 2,
+                }}
+              >
+                <Box
+                  component="pre"
+                  sx={{
+                    overflowX: 'auto',
+                    whiteSpace: 'nowrap',
+                    p: 1,
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: 1,
+                    fontSize: 12,
+                    maxWidth: '100%',
+                    m: 0,
+                  }}
+                >
+                  {invoice}
+                </Box>
+                <Tooltip title="Copy invoice">
+                  <IconButton size="small" onClick={handleCopy} sx={{ flexShrink: 0 }}>
+                    <ContentCopyIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+
+              <Button onClick={() => attemptWebLN(invoice)} sx={{ mr: 1 }}>
+                Open Wallet
+              </Button>
+              <Button variant="outlined" onClick={() => setInvoice(null)}>
+                Back
+              </Button>
+            </Box>
+          )}
+        </Box>
+      </DialogContent>
+      <Snackbar
+        open={!!toast}
+        autoHideDuration={4000}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setToast(null)} severity="success" variant="filled" sx={{ width: '100%' }}>
+          {toast}
+        </Alert>
+      </Snackbar>
+    </Dialog>
   );
 };

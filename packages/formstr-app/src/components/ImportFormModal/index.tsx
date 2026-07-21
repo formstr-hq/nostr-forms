@@ -1,14 +1,25 @@
 import React, { useState } from "react";
-import { Modal, Button, Typography, Space, Input, message, Alert } from "antd";
-import { ImportOutlined, LinkOutlined } from "@ant-design/icons";
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
+import LinkIcon from "@mui/icons-material/Link";
 import { Event } from "nostr-tools";
 import { useTranslation } from "react-i18next";
 import { parseFormUrl, ParsedFormUrl } from "../../utils/formUrlParser";
 import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
 import { ILocalForm } from "../../containers/CreateFormNew/providers/FormBuilder/typeDefs";
 import { useLocalForms } from "../../provider/LocalFormsProvider";
-
-const { Title, Text } = Typography;
+import { useSnackbar } from "../../providers/SnackbarProvider";
 
 interface ImportFormModalProps {
   open: boolean;
@@ -28,6 +39,7 @@ const ImportFormModal: React.FC<ImportFormModalProps> = ({
   onImported,
 }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [urlInput, setUrlInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<FormPreview | null>(null);
@@ -145,11 +157,11 @@ const ImportFormModal: React.FC<ImportFormModalProps> = ({
 
     try {
       await saveLocalForm(formToSave);
-      message.success(t("import.importSuccess"));
+      showMessage(t("import.importSuccess"), "success");
       handleClose();
       onImported();
     } catch (e) {
-      message.error(t("import.importFailed"));
+      showMessage(t("import.importFailed"), "error");
     }
   };
 
@@ -158,58 +170,65 @@ const ImportFormModal: React.FC<ImportFormModalProps> = ({
   };
 
   return (
-    <Modal
+    <Dialog
       open={open}
-      onCancel={handleClose}
-      footer={null}
-      centered
-      width={480}
-      destroyOnClose
+      onClose={handleClose}
+      maxWidth="xs"
+      fullWidth
+      slotProps={{ transition: { onExited: resetState } }}
     >
-      <div style={{ textAlign: "center", marginBottom: 16 }}>
-        <Title level={4}>
-          <ImportOutlined style={{ marginRight: 8 }} />
-          {t("import.title")}
-        </Title>
-        <Text type="secondary">
-          {t("import.subtitle")}
-        </Text>
-      </div>
+      <DialogContent>
+        <Box sx={{ textAlign: "center", mb: 2 }}>
+          <Typography variant="h4" sx={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 1 }}>
+            <DownloadIcon fontSize="small" />
+            {t("import.title")}
+          </Typography>
+          <Typography color="text.secondary">{t("import.subtitle")}</Typography>
+        </Box>
 
-      <Space direction="vertical" style={{ width: "100%" }} size="middle">
-        <Input.TextArea
-          placeholder={t("import.placeholder")}
-          value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-          autoSize={{ minRows: 2, maxRows: 4 }}
-          disabled={loading || !!preview}
-        />
+        <Stack spacing={2}>
+          <TextField
+            fullWidth
+            multiline
+            minRows={2}
+            maxRows={4}
+            placeholder={t("import.placeholder")}
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            disabled={loading || !!preview}
+          />
 
-        {error && <Alert message={error} type="error" showIcon />}
+          {error && <Alert severity="error">{error}</Alert>}
 
-        {!preview && (
-          <Button
-            type="primary"
-            icon={<LinkOutlined />}
-            onClick={handleParseUrl}
-            loading={loading}
-            block
-          >
-            {loading ? t("import.fetching") : t("import.parse")}
-          </Button>
-        )}
+          {!preview && (
+            <Button
+              variant="contained"
+              startIcon={
+                loading ? (
+                  <CircularProgress size={16} color="inherit" />
+                ) : (
+                  <LinkIcon />
+                )
+              }
+              onClick={handleParseUrl}
+              disabled={loading}
+              fullWidth
+            >
+              {loading ? t("import.fetching") : t("import.parse")}
+            </Button>
+          )}
 
-        {preview && (
-          <>
-            <Alert
-              message={t("import.formFound")}
-              description={
-                <div style={{ marginTop: 8 }}>
+          {preview && (
+            <>
+              <Alert severity="success">
+                <AlertTitle>{t("import.formFound")}</AlertTitle>
+                <Box sx={{ mt: 1 }}>
                   <p>
                     <strong>{t("import.labels.name")}:</strong> {preview.formName}
                   </p>
                   <p>
-                    <strong>{t("import.labels.formId")}:</strong> {preview.parsed.formId}
+                    <strong>{t("import.labels.formId")}:</strong>{" "}
+                    {preview.parsed.formId}
                   </p>
                   <p>
                     <strong>{t("import.labels.author")}:</strong>{" "}
@@ -221,9 +240,10 @@ const ImportFormModal: React.FC<ImportFormModalProps> = ({
                       ? preview.parsed.relays.length
                       : 1}{" "}
                     {t("import.relayCount", {
-                      count: preview.parsed.relays.length > 0
-                        ? preview.parsed.relays.length
-                        : 1,
+                      count:
+                        preview.parsed.relays.length > 0
+                          ? preview.parsed.relays.length
+                          : 1,
                     })}
                   </p>
                   {preview.parsed.viewKey && (
@@ -236,29 +256,32 @@ const ImportFormModal: React.FC<ImportFormModalProps> = ({
                     <strong>{t("import.labels.editAccess")}:</strong>{" "}
                     {t("import.editAccessIncluded")}
                   </p>
-                </div>
-              }
-              type="success"
-              showIcon
-            />
+                </Box>
+              </Alert>
 
-            <Alert
-              message={t("import.editAccessNoticeTitle")}
-              description={t("import.editAccessNoticeBody")}
-              type="info"
-              showIcon
-            />
+              <Alert severity="info">
+                <AlertTitle>{t("import.editAccessNoticeTitle")}</AlertTitle>
+                {t("import.editAccessNoticeBody")}
+              </Alert>
 
-            <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-              <Button onClick={resetState}>{t("common.actions.cancel")}</Button>
-              <Button type="primary" onClick={handleImport}>
-                {t("import.title")}
-              </Button>
-            </Space>
-          </>
-        )}
-      </Space>
-    </Modal>
+              <Box
+                sx={{
+                  display: "flex",
+                  width: "100%",
+                  justifyContent: "flex-end",
+                  gap: 1,
+                }}
+              >
+                <Button onClick={resetState}>{t("common.actions.cancel")}</Button>
+                <Button variant="contained" onClick={handleImport}>
+                  {t("import.title")}
+                </Button>
+              </Box>
+            </>
+          )}
+        </Stack>
+      </DialogContent>
+    </Dialog>
   );
 };
 
