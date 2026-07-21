@@ -1,9 +1,7 @@
-import { Typography } from "antd";
+import { Box, Link, Typography } from "@mui/material";
 import { CopyButton } from "../../../../components/CopyButton";
 import { makeFormNAddr } from "../../../../utils/utility";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 export const EmbedWithSDKTab = ({
   pubKey,
@@ -66,9 +64,9 @@ export const EmbedWithSDKTab = ({
 </script>`;
 
   return (
-    <div
+    <Box
       className="sdk-embed"
-      style={{
+      sx={{
         display: "flex",
         flexDirection: "column",
         alignItems: "flex-start",
@@ -77,51 +75,45 @@ export const EmbedWithSDKTab = ({
       }}
     >
       {/* Explanation / docs */}
-      <div style={{ marginBottom: 12 }}>
-        <Text
-          style={{
-            fontSize: 16,
-            display: "block",
-            marginBottom: 6,
-          }}
-        >
+      <Box sx={{ mb: 1.5 }}>
+        <Typography sx={{ fontSize: 16, display: "block", mb: 0.75 }}>
           {t("builder.formDetails.sdk.stylingTitle")}
-        </Text>
-        <Text>{t("builder.formDetails.sdk.intro")}</Text>
-      </div>
+        </Typography>
+        <Typography>{t("builder.formDetails.sdk.intro")}</Typography>
+      </Box>
 
       {/* Copy button */}
-      <div style={{ marginBottom: 10 }}>
+      <Box sx={{ mb: 1.25 }}>
         <CopyButton getText={() => sdkSnippet} />
-      </div>
+      </Box>
 
       {/* Code block */}
-      <pre
-        style={{
+      <Box
+        component="pre"
+        sx={{
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
           maxHeight: 420,
           overflow: "auto",
-          background: "#0f172a",
+          bgcolor: "#0f172a",
           color: "#e5e7eb",
-          padding: "1rem",
-          borderRadius: 8,
+          p: "1rem",
+          borderRadius: 2,
           width: "100%",
         }}
       >
         {sdkSnippet}
-      </pre>
-      <ul
-        style={{
-          paddingLeft: 16,
-          margin: 0,
+      </Box>
+      <Box
+        component="ul"
+        sx={{
+          pl: 2,
+          m: 0,
           fontSize: 12,
-          color: "rgba(0, 0, 0, 0.55)",
+          color: "text.secondary",
         }}
       >
-        <li>
-          {t("builder.formDetails.sdk.neutralHtml")}
-        </li>
+        <li>{t("builder.formDetails.sdk.neutralHtml")}</li>
         <li>
           {t("builder.formDetails.sdk.classesIntro")}
           <ul style={{ marginTop: 4, paddingLeft: 16 }}>
@@ -150,16 +142,16 @@ export const EmbedWithSDKTab = ({
         </li>
         <li>
           {t("builder.formDetails.sdk.docsIntro")}{" "}
-          <a
+          <Link
             href="https://github.com/abh3po/nostr-forms/blob/master/packages/formstr-sdk/README.md"
             target="_blank"
             rel="noreferrer"
           >
             {t("builder.formDetails.sdk.docsLink")}
-          </a>
+          </Link>
           .
         </li>
-      </ul>
-    </div>
+      </Box>
+    </Box>
   );
 };

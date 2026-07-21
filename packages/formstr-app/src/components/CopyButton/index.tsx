@@ -1,7 +1,7 @@
-import { CheckCircleOutlined, CopyOutlined } from "@ant-design/icons";
-import { Button } from "antd";
+import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
+import { Box, IconButton, Typography } from "@mui/material";
 import { useState } from "react";
-import CopyStyle from "./copy.style";
 
 export const CopyButton = ({
   getText,
@@ -22,23 +22,27 @@ export const CopyButton = ({
       },
       (reject) => {
         setCopyMessage("Error!");
-      }
+      },
     );
     setTimeout(() => {
       setCopyMessage(textBefore === undefined ? "Copy" : textBefore);
     }, 5000);
   };
   return (
-    <CopyStyle>
-      <label className="copy-label">{copyMessage}</label>
-      <Button
+    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+      <Typography variant="body2">{copyMessage}</Typography>
+      <IconButton
+        aria-label="copy"
         disabled={copyMessage === "Copied!"}
-        icon={
-          copyMessage === "Copied!" ? <CheckCircleOutlined /> : <CopyOutlined />
-        }
         onClick={copyText}
-        style={{ marginTop: -5 }}
-      />
-    </CopyStyle>
+        size="small"
+      >
+        {copyMessage === "Copied!" ? (
+          <CheckCircleOutlineOutlinedIcon fontSize="small" />
+        ) : (
+          <ContentCopyOutlinedIcon fontSize="small" />
+        )}
+      </IconButton>
+    </Box>
   );
 };

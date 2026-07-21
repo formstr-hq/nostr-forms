@@ -1,11 +1,9 @@
-import { Button, Drawer, Typography } from "antd";
+import { Box, Button, Drawer, TextField, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 import { ImagePicker } from "../BackgroundImagePicker";
 import { sampleBackgrounds } from "./constants";
-import { useState } from "react";
-
-const { Text } = Typography;
+import { ChangeEvent, useState } from "react";
 
 function TitleImage({ titleImageUrl }: { titleImageUrl?: string }) {
   const { t } = useTranslation();
@@ -14,40 +12,62 @@ function TitleImage({ titleImageUrl }: { titleImageUrl?: string }) {
 
   return (
     <>
-      <div className="property-setting">
-        <Text className="property-name">{t("builder.formSettings.titleImage")}</Text>
-      </div>
-      <div
-        style={{
+      <Box
+        sx={{
           display: "flex",
-          gap: 6,
+          justifyContent: "space-between",
+          alignItems: "center",
+          my: 1.5,
+        }}
+      >
+        <Typography sx={{ fontSize: 14 }}>
+          {t("builder.formSettings.titleImage")}
+        </Typography>
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          gap: 0.75,
           alignItems: "center",
         }}
       >
-        <input
-          className="file-input"
-          type="text"
-          value={titleImageUrl}
-          onChange={updateFormTitleImage}
+        <TextField
+          size="small"
+          fullWidth
+          value={titleImageUrl ?? ""}
+          onChange={(e) =>
+            updateFormTitleImage(e as ChangeEvent<HTMLInputElement>)
+          }
         />
-        <Button onClick={() => setDrawerOpen(true)}>...</Button>
-      </div>
+        <Button
+          variant="outlined"
+          onClick={() => setDrawerOpen(true)}
+          sx={{ minWidth: 40, px: 1 }}
+        >
+          ...
+        </Button>
+      </Box>
       <Drawer
-        title={t("builder.formSettings.chooseBackground")}
+        anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        width={500}
+        slotProps={{ paper: { sx: { width: { xs: "100%", sm: 500 } } } }}
       >
-        <ImagePicker
-          options={sampleBackgrounds}
-          selectedUrl={titleImageUrl}
-          onSelect={(url: string) => {
-            updateFormSetting({
-              titleImageUrl: url,
-            });
-            setDrawerOpen(false);
-          }}
-        />
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            {t("builder.formSettings.chooseBackground")}
+          </Typography>
+          <ImagePicker
+            options={sampleBackgrounds}
+            selectedUrl={titleImageUrl}
+            onSelect={(url: string) => {
+              updateFormSetting({
+                titleImageUrl: url,
+              });
+              setDrawerOpen(false);
+            }}
+          />
+        </Box>
       </Drawer>
     </>
   );

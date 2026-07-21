@@ -1,10 +1,16 @@
-import { CaretDownOutlined, CloseOutlined } from "@ant-design/icons";
-import { Button, Dropdown, Input, MenuProps } from "antd";
-import { useState } from "react";
-import OptionsStyle from "./Options.style";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+  Box,
+  Button,
+  IconButton,
+  Menu,
+  MenuItem,
+  TextField,
+} from "@mui/material";
+import { useRef, useState } from "react";
 import { AddOption } from "./AddOption";
 import { handleDelete, handleLabelChange, normalizeChoices } from "./utils";
-import { MenuItemType } from "antd/es/menu/hooks/useItems";
 import { Choice, ChoiceSettings } from "./types";
 import { useTranslation } from "react-i18next";
 
@@ -21,66 +27,76 @@ export const DropdownCreator: React.FC<RadioButtonCreatorProps> = ({
   const [choices, setChoices] = useState<Array<Choice>>(() =>
     normalizeChoices(initialValues),
   );
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const isOpen = Boolean(anchorEl);
 
   const handleNewChoices = (choices: Array<Choice>) => {
     setChoices(choices);
     onValuesChange(choices);
-    setIsOpen(true);
+    // Keep the dropdown open after edits/additions (antd setIsOpen(true)).
+    setAnchorEl(triggerRef.current);
   };
 
-  const getMenuItems = (): MenuProps["items"] => {
-    return choices.map((choice) => {
-      let [choiceId, label, settingsString] = choice;
-      let settings = JSON.parse(settingsString || "{}") as ChoiceSettings;
-      return {
-        label: (
-          <div className="radioButtonItem" key={choiceId}>
-            <Input
-              defaultValue={label}
-              key={choiceId}
-              onChange={(e) => {
-                handleLabelChange(
-                  e.target.value,
-                  choiceId!,
-                  choices,
-                  handleNewChoices
-                );
-              }}
-              className="choice-input"
-              placeholder={t("builder.inputPreviews.optionPlaceholder")}
-              disabled={settings.isOther}
-            />
-            <div>
-              {choices.length >= 2 && (
-                <CloseOutlined
-                  onClick={(e) => {
-                    handleDelete(choiceId!, choices, handleNewChoices);
-                  }}
-                />
-              )}
-            </div>
-          </div>
-        ),
-        key: choiceId,
-      } as MenuItemType;
-    });
-  };
   return (
-    <OptionsStyle>
-      <Dropdown
-        menu={{ items: getMenuItems(), onClick: () => {} }}
-        open={isOpen}
-        className="dropdown"
-        onOpenChange={(nextOpen, info) => {
-          if (info.source === "trigger") setIsOpen(nextOpen);
-        }}
+    <Box>
+      <Button
+        ref={triggerRef}
+        variant="outlined"
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        endIcon={<ArrowDropDownIcon />}
+        sx={{ mt: "5px", mb: "10px" }}
       >
-        <Button onClick={(e) => e.preventDefault()}>
-          {t("builder.inputPreviews.optionsCount", { count: choices.length })}{" "}
-          <CaretDownOutlined />
-        </Button>
-      </Dropdown>
+        {t("builder.inputPreviews.optionsCount", { count: choices.length })}
+      </Button>
+      <Menu anchorEl={anchorEl} open={isOpen} onClose={() => setAnchorEl(null)}>
+        {choices.map((choice) => {
+          let [choiceId, label, settingsString] = choice;
+          let settings = JSON.parse(settingsString || "{}") as ChoiceSettings;
+          return (
+            <MenuItem
+              key={choiceId}
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <TextField
+                defaultValue={label}
+                key={choiceId}
+                onChange={(e) => {
+                  handleLabelChange(
+                    e.target.value,
+                    choiceId!,
+                    choices,
+                    handleNewChoices,
+                  );
+                }}
+                onKeyDown={(e) => e.stopPropagation()}
+                placeholder={t("builder.inputPreviews.optionPlaceholder")}
+                disabled={settings.isOther}
+                size="small"
+                variant="standard"
+                slotProps={{ input: { disableUnderline: true } }}
+                sx={{ m: "10px" }}
+              />
+              <Box>
+                {choices.length >= 2 && (
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      handleDelete(choiceId!, choices, handleNewChoices);
+                    }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                )}
+              </Box>
+            </MenuItem>
+          );
+        })}
+      </Menu>
       <AddOption
         disable={choices.some((choice) => {
           let [choiceId, label, settingsString] = choice;
@@ -90,6 +106,6 @@ export const DropdownCreator: React.FC<RadioButtonCreatorProps> = ({
         callback={handleNewChoices}
         displayOther={false}
       />
-    </OptionsStyle>
+    </Box>
   );
 };

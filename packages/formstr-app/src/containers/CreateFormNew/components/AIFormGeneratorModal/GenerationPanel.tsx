@@ -1,11 +1,15 @@
-import React from 'react';
-import { Input, Button, Typography, Tooltip } from 'antd';
-import { InfoCircleOutlined } from '@ant-design/icons';
-import { GenerationPanelProps } from './types';
+import React from "react";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import { GenerationPanelProps } from "./types";
 import { useTranslation } from "react-i18next";
-
-const { TextArea } = Input;
-const { Text, Paragraph } = Typography;
 
 const GenerationPanel: React.FC<GenerationPanelProps> = ({
   prompt,
@@ -17,37 +21,45 @@ const GenerationPanel: React.FC<GenerationPanelProps> = ({
   const { t } = useTranslation();
   const placeholderText = t("builder.aiGenerator.placeholder");
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-        <Text strong>{t("builder.aiGenerator.describeTitle")}</Text>
+    <Box sx={{ width: "100%" }}>
+      <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+        <Typography sx={{ fontWeight: 600 }}>
+          {t("builder.aiGenerator.describeTitle")}
+        </Typography>
         <Tooltip title={t("builder.aiGenerator.describeHelp")}>
-            <InfoCircleOutlined style={{ marginLeft: 8, color: 'rgba(0, 0, 0, 0.45)', cursor: 'help' }} />
+          <InfoOutlinedIcon
+            sx={{ ml: 1, color: "text.disabled", cursor: "help", fontSize: 18 }}
+          />
         </Tooltip>
-      </div>
-      <TextArea
+      </Box>
+      <TextField
+        multiline
         rows={5}
+        fullWidth
         placeholder={placeholderText}
         value={prompt}
-        onChange={e => setPrompt(e.target.value)}
+        onChange={(e) => setPrompt(e.target.value)}
         disabled={loading || disabled}
-        aria-label={t("builder.aiGenerator.ariaLabel")}
-        style={{ marginBottom: 8 }}
+        slotProps={{
+          htmlInput: { "aria-label": t("builder.aiGenerator.ariaLabel") },
+        }}
+        sx={{ mb: 1 }}
       />
-      <Paragraph type="secondary" style={{ fontSize: '12px', marginTop: 0, marginBottom: 16 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0, mb: 2 }}>
         {t("builder.aiGenerator.hint")}
-      </Paragraph>
+      </Typography>
       <Button
-        type="primary"
-        block
+        variant="contained"
+        fullWidth
         onClick={onGenerate}
-        loading={loading}
-        disabled={disabled || !prompt.trim()}
+        disabled={disabled || !prompt.trim() || loading}
+        startIcon={loading ? <CircularProgress size={16} /> : undefined}
       >
         {loading
           ? t("builder.aiGenerator.generating")
           : t("builder.aiGenerator.generateForm")}
       </Button>
-    </div>
+    </Box>
   );
 };
 

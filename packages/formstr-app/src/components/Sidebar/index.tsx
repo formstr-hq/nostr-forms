@@ -1,7 +1,11 @@
 import { forwardRef } from "react";
-import { Layout } from "antd";
-import StyledWrapper from "./style";
+import { Box } from "@mui/material";
 
+/**
+ * MUI replacement for the antd Layout.Sider wrapper (ui-rewrite-mui).
+ * Height comes from .builder-row — percentage, not viewport units; the menu
+ * scrolls inside the pane.
+ */
 function Sidebar(
   {
     className,
@@ -12,14 +16,34 @@ function Sidebar(
     width: number;
     children: React.ReactNode;
   },
-  ref: any
+  ref: any,
 ) {
   return (
-    <StyledWrapper ref={ref} className={className}>
-      <Layout.Sider className="create-sidebar" width={width}>
+    <Box
+      ref={ref}
+      className={className}
+      sx={{
+        height: "100%",
+        overflow: "hidden",
+        "& .menu-divider": { m: 0 },
+      }}
+    >
+      <Box
+        className="create-sidebar"
+        sx={{
+          width,
+          height: "100%",
+          borderRight: 1,
+          borderColor: "divider",
+          mt: "1px",
+          bgcolor: "background.paper",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
         {children}
-      </Layout.Sider>
-    </StyledWrapper>
+      </Box>
+    </Box>
   );
 }
 

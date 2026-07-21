@@ -1,8 +1,6 @@
-import { InputNumber, Typography, Space } from "antd";
+import { Box, TextField, Typography } from "@mui/material";
 import React from "react";
 import { IAnswerSettings } from "../types";
-
-const { Text } = Typography;
 
 interface RatingSettingsProps {
   answerSettings: IAnswerSettings;
@@ -23,16 +21,32 @@ export const RatingSettings: React.FC<RatingSettingsProps> = ({
   };
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }}>
-      <div className="property-setting">
-        <Text className="property-name">Max Stars</Text>
-        <InputNumber
-          min={3}
-          max={10}
+    <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          my: 1.5,
+          fontSize: 14,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          Max Stars
+        </Typography>
+        <TextField
+          type="number"
+          size="small"
           value={maxStars}
-          onChange={updateMaxStars}
+          onChange={(e) =>
+            updateMaxStars(
+              e.target.value === "" ? null : Number(e.target.value),
+            )
+          }
+          slotProps={{ htmlInput: { min: 3, max: 10 } }}
+          sx={{ width: 100 }}
         />
-      </div>
-    </Space>
+      </Box>
+    </Box>
   );
 };

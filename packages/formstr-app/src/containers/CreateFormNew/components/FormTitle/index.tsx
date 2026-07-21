@@ -1,12 +1,8 @@
-import { Input, Typography } from "antd";
-import { SettingOutlined } from "@ant-design/icons";
+import { Box, IconButton, Typography } from "@mui/material";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import { useTranslation } from "react-i18next";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
-import StyleWrapper from "./style";
-import { ChangeEvent } from "react";
 import { ColorfulMarkdownTextarea } from "../../../../components/SafeMarkdown/ColorfulMarkdownInput";
-
-const { Text } = Typography;
 
 function FormTitle({
   className,
@@ -33,31 +29,82 @@ function FormTitle({
   };
 
   return (
-    <StyleWrapper className={className} $titleImageUrl={settings.image}>
-      <div className="image-utils">
+    <Box
+      className={className}
+      sx={{
+        ...(settings.image
+          ? {
+              backgroundImage: `linear-gradient(180deg, rgb(0 0 0 / 0%), rgb(200 200 200) 110%), url(${settings.image})`,
+              backgroundRepeat: "no-repeat",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : { backgroundImage: "none" }),
+      }}
+    >
+      <Box
+        sx={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          display: "flex",
+        }}
+      >
         {edit && (
-          <>
-            <div
-              className="icon-util"
-              title={t("builder.formSettings.title")}
-              onClick={toggleSettingsWindow}
-            >
-              <SettingOutlined />
-            </div>
-          </>
+          <IconButton
+            title={t("builder.formSettings.title")}
+            onClick={toggleSettingsWindow}
+            size="small"
+            sx={{
+              bgcolor: "rgba(255,255,255,0.7)",
+              opacity: 0.8,
+              "&:hover": { bgcolor: "rgba(255,255,255,0.9)", opacity: 1 },
+            }}
+          >
+            <SettingsOutlinedIcon fontSize="small" />
+          </IconButton>
         )}
-      </div>
-      {!edit && <Text className="title-text">{settings.name}</Text>}
-      {edit && (
-        <ColorfulMarkdownTextarea
-          className="title-text"
-          value={formName || ""}
-          onChange={handleTitleChange}
-          fontSize={24}
-          color={formSettings.colors?.title ?? formSettings.colors?.global ?? formSettings.globalColor}
-        />
+      </Box>
+      {!edit && (
+        <Typography
+          sx={{
+            color: "white",
+            fontSize: 24,
+            fontWeight: 500,
+            maxWidth: "95%",
+            position: settings.image ? "absolute" : "static",
+            bottom: settings.image ? 10 : "auto",
+            left: settings.image ? 16 : "auto",
+          }}
+        >
+          {settings.name}
+        </Typography>
       )}
-    </StyleWrapper>
+      {edit && (
+        <Box
+          sx={{
+            color: "white",
+            fontSize: 24,
+            fontWeight: 500,
+            maxWidth: "95%",
+            position: settings.image ? "absolute" : "static",
+            bottom: settings.image ? 10 : "auto",
+            left: settings.image ? 16 : "auto",
+          }}
+        >
+          <ColorfulMarkdownTextarea
+            value={formName || ""}
+            onChange={handleTitleChange}
+            fontSize={24}
+            color={
+              formSettings.colors?.title ??
+              formSettings.colors?.global ??
+              formSettings.globalColor
+            }
+          />
+        </Box>
+      )}
+    </Box>
   );
 }
 

@@ -1,4 +1,4 @@
-import { Input } from "antd";
+import { TextField } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
 interface ShortTextProps {}
@@ -6,18 +6,21 @@ interface ShortTextProps {}
 const shortText: React.FC<ShortTextProps> = () => {
   const { t } = useTranslation();
   return (
-    <>
-      <Input
-        placeholder={t("builder.inputPreviews.shortTextPlaceholder")}
-        bordered={false}
-        disabled
-        style={{
-          paddingLeft: 0,
-          // borderBottom: "0.5px solid black",
-          borderRadius: 0,
-        }}
-      />
-    </>
+    <TextField
+      placeholder={t("builder.inputPreviews.shortTextPlaceholder")}
+      variant="standard"
+      fullWidth
+      disabled
+      slotProps={{
+        input: {
+          disableUnderline: true,
+          sx: {
+            pl: 0,
+            borderRadius: 0,
+          },
+        },
+      }}
+    />
   );
 };
 

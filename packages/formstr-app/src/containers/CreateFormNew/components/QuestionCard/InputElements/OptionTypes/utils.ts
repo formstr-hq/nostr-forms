@@ -18,7 +18,7 @@ export function normalizeChoices(raw: unknown): Array<Choice> {
 export const addOption = (
   option: Choice,
   choices: Array<Choice>,
-  callback: (choices: Array<Choice>) => void
+  callback: (choices: Array<Choice>) => void,
 ) => {
   const safe = normalizeChoices(choices);
   let newChoices = [...safe, option];
@@ -28,7 +28,7 @@ export const addOption = (
 export const handleDelete = (
   choiceId: string,
   choices: Array<Choice>,
-  callback: (choices: Array<Choice>) => void
+  callback: (choices: Array<Choice>) => void,
 ) => {
   const safe = normalizeChoices(choices);
   let newChoices = safe.filter((choice) => choice[0] !== choiceId);
@@ -39,7 +39,7 @@ export const handleLabelChange = (
   label: string,
   choiceId: string,
   choices: Array<Choice>,
-  callback: (choices: Array<Choice>) => void
+  callback: (choices: Array<Choice>) => void,
 ) => {
   const safe = normalizeChoices(choices);
   let newChoices = safe.map((choice) => {

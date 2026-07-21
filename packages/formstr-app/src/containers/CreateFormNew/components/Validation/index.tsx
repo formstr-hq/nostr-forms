@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
-import { Typography, Select } from "antd";
+import { Box, FormControl, MenuItem, Select, Typography } from "@mui/material";
 import { IProps } from "./validation.type";
 import { ANSWER_TYPE_RULES_MENU, RULE_CONFIG } from "../../configs/config";
-import StyleWrapper from "./validation.style";
 import { ValidationRuleTypes } from "../../../../nostr/types";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 function Validation(props: IProps) {
   const { t } = useTranslation();
@@ -45,19 +42,38 @@ function Validation(props: IProps) {
   }));
 
   return (
-    <StyleWrapper className="input-property">
-      <div className="header">
-        <div>
-          <Text className="property-title">{t("builder.validation.title")}</Text>
-        </div>
+    <Box sx={{ m: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Box>
+          <Typography sx={{ display: "block", my: 1.5 }}>
+            {t("builder.validation.title")}
+          </Typography>
+        </Box>
         {!!rules.length && (
-          <Select
-            value={t("builder.validation.selectPlaceholder")}
-            options={translatedRules}
-            onChange={onRuleSelect}
-          />
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <Select
+              value=""
+              displayEmpty
+              renderValue={() => t("builder.validation.selectPlaceholder")}
+              onChange={(e) =>
+                onRuleSelect(e.target.value as ValidationRuleTypes)
+              }
+            >
+              {translatedRules.map((rule) => (
+                <MenuItem key={rule.value} value={rule.value}>
+                  {rule.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         )}
-      </div>
+      </Box>
       {!!selected.length &&
         selected.map((ruleType) => {
           let { key, component: Component } = RULE_CONFIG[ruleType];
@@ -70,7 +86,7 @@ function Validation(props: IProps) {
             />
           );
         })}
-    </StyleWrapper>
+    </Box>
   );
 }
 

@@ -1,43 +1,7 @@
 import React from "react";
-import { Carousel, Card, Button } from "antd";
-import { LeftOutlined, RightOutlined } from "@ant-design/icons";
-import styled from "styled-components";
-
-const CarouselWrapper = styled.div`
-  position: relative;
-  width: 100%;
-  .ant-carousel {
-    margin: 0 auto;
-    width: 100%;
-  }
-`;
-
-const Controls = styled.div`
-  position: absolute;
-  top: 40%;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  z-index: 10;
-  button {
-    background: rgba(255, 255, 255, 0.8);
-    border: none;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-  }
-`;
-
-const SelectableCard = styled(Card)<{ $selected?: boolean }>`
-  cursor: pointer;
-  border: ${(props) =>
-    props.$selected ? "2px solid #1890ff" : "2px solid transparent"};
-  transition: border 0.2s ease;
-  img {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 6px;
-  }
-`;
+import { Box, Card, CardMedia, IconButton } from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 interface ImagePickerProps {
   options: string[];
@@ -45,12 +9,16 @@ interface ImagePickerProps {
   onSelect: (url: string) => void;
 }
 
+/**
+ * MUI replacement for the antd Carousel picker (ui-rewrite-mui Phase 5):
+ * horizontal scroll-snap pages — no carousel dependency.
+ */
 export const ImagePicker: React.FC<ImagePickerProps> = ({
   options,
   selectedUrl,
   onSelect,
 }) => {
-  const carouselRef = React.useRef<any>(null);
+  const scrollRef = React.useRef<HTMLDivElement>(null);
 
   // break images into groups depending on screen size
   const chunkSize = window.innerWidth > 768 ? 5 : 3;
@@ -59,39 +27,87 @@ export const ImagePicker: React.FC<ImagePickerProps> = ({
     slides.push(options.slice(i, i + chunkSize));
   }
 
-  return (
-    <CarouselWrapper>
-      <Controls>
-        <Button
-          shape="circle"
-          icon={<LeftOutlined />}
-          onClick={() => carouselRef.current?.prev()}
-        />
-        <Button
-          shape="circle"
-          icon={<RightOutlined />}
-          onClick={() => carouselRef.current?.next()}
-        />
-      </Controls>
+  const scrollByPage = (direction: -1 | 1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * el.clientWidth, behavior: "smooth" });
+  };
 
-      <Carousel ref={carouselRef} dots={false}>
+  const arrowSx = {
+    position: "absolute",
+    top: "40%",
+    zIndex: 10,
+    bgcolor: "rgba(255, 255, 255, 0.8)",
+    boxShadow: "0 1px 4px rgba(0, 0, 0, 0.15)",
+    "&:hover": { bgcolor: "rgba(255, 255, 255, 0.95)" },
+  } as const;
+
+  return (
+    <Box sx={{ position: "relative", width: "100%" }}>
+      <IconButton
+        aria-label="previous backgrounds"
+        size="small"
+        onClick={() => scrollByPage(-1)}
+        sx={{ ...arrowSx, left: 4 }}
+      >
+        <ChevronLeftIcon />
+      </IconButton>
+      <IconButton
+        aria-label="next backgrounds"
+        size="small"
+        onClick={() => scrollByPage(1)}
+        sx={{ ...arrowSx, right: 4 }}
+      >
+        <ChevronRightIcon />
+      </IconButton>
+
+      <Box
+        ref={scrollRef}
+        sx={{
+          display: "flex",
+          overflowX: "auto",
+          scrollSnapType: "x mandatory",
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": { display: "none" },
+          width: "100%",
+        }}
+      >
         {slides.map((group, idx) => (
-          <div
+          <Box
             key={idx}
-            style={{ display: "flex", gap: "12px", padding: "8px" }}
+            sx={{
+              display: "flex",
+              gap: "12px",
+              p: "8px",
+              flex: "0 0 100%",
+              scrollSnapAlign: "start",
+            }}
           >
             {group.map((url) => (
-              <SelectableCard
+              <Card
                 key={url}
-                hoverable
-                cover={<img alt="background option" src={url} />}
-                $selected={url === selectedUrl}
+                variant="outlined"
                 onClick={() => onSelect(url)}
-              />
+                sx={{
+                  cursor: "pointer",
+                  flex: 1,
+                  border: "2px solid",
+                  borderColor:
+                    url === selectedUrl ? "primary.main" : "transparent",
+                  transition: "border-color 0.2s ease",
+                }}
+              >
+                <CardMedia
+                  component="img"
+                  image={url}
+                  alt="background option"
+                  sx={{ height: 120, objectFit: "cover", borderRadius: "6px" }}
+                />
+              </Card>
             ))}
-          </div>
+          </Box>
         ))}
-      </Carousel>
-    </CarouselWrapper>
+      </Box>
+    </Box>
   );
 };

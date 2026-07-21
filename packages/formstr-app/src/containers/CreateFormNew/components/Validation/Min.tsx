@@ -1,24 +1,31 @@
-import { Typography } from "antd";
-import { InputStyle } from "./validation.style";
+import { Box, TextField, Typography } from "@mui/material";
 import { MinRule, ValidationRuleTypes } from "../../../../nostr/types";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 function Min({ rule, onChange }: { rule?: MinRule; onChange: Function }) {
   const { t } = useTranslation();
   return (
-    <InputStyle>
-      <Text className="property-name">{t("builder.validation.minLength")}</Text>
-      <input
-        className="number-input"
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        mb: 1,
+      }}
+    >
+      <Typography variant="body2" color="text.secondary">
+        {t("builder.validation.minLength")}
+      </Typography>
+      <TextField
         type="number"
-        value={rule?.min}
+        size="small"
+        value={rule?.min ?? ""}
         onChange={(e) =>
           onChange(ValidationRuleTypes.min, { min: e.target.value })
         }
+        sx={{ width: "50%" }}
       />
-    </InputStyle>
+    </Box>
   );
 }
 

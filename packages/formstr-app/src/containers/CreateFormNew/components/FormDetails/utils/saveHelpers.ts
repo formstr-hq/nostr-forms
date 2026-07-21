@@ -57,7 +57,11 @@ export const saveToDevice = async (
     return;
   }
 
-  const { error } = await setLocalForms([...forms, saveObject], signer, userPub);
+  const { error } = await setLocalForms(
+    [...forms, saveObject],
+    signer,
+    userPub,
+  );
   if (error) {
     console.error("saveToDevice: failed to persist form:", error);
   }

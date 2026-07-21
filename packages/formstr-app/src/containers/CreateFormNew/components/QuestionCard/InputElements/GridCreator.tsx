@@ -1,9 +1,16 @@
-import { CloseOutlined, PlusOutlined } from "@ant-design/icons";
-import { Button, Checkbox, Radio, Input } from "antd";
+import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
+import {
+  Box,
+  Button,
+  Checkbox,
+  IconButton,
+  Radio,
+  TextField,
+} from "@mui/material";
 import { useState, useEffect } from "react";
 import { GridOptions } from "../../../../../nostr/types";
 import { makeTag } from "../../../../../utils/utility";
-import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 
 interface GridCreatorProps {
@@ -14,85 +21,30 @@ interface GridCreatorProps {
 
 type GridItem = [id: string, label: string, config?: string];
 
-const GridContainer = styled.div`
-  width: 100%;
-  overflow-x: auto;
-  margin-top: 8px;
-`;
+const cellInputSx = {
+  width: "100%",
+  background: "transparent",
+  textAlign: "inherit",
+  p: 0,
+  "&.Mui-focused": {
+    outline: "2px solid",
+    outlineColor: "primary.main",
+    outlineOffset: "-2px",
+    background: "#fff",
+  },
+} as const;
 
-const GridTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 400px;
-
-  th,
-  td {
-    padding: 8px;
-    text-align: center;
-    border: 1px solid #d9d9d9;
-    position: relative;
-  }
-
-  th:first-child,
-  td:first-child {
-    text-align: left;
-    font-weight: 500;
-    min-width: 150px;
-    background: #fafafa;
-  }
-
-  thead th {
-    background: #f5f5f5;
-    font-weight: 600;
-  }
-
-  tbody tr:hover {
-    background: #fafafa;
-  }
-
-  .cell-input {
-    width: 100%;
-    border: none;
-    background: transparent;
-    text-align: inherit;
-    padding: 0;
-
-    &:focus {
-      outline: 2px solid #1890ff;
-      outline-offset: -2px;
-      background: white;
-    }
-  }
-
-  .delete-btn {
-    position: absolute;
-    right: 2px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    color: #8c8c8c;
-    padding: 2px;
-
-    &:hover {
-      color: #ff4d4f;
-    }
-  }
-
-  .add-column-cell {
-    background: #fafafa;
-    cursor: pointer;
-    color: #ff4d4f;
-
-    &:hover {
-      background: #e6f7ff;
-    }
-  }
-`;
-
-const AddRowButton = styled(Button)`
-  margin-top: 8px;
-  width: 100%;
-`;
+const deleteBtnSx = {
+  position: "absolute",
+  right: 2,
+  top: "50%",
+  transform: "translateY(-50%)",
+  color: "text.disabled",
+  p: "2px",
+  "&:hover": {
+    color: "error.main",
+  },
+} as const;
 
 export const GridCreator: React.FC<GridCreatorProps> = ({
   initialValue,
@@ -179,35 +131,86 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
   };
 
   return (
-    <div>
-      <GridContainer>
-        <GridTable>
+    <Box>
+      <Box sx={{ width: "100%", overflowX: "auto", mt: 1 }}>
+        <Box
+          component="table"
+          sx={{
+            width: "100%",
+            borderCollapse: "collapse",
+            minWidth: 400,
+            "& th, & td": {
+              padding: "8px",
+              textAlign: "center",
+              border: "1px solid",
+              borderColor: "divider",
+              position: "relative",
+            },
+            "& th:first-of-type, & td:first-of-type": {
+              textAlign: "left",
+              fontWeight: 500,
+              minWidth: 150,
+              background: "#fafafa",
+            },
+            "& thead th": {
+              background: "#f5f5f5",
+              fontWeight: 600,
+            },
+            "& tbody tr:hover": {
+              background: "#fafafa",
+            },
+          }}
+        >
           <thead>
             <tr>
               <th></th>
               {columns.map((col) => (
                 <th key={col[0]}>
-                  <Input
-                    className="cell-input"
+                  <TextField
+                    variant="standard"
                     value={col[1]}
                     onChange={(e) =>
                       handleColumnLabelChange(col[0], e.target.value)
                     }
                     placeholder={t("builder.grid.columnPlaceholder")}
-                    style={{ textAlign: "center", fontWeight: 600 }}
+                    slotProps={{
+                      input: {
+                        disableUnderline: true,
+                        sx: { ...cellInputSx, fontWeight: 600 },
+                      },
+                      htmlInput: {
+                        style: { textAlign: "center" },
+                      },
+                    }}
+                    fullWidth
                   />
                   {columns.length > 1 && (
-                    <CloseOutlined
-                      className="delete-btn"
+                    <IconButton
+                      size="small"
+                      sx={deleteBtnSx}
                       onClick={() => handleColumnDelete(col[0])}
-                    />
+                    >
+                      <CloseIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
                   )}
                 </th>
               ))}
               {columns.length < 10 && (
-                <th className="add-column-cell" onClick={handleColumnAdd}>
-                  <PlusOutlined /> {t("builder.grid.addColumn")}
-                </th>
+                <Box
+                  component="th"
+                  onClick={handleColumnAdd}
+                  sx={{
+                    background: "#fafafa",
+                    cursor: "pointer",
+                    color: "#ff4d4f",
+                    "&:hover": {
+                      background: "#e6f7ff",
+                    },
+                  }}
+                >
+                  <AddIcon sx={{ fontSize: 14, verticalAlign: "middle" }} />{" "}
+                  {t("builder.grid.addColumn")}
+                </Box>
               )}
             </tr>
           </thead>
@@ -215,41 +218,56 @@ export const GridCreator: React.FC<GridCreatorProps> = ({
             {rows.map((row) => (
               <tr key={row[0]}>
                 <td>
-                  <Input
-                    className="cell-input"
+                  <TextField
+                    variant="standard"
                     value={row[1]}
                     onChange={(e) =>
                       handleRowLabelChange(row[0], e.target.value)
                     }
                     placeholder={t("builder.grid.rowPlaceholder")}
+                    slotProps={{
+                      input: {
+                        disableUnderline: true,
+                        sx: cellInputSx,
+                      },
+                    }}
+                    fullWidth
                   />
                   {rows.length > 1 && (
-                    <CloseOutlined
-                      className="delete-btn"
+                    <IconButton
+                      size="small"
+                      sx={deleteBtnSx}
                       onClick={() => handleRowDelete(row[0])}
-                    />
+                    >
+                      <CloseIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
                   )}
                 </td>
                 {columns.map((col) => (
                   <td key={col[0]}>
-                    {allowMultiple ? <Checkbox disabled /> : <Radio disabled />}
+                    {allowMultiple ? (
+                      <Checkbox disabled size="small" />
+                    ) : (
+                      <Radio disabled size="small" />
+                    )}
                   </td>
                 ))}
                 {columns.length < 10 && <td></td>}
               </tr>
             ))}
           </tbody>
-        </GridTable>
-      </GridContainer>
+        </Box>
+      </Box>
       {rows.length < 10 && (
-        <AddRowButton
-          type="dashed"
+        <Button
+          variant="outlined"
           onClick={handleRowAdd}
-          icon={<PlusOutlined />}
+          startIcon={<AddIcon />}
+          sx={{ mt: 1, width: "100%", borderStyle: "dashed" }}
         >
           {t("builder.grid.addRow")}
-        </AddRowButton>
+        </Button>
       )}
-    </div>
+    </Box>
   );
 };

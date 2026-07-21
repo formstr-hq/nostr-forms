@@ -1,4 +1,4 @@
-import { Typography } from "antd";
+import { TextField } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 import { ChangeEvent } from "react";
@@ -10,15 +10,13 @@ function FormIdentifier() {
     updateFormSetting({ ...formSettings, formId: e.target.value });
   };
   return (
-    <>
-      <input
-        className="file-input"
-        type="text"
-        placeholder={t("builder.formSettings.formIdentifier")}
-        value={formSettings.formId}
-        onChange={handleIdentifierChange}
-      />
-    </>
+    <TextField
+      size="small"
+      fullWidth
+      placeholder={t("builder.formSettings.formIdentifier")}
+      value={formSettings.formId ?? ""}
+      onChange={handleIdentifierChange}
+    />
   );
 }
 

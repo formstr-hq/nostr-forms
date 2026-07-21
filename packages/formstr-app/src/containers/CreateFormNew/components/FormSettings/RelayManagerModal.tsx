@@ -1,14 +1,31 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Modal, Button, Input, List, Typography, Tooltip, Space } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SaveOutlined, CloseOutlined, ReloadOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
+import CloseIcon from "@mui/icons-material/Close";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import { useTranslation } from "react-i18next";
-import useFormBuilderContext from '../../hooks/useFormBuilderContext';
-import RelayStatusIndicator from '../../../../components/RelayStatusIndicator';
-import { RelayItem, RelayStatus } from '../../providers/FormBuilder/typeDefs';
-import { isValidWebSocketUrl } from '../../utils';
-import { checkRelayConnection } from '../../../../utils/relayUtils';
-
-const { Text } = Typography;
+import useFormBuilderContext from "../../hooks/useFormBuilderContext";
+import RelayStatusIndicator from "../../../../components/RelayStatusIndicator";
+import { RelayItem, RelayStatus } from "../../providers/FormBuilder/typeDefs";
+import { isValidWebSocketUrl } from "../../utils";
+import { checkRelayConnection } from "../../../../utils/relayUtils";
 
 interface EditableRelayItemProps {
   relayItem: RelayItem;
@@ -50,72 +67,99 @@ const EditableRelayListItem: React.FC<EditableRelayItemProps> = ({
     setEditedUrl(relayItem.url);
   }, [relayItem.url]);
 
-
   return (
-    <List.Item
-      actions={
-        isEditing
-          ? [
-              <Tooltip title={t("common.actions.save")} key="save">
-                <Button
-                  icon={<SaveOutlined />}
-                  onClick={handleSave}
-                  type="text"
-                />
-              </Tooltip>,
-              <Tooltip title={t("common.actions.cancel")} key="cancel">
-                <Button
-                  icon={<CloseOutlined />}
-                  onClick={handleCancelEdit}
-                  type="text"
-                  danger
-                />
-              </Tooltip>,
-            ]
-          : [
-              <Tooltip title={t("builder.relayManager.testConnection")} key="test">
-                <Button
-                  icon={<ReloadOutlined />}
-                  onClick={() => onTestConnection(relayItem.tempId, relayItem.url)}
-                  type="text"
-                />
-              </Tooltip>,
-              <Tooltip title={t("builder.relayManager.editRelay")} key="edit">
-                <Button
-                  icon={<EditOutlined />}
-                  onClick={() => setIsEditing(true)}
-                  type="text"
-                />
-              </Tooltip>,
-              <Tooltip title={t("builder.relayManager.deleteRelay")} key="delete">
-                <Button
-                  icon={<DeleteOutlined />}
-                  onClick={() => onDelete(relayItem.tempId)}
-                  type="text"
-                  danger
-                />
-              </Tooltip>,
-            ]
+    <ListItem
+      disableGutters
+      secondaryAction={
+        isEditing ? (
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Tooltip title={t("common.actions.save")}>
+              <IconButton size="small" onClick={handleSave}>
+                <SaveOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t("common.actions.cancel")}>
+              <IconButton size="small" color="error" onClick={handleCancelEdit}>
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        ) : (
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Tooltip title={t("builder.relayManager.testConnection")}>
+              <IconButton
+                size="small"
+                onClick={() =>
+                  onTestConnection(relayItem.tempId, relayItem.url)
+                }
+              >
+                <RefreshIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t("builder.relayManager.editRelay")}>
+              <IconButton size="small" onClick={() => setIsEditing(true)}>
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t("builder.relayManager.deleteRelay")}>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => onDelete(relayItem.tempId)}
+              >
+                <DeleteOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        )
       }
-      style={{ padding: '8px 0', alignItems: 'center' }}
+      sx={{ py: 1, alignItems: "center" }}
     >
-      <RelayStatusIndicator status={status} />
-      {isEditing ? (
-        <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <Input
-            value={editedUrl}
-            onChange={(e) => setEditedUrl(e.target.value)}
-            onPressEnter={handleSave}
-            style={{ marginRight: '8px' }}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          flexGrow: 1,
+          minWidth: 0,
+          mr: 1,
+        }}
+      >
+        <RelayStatusIndicator status={status} />
+        {isEditing ? (
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              flexDirection: "column",
+              ml: 1,
+            }}
+          >
+            <TextField
+              size="small"
+              fullWidth
+              value={editedUrl}
+              onChange={(e) => setEditedUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSave();
+              }}
+            />
+            {editError && (
+              <Typography color="error" sx={{ fontSize: 12, mt: 0.5 }}>
+                {editError}
+              </Typography>
+            )}
+          </Box>
+        ) : (
+          <ListItemText
+            primary={relayItem.url}
+            slotProps={{
+              primary: { noWrap: true, sx: { fontSize: 14 } },
+            }}
+            sx={{ ml: 1, minWidth: 0 }}
           />
-          {editError && <Text type="danger" style={{ fontSize: '12px', marginTop: '4px' }}>{editError}</Text>}
-        </div>
-      ) : (
-        <Text ellipsis style={{ flexGrow: 1, marginRight: '8px' }}>
-          {relayItem.url}
-        </Text>
-      )}
-    </List.Item>
+        )}
+      </Box>
+    </ListItem>
   );
 };
 
@@ -124,38 +168,46 @@ interface RelayManagerModalProps {
   onClose: () => void;
 }
 
-const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }) => {
+const RelayManagerModal: React.FC<RelayManagerModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const { t } = useTranslation();
-  const {
-    relayList,
-    addRelayToList,
-    editRelayInList,
-    deleteRelayFromList,
-  } = useFormBuilderContext();
+  const { relayList, addRelayToList, editRelayInList, deleteRelayFromList } =
+    useFormBuilderContext();
 
-  const [newRelayUrl, setNewRelayUrl] = useState('');
+  const [newRelayUrl, setNewRelayUrl] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
-  const [localRelayStatuses, setLocalRelayStatuses] = useState<Map<string, RelayStatus>>(new Map());
+  const [localRelayStatuses, setLocalRelayStatuses] = useState<
+    Map<string, RelayStatus>
+  >(new Map());
   const prevRelayListRef = useRef<RelayItem[]>([]);
 
+  const updateLocalRelayStatus = useCallback(
+    (relayId: string, status: RelayStatus) => {
+      setLocalRelayStatuses((prevStatuses) =>
+        new Map(prevStatuses).set(relayId, status),
+      );
+    },
+    [],
+  );
 
-  const updateLocalRelayStatus = useCallback((relayId: string, status: RelayStatus) => {
-    setLocalRelayStatuses(prevStatuses => new Map(prevStatuses).set(relayId, status));
-  }, []);
-
-  const testLocalRelayConnection = useCallback(async (relayId: string, url: string) => {
-    updateLocalRelayStatus(relayId, 'pending');
-    try {
-      const status = await checkRelayConnection(url);
-      updateLocalRelayStatus(relayId, status);
-    } catch (error) {
-      updateLocalRelayStatus(relayId, 'error');
-    }
-  }, [updateLocalRelayStatus]);
+  const testLocalRelayConnection = useCallback(
+    async (relayId: string, url: string) => {
+      updateLocalRelayStatus(relayId, "pending");
+      try {
+        const status = await checkRelayConnection(url);
+        updateLocalRelayStatus(relayId, status);
+      } catch (error) {
+        updateLocalRelayStatus(relayId, "error");
+      }
+    },
+    [updateLocalRelayStatus],
+  );
 
   const testAllLocalRelayConnections = useCallback(() => {
-    relayList.forEach(relay => {
+    relayList.forEach((relay) => {
       testLocalRelayConnection(relay.tempId, relay.url);
     });
   }, [relayList, testLocalRelayConnection]);
@@ -164,29 +216,33 @@ const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }
     if (isOpen) {
       const initialStatuses = new Map<string, RelayStatus>();
       let hasNewRelays = false;
-      const currentRelayIds = new Set(relayList.map(r => r.tempId));
-      const prevRelayIds = new Set(prevRelayListRef.current.map(r => r.tempId));
+      const currentRelayIds = new Set(relayList.map((r) => r.tempId));
+      const prevRelayIds = new Set(
+        prevRelayListRef.current.map((r) => r.tempId),
+      );
 
-      relayList.forEach(relay => {
+      relayList.forEach((relay) => {
         const existingStatus = localRelayStatuses.get(relay.tempId);
-        initialStatuses.set(relay.tempId, existingStatus || 'unknown');
+        initialStatuses.set(relay.tempId, existingStatus || "unknown");
         if (!prevRelayIds.has(relay.tempId)) {
           hasNewRelays = true;
         }
       });
-            localRelayStatuses.forEach((_status, tempId) => {
+      localRelayStatuses.forEach((_status, tempId) => {
         if (!currentRelayIds.has(tempId)) {
           initialStatuses.delete(tempId);
         }
       });
       setLocalRelayStatuses(initialStatuses);
-      if (relayList.length !== prevRelayListRef.current.length || hasNewRelays) {
-         testAllLocalRelayConnections();
+      if (
+        relayList.length !== prevRelayListRef.current.length ||
+        hasNewRelays
+      ) {
+        testAllLocalRelayConnections();
       }
     }
     prevRelayListRef.current = relayList;
   }, [isOpen, relayList, testAllLocalRelayConnections]);
-
 
   const handleAddNewRelay = () => {
     if (!isValidWebSocketUrl(newRelayUrl)) {
@@ -195,7 +251,7 @@ const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }
     }
     setAddError(null);
     addRelayToList(newRelayUrl);
-    setNewRelayUrl('');
+    setNewRelayUrl("");
     setIsAdding(false);
   };
 
@@ -208,64 +264,91 @@ const RelayManagerModal: React.FC<RelayManagerModalProps> = ({ isOpen, onClose }
   };
 
   return (
-    <Modal
-      title={t("builder.relayManager.title")}
-      open={isOpen}
-      onCancel={onClose}
-      width={600}
-      footer={[
-        <Button key="testAll" onClick={testAllLocalRelayConnections} icon={<ReloadOutlined />}>
-          {t("builder.relayManager.testAll")}
-        </Button>,
-        <Button key="close" onClick={onClose}>
-          {t("common.actions.close")}
-        </Button>,
-      ]}
-      destroyOnClose
-    >
-      {isAdding ? (
-        <Space.Compact style={{ width: '100%', marginBottom: '20px' }}>
-           <Input
-            placeholder={t("builder.relayManager.placeholder")}
-            value={newRelayUrl}
-            onChange={(e) => setNewRelayUrl(e.target.value)}
-            onPressEnter={handleAddNewRelay}
-          />
-          <Button type="primary" onClick={handleAddNewRelay} icon={<SaveOutlined />}>
-            {t("common.actions.add")}
-          </Button>
-          <Button onClick={() => {setIsAdding(false); setAddError(null); setNewRelayUrl('');}} icon={<CloseOutlined />}>
-            {t("common.actions.cancel")}
-          </Button>
-        </Space.Compact>
-      ) : (
-        <Button
-            type="dashed"
+    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogTitle>{t("builder.relayManager.title")}</DialogTitle>
+      <DialogContent>
+        {isAdding ? (
+          <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+            <TextField
+              size="small"
+              fullWidth
+              placeholder={t("builder.relayManager.placeholder")}
+              value={newRelayUrl}
+              onChange={(e) => setNewRelayUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddNewRelay();
+              }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleAddNewRelay}
+              startIcon={<SaveOutlinedIcon />}
+            >
+              {t("common.actions.add")}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setIsAdding(false);
+                setAddError(null);
+                setNewRelayUrl("");
+              }}
+              startIcon={<CloseIcon />}
+            >
+              {t("common.actions.cancel")}
+            </Button>
+          </Box>
+        ) : (
+          <Button
+            variant="outlined"
+            fullWidth
             onClick={() => setIsAdding(true)}
-            icon={<PlusOutlined />}
-            style={{ width: '100%', marginBottom: '20px' }}
-        >
+            startIcon={<AddIcon />}
+            sx={{ mb: 2, borderStyle: "dashed" }}
+          >
             {t("builder.relayManager.addRelay")}
-        </Button>
-      )}
-      {addError && <Text type="danger" style={{ display: 'block', marginBottom: '10px', fontSize: '12px' }}>{addError}</Text>}
-
-      <List
-        itemLayout="horizontal"
-        dataSource={relayList}
-        renderItem={(item) => (
-          <EditableRelayListItem
-            relayItem={item}
-            status={localRelayStatuses.get(item.tempId) || 'unknown'}
-            onEdit={handleEditRelay}
-            onDelete={handleDeleteRelay}
-            onTestConnection={testLocalRelayConnection}
-          />
+          </Button>
         )}
-        locale={{ emptyText: t("common.labels.noSupportedRelays") }}
-        style={{ maxHeight: 'calc(100vh - 350px)', overflowY: 'auto' }}
-      />
-    </Modal>
+        {addError && (
+          <Typography
+            color="error"
+            sx={{ display: "block", mb: 1, fontSize: 12 }}
+          >
+            {addError}
+          </Typography>
+        )}
+
+        {relayList.length === 0 ? (
+          <Typography color="text.secondary">
+            {t("common.labels.noSupportedRelays")}
+          </Typography>
+        ) : (
+          <List
+            sx={{ maxHeight: "calc(100vh - 350px)", overflowY: "auto", py: 0 }}
+          >
+            {relayList.map((item) => (
+              <EditableRelayListItem
+                key={item.tempId}
+                relayItem={item}
+                status={localRelayStatuses.get(item.tempId) || "unknown"}
+                onEdit={handleEditRelay}
+                onDelete={handleDeleteRelay}
+                onTestConnection={testLocalRelayConnection}
+              />
+            ))}
+          </List>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={testAllLocalRelayConnections}
+          startIcon={<RefreshIcon />}
+        >
+          {t("builder.relayManager.testAll")}
+        </Button>
+        <Button onClick={onClose}>{t("common.actions.close")}</Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

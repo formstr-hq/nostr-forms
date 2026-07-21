@@ -28,5 +28,5 @@ export interface IFormSettings {
   nrpcPubkey?: string;
   nrpcMethod?: string;
   requireWebhookPass?: boolean;
-  disablePreview?: boolean
+  disablePreview?: boolean;
 }

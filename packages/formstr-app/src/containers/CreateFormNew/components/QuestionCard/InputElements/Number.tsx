@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Input, Row, Tooltip, InputRef } from "antd";
+import { Box, TextField, Tooltip, Typography } from "@mui/material";
 import { NumberConstraint } from "../../../../../nostr/types";
 
 interface Constraints {
@@ -17,14 +17,14 @@ export const NumberConstraints: React.FC<NumberConstraintsProps> = ({
   numberConstraints,
 }) => {
   const [error, showError] = React.useState(false);
-  const maxRef = React.useRef<InputRef | null>();
-  const minRef = React.useRef<InputRef | null>();
+  const maxRef = React.useRef<HTMLInputElement | null>(null);
+  const minRef = React.useRef<HTMLInputElement | null>(null);
   const handleOnChange = () => {
-    const maxValue = maxRef.current?.input?.value
-      ? Number(maxRef.current?.input?.value)
+    const maxValue = maxRef.current?.value
+      ? Number(maxRef.current.value)
       : undefined;
-    const minValue = minRef.current?.input?.value
-      ? Number(minRef.current?.input?.value)
+    const minValue = minRef.current?.value
+      ? Number(minRef.current.value)
       : undefined;
     if (
       maxValue !== undefined &&
@@ -42,33 +42,43 @@ export const NumberConstraints: React.FC<NumberConstraintsProps> = ({
     }
   };
   return (
-    <Row justify={"space-between"}>
-      <Tooltip open={error} title={"Max value should be more than min value"}>
-        <Row>
-          <Form.Item label={"Enter the minimum allowed number(optional)"}>
-            <Input
+    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+      <Tooltip
+        open={error}
+        title={"Max value should be more than min value"}
+        arrow
+      >
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body2">
+              {"Enter the minimum allowed number(optional)"}
+            </Typography>
+            <TextField
               defaultValue={numberConstraints?.min}
-              ref={(elem) => (minRef.current = elem)}
-              type={"number"}
+              inputRef={minRef}
+              type="number"
+              size="small"
               onChange={() => {
                 handleOnChange();
               }}
             />
-          </Form.Item>
-        </Row>
-        <Row>
-          <Form.Item label={"Enter the maximum allowed number(optional)"}>
-            <Input
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body2">
+              {"Enter the maximum allowed number(optional)"}
+            </Typography>
+            <TextField
               defaultValue={numberConstraints?.max}
-              ref={(elem) => (maxRef.current = elem)}
-              type={"number"}
+              inputRef={maxRef}
+              type="number"
+              size="small"
               onChange={() => {
                 handleOnChange();
               }}
             />
-          </Form.Item>
-        </Row>
+          </Box>
+        </Box>
       </Tooltip>
-    </Row>
+    </Box>
   );
 };

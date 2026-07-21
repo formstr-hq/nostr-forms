@@ -1,12 +1,22 @@
 // ZapQRCodeModal.tsx
 import { useEffect, useRef, useState } from "react";
-import { Modal, Typography, Button, Tooltip, message, Spin, Alert } from "antd";
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import * as QRCode from "qrcode.react";
-import { CopyOutlined } from "@ant-design/icons";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import { appConfig } from "../../../../../config";
 import { useTranslation } from "react-i18next";
+import { useSnackbar } from "../../../../../providers/SnackbarProvider";
 
-const { Text } = Typography;
 const MAX_TIME = 300;
 
 export const ZapQRCodeModal = ({
@@ -25,6 +35,7 @@ export const ZapQRCodeModal = ({
   onClose: () => void;
 }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [paymentStatus, setPaymentStatus] = useState<
     "pending" | "paid" | "error"
   >("pending");
@@ -85,7 +96,7 @@ export const ZapQRCodeModal = ({
   const copyInvoice = () => {
     navigator.clipboard.writeText(invoice).then(() => {
       setCopied(true);
-      message.success(t("builder.formDetails.zapQr.invoiceCopied"));
+      showMessage(t("builder.formDetails.zapQr.invoiceCopied"), "success");
       setTimeout(() => setCopied(false), 2000);
     });
   };
@@ -99,91 +110,88 @@ export const ZapQRCodeModal = ({
   };
 
   return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      title={t("builder.formDetails.zapQr.title")}
-      centered
-      bodyStyle={{ textAlign: "center", padding: 24 }}
-    >
-      <Text>{t("builder.formDetails.zapQr.scanHelp")}</Text>
+    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+      <DialogTitle sx={{ textAlign: "center" }}>
+        {t("builder.formDetails.zapQr.title")}
+      </DialogTitle>
+      <DialogContent sx={{ textAlign: "center", p: 3 }}>
+        <Typography>{t("builder.formDetails.zapQr.scanHelp")}</Typography>
 
-      <div style={{ marginTop: 16 }}>
-        <QRCode.QRCodeSVG value={invoice} size={220} />
+        <Box sx={{ mt: 2 }}>
+          <QRCode.QRCodeSVG value={invoice} size={220} />
 
-        <div
-          style={{
-            marginTop: 12,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 8,
-            flexWrap: "wrap",
-          }}
-        >
-          <pre
-            style={{
-              overflowX: "auto",
-              whiteSpace: "nowrap",
-              padding: 8,
-              backgroundColor: "#f5f5f5",
-              borderRadius: 4,
-              fontSize: 12,
-              maxWidth: "100%",
-              margin: 0,
-            }}
-          >
-            {invoice}
-          </pre>
-          <div>
-            {t("builder.formDetails.zapQr.amount", { amount })}
-          </div>
-          <Tooltip
-            title={
-              copied
-                ? t("builder.formDetails.zapQr.copied")
-                : t("builder.formDetails.zapQr.copyInvoice")
-            }
-          >
-            <Button
-              icon={<CopyOutlined />}
-              size="small"
-              onClick={copyInvoice}
-              style={{ flexShrink: 0 }}
-            />
-          </Tooltip>
-        </div>
-
-        {paymentStatus === "pending" && (
-          <div
-            style={{
-              marginTop: 24,
+          <Box
+            sx={{
+              mt: 1.5,
               display: "flex",
-              alignItems: "center",
               justifyContent: "center",
-              flexDirection: "column",
-              gap: 8,
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "wrap",
             }}
           >
-            <Spin />
-            <Text>{t("builder.formDetails.zapQr.waiting")}</Text>
-            <Text type="secondary">
-              {t("builder.formDetails.zapQr.expiresIn", {
-                time: formatTime(timeLeft),
-              })}
-            </Text>
-          </div>
-        )}
+            <Box
+              component="pre"
+              sx={{
+                overflowX: "auto",
+                whiteSpace: "nowrap",
+                p: 1,
+                bgcolor: "grey.100",
+                borderRadius: 1,
+                fontSize: 12,
+                maxWidth: "100%",
+                m: 0,
+              }}
+            >
+              {invoice}
+            </Box>
+            <Box>{t("builder.formDetails.zapQr.amount", { amount })}</Box>
+            <Tooltip
+              title={
+                copied
+                  ? t("builder.formDetails.zapQr.copied")
+                  : t("builder.formDetails.zapQr.copyInvoice")
+              }
+            >
+              <IconButton
+                aria-label={t("builder.formDetails.zapQr.copyInvoice")}
+                size="small"
+                onClick={copyInvoice}
+                sx={{ flexShrink: 0 }}
+              >
+                <ContentCopyOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Box>
 
-        {paymentStatus === "error" && (
-          <Alert
-            type="error"
-            message={t("builder.formDetails.zapQr.serverError")}
-            style={{ marginTop: 24 }}
-          />
-        )}
-      </div>
-    </Modal>
+          {paymentStatus === "pending" && (
+            <Box
+              sx={{
+                mt: 3,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+                gap: 1,
+              }}
+            >
+              <CircularProgress size={28} />
+              <Typography>{t("builder.formDetails.zapQr.waiting")}</Typography>
+              <Typography color="text.secondary">
+                {t("builder.formDetails.zapQr.expiresIn", {
+                  time: formatTime(timeLeft),
+                })}
+              </Typography>
+            </Box>
+          )}
+
+          {paymentStatus === "error" && (
+            <Alert severity="error" sx={{ mt: 3 }}>
+              {t("builder.formDetails.zapQr.serverError")}
+            </Alert>
+          )}
+        </Box>
+      </DialogContent>
+    </Dialog>
   );
 };

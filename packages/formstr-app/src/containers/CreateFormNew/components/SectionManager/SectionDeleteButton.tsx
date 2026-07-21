@@ -1,6 +1,16 @@
 import React, { useState } from "react";
-import { DeleteOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
-import { Modal, Button, Space } from "antd";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Typography,
+} from "@mui/material";
+import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import { useTranslation } from "react-i18next";
 
 interface SectionDeleteButtonProps {
@@ -20,15 +30,16 @@ const SectionDeleteButton: React.FC<SectionDeleteButtonProps> = ({
 }) => {
   const { t } = useTranslation();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleDelete = () => {
-    // If no questions, delete immediately without modal
+    // If no questions, delete immediately without dialog
     if (questionCount === 0) {
       onDelete();
       return;
     }
 
-    // Show custom modal for sections with questions
+    // Show dialog for sections with questions
     setIsModalVisible(true);
   };
 
@@ -39,21 +50,13 @@ const SectionDeleteButton: React.FC<SectionDeleteButtonProps> = ({
 
   const handleDeleteWithQuestions = () => {
     // Show confirmation for deleting questions too
-    Modal.confirm({
-      title: t("builder.sectionDelete.deleteEverythingTitle"),
-      icon: <ExclamationCircleOutlined />,
-      content: t("builder.sectionDelete.deleteEverythingBody", {
-        title: sectionTitle,
-        count: questionCount,
-      }),
-      okText: t("builder.sectionDelete.deleteAll"),
-      okType: "danger",
-      cancelText: t("common.actions.cancel"),
-      onOk: () => {
-        onDeleteWithQuestions?.();
-        setIsModalVisible(false);
-      },
-    });
+    setIsConfirmOpen(true);
+  };
+
+  const handleConfirmDeleteAll = () => {
+    onDeleteWithQuestions?.();
+    setIsConfirmOpen(false);
+    setIsModalVisible(false);
   };
 
   const handleCancel = () => {
@@ -62,53 +65,101 @@ const SectionDeleteButton: React.FC<SectionDeleteButtonProps> = ({
 
   return (
     <>
-      <DeleteOutlined
+      <IconButton
         className={className}
-        style={{ color: "red" }}
+        size="small"
+        sx={{ color: "red" }}
         onClick={handleDelete}
-      />
+      >
+        <DeleteOutlinedIcon fontSize="small" />
+      </IconButton>
 
-      <Modal
-        title={
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <ExclamationCircleOutlined style={{ color: "#faad14" }} />
+      <Dialog
+        open={isModalVisible}
+        onClose={handleCancel}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <ErrorOutlineIcon sx={{ color: "#faad14" }} />
             {t("builder.sectionDelete.deleteSectionTitle", {
               title: sectionTitle,
             })}
-          </div>
-        }
-        open={isModalVisible}
-        onCancel={handleCancel}
-        footer={null}
-        width={480}
-      >
-        <div style={{ marginBottom: "24px" }}>
-          <p>
-            <strong>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mb: 3 }}>
+            <Typography component="p" sx={{ fontWeight: 600 }}>
               {t("builder.sectionDelete.containsQuestions", {
                 count: questionCount,
               })}
-            </strong>
-          </p>
-          <p>{t("builder.sectionDelete.whatToDo")}</p>
-        </div>
+            </Typography>
+            <Typography component="p">
+              {t("builder.sectionDelete.whatToDo")}
+            </Typography>
+          </Box>
 
-        <Space direction="vertical" style={{ width: "100%" }}>
-          <Button type="primary" block onClick={handleMoveToUnsectioned}>
-            {t("builder.sectionDelete.deleteSectionOnly")}
-          </Button>
-
-          {onDeleteWithQuestions && (
-            <Button danger block onClick={handleDeleteWithQuestions}>
-              {t("builder.sectionDelete.deleteSectionAndQuestions")}
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Button
+              variant="contained"
+              fullWidth
+              onClick={handleMoveToUnsectioned}
+            >
+              {t("builder.sectionDelete.deleteSectionOnly")}
             </Button>
-          )}
 
-          <Button block onClick={handleCancel}>
+            {onDeleteWithQuestions && (
+              <Button
+                variant="outlined"
+                color="error"
+                fullWidth
+                onClick={handleDeleteWithQuestions}
+              >
+                {t("builder.sectionDelete.deleteSectionAndQuestions")}
+              </Button>
+            )}
+
+            <Button variant="outlined" fullWidth onClick={handleCancel}>
+              {t("common.actions.cancel")}
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <ErrorOutlineIcon sx={{ color: "#faad14" }} />
+            {t("builder.sectionDelete.deleteEverythingTitle")}
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            {t("builder.sectionDelete.deleteEverythingBody", {
+              title: sectionTitle,
+              count: questionCount,
+            })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsConfirmOpen(false)}>
             {t("common.actions.cancel")}
           </Button>
-        </Space>
-      </Modal>
+          <Button
+            onClick={handleConfirmDeleteAll}
+            variant="contained"
+            color="error"
+          >
+            {t("builder.sectionDelete.deleteAll")}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

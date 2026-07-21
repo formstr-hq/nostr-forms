@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Box, Typography } from "@mui/material";
 
 interface RatingProps {
   initialValue?: number;
@@ -89,14 +90,17 @@ export const Rating: React.FC<RatingProps> = ({
   };
 
   const handleClick = (nextValue: number) => {
-    const adjusted = Math.max(minValue, Math.min(roundToStep(nextValue), clampedMax));
+    const adjusted = Math.max(
+      minValue,
+      Math.min(roundToStep(nextValue), clampedMax),
+    );
     setValue(adjusted);
     onChange(adjusted);
   };
 
   return (
-    <div style={{ marginBottom: "1rem" }}>
-      <div
+    <Box sx={{ mb: "1rem" }}>
+      <Box
         ref={containerRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
@@ -105,7 +109,13 @@ export const Rating: React.FC<RatingProps> = ({
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ display: "inline-flex", gap: 4, flexWrap: "wrap", touchAction: "none", userSelect: "none" }}
+        sx={{
+          display: "inline-flex",
+          gap: "4px",
+          flexWrap: "wrap",
+          touchAction: "none",
+          userSelect: "none",
+        }}
       >
         {Array.from({ length: clampedMax }, (_, i) => {
           const n = i + 1;
@@ -113,14 +123,20 @@ export const Rating: React.FC<RatingProps> = ({
           const gradientId = `rating-preview-${n}`;
 
           return (
-            <div
+            <Box
               key={n}
               onClick={() => handleClick(n)}
-              style={{ padding: 1, cursor: "pointer" }}
+              sx={{ p: "1px", cursor: "pointer" }}
             >
               <svg width={24} height={24} viewBox="0 0 28 28">
                 <defs>
-                  <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                  <linearGradient
+                    id={gradientId}
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="0%"
+                  >
                     <stop offset={`${fillPercent}%`} stopColor="#EF9F27" />
                     <stop offset={`${fillPercent}%`} stopColor="transparent" />
                   </linearGradient>
@@ -133,15 +149,20 @@ export const Rating: React.FC<RatingProps> = ({
                   strokeLinejoin="round"
                 />
               </svg>
-            </div>
+            </Box>
           );
         })}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}>
-        <span style={{ minWidth: 52, textAlign: "right", fontSize: 12 }}>
+      </Box>
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: "10px", mt: "8px" }}
+      >
+        <Typography
+          component="span"
+          sx={{ minWidth: 52, textAlign: "right", fontSize: 12 }}
+        >
           {value.toFixed(1)}
-        </span>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+    </Box>
   );
 };

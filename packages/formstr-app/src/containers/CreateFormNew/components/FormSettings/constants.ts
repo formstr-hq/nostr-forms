@@ -17,5 +17,5 @@ export const sampleThankYouScreens = [
   "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExa2RxdTNsb3RjeWw0ajViNjB4eWJ6NTNudGxodDJra2tpMHg5bzlvayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/hxERQNWQudqSF1iDnr/giphy.gif",
   "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMDE5bWs3MmtmaWR3NzBtaTQ5YXVhd29vZnBscnlwbTNnZW05ZXJybCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/DERRp7hVyAaZ9utWrL/giphy.gif",
   "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZGFhdHhjaTVzd2xzODg4MDc4OGF3OXQ3MWxzcW0zZjkzNGMxZDJvMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/PW2YmRu5TvbJ7ZJpQg/giphy.gif",
-  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbjVwbGFmZmFzNmdvY21naXNxYWlqN3V2bWE2anh0NW41ZzJsaThwNSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/G5MDBwmdTrVMpuRJix/giphy.gif"
-]
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbjVwbGFmZmFzNmdvY21naXNxYWlqN3V2bWE2anh0NW41ZzJsaThwNSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/G5MDBwmdTrVMpuRJix/giphy.gif",
+];

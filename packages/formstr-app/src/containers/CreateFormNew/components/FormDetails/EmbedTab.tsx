@@ -1,5 +1,5 @@
 // EmbedTab.tsx
-import { Checkbox } from "antd";
+import { Box, Checkbox, FormControlLabel } from "@mui/material";
 import { useState } from "react";
 import { CopyButton } from "../../../../components/CopyButton";
 import { constructEmbeddedUrl } from "../../../../utils/formUtils";
@@ -28,41 +28,75 @@ export const EmbedTab = ({
     formId,
     embedOptions,
     relays,
-    viewKey
+    viewKey,
   )}" height="700px" width="480px" frameborder="0" style="border-style:none;box-shadow:0px 0px 2px 2px rgba(0,0,0,0.2);" cellspacing="0" ></iframe>`;
 
   return (
-    <div className="embedded-share">
-      <div className="settings-container">
-        <Checkbox
-          checked={embedOptions.hideTitleImage}
-          onChange={() => toggleOption("hideTitleImage")}
-        >
-          Hide Title Image
-        </Checkbox>
-        <Checkbox
-          checked={embedOptions.hideDescription}
-          onChange={() => toggleOption("hideDescription")}
-        >
-          Hide Description
-        </Checkbox>
-      </div>
+    <Box
+      className="embedded-share"
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        width: "100%",
+      }}
+    >
+      <Box
+        className="settings-container"
+        sx={{ display: "flex", justifyContent: "center", width: "100%" }}
+      >
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={!!embedOptions.hideTitleImage}
+              onChange={() => toggleOption("hideTitleImage")}
+              size="small"
+            />
+          }
+          label="Hide Title Image"
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={!!embedOptions.hideDescription}
+              onChange={() => toggleOption("hideDescription")}
+              size="small"
+            />
+          }
+          label="Hide Description"
+        />
+      </Box>
 
-      <div className="embed-container">
-        <pre
+      <Box
+        className="embed-container"
+        sx={{
+          p: "10px",
+          background:
+            "radial-gradient(rgba(199, 199, 199, 1) 0%, rgba(255, 255, 255, 1) 100%)",
+          mb: "10px",
+          width: "60%",
+          maxWidth: "100%",
+        }}
+      >
+        <Box
+          component="pre"
           className="embedded-code"
-          style={{
-            whiteSpace: "pre-wrap", // ✅ wrap long strings
-            wordBreak: "break-word", // ✅ break inside long tag
-            overflowX: "auto", // ✅ horizontal scroll as fallback
+          sx={{
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            overflowX: "auto",
             display: "block",
+            width: "100%",
+            maxWidth: "100%",
+            overflowWrap: "anywhere",
           }}
         >
           {iframeHtml}
-        </pre>
+        </Box>
 
         <CopyButton getText={() => iframeHtml} textBefore="" textAfter="" />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };

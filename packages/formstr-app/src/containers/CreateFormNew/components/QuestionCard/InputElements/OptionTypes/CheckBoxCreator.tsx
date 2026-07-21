@@ -1,7 +1,6 @@
-import { CloseOutlined } from "@ant-design/icons";
-import { Checkbox, Input } from "antd";
+import CloseIcon from "@mui/icons-material/Close";
+import { Box, Checkbox, IconButton, TextField } from "@mui/material";
 import { useState } from "react";
-import OptionsStyle from "./Options.style";
 import { AddOption } from "./AddOption";
 import {
   handleDelete,
@@ -33,55 +32,49 @@ export const CheckboxCreator: React.FC<CheckboxCreatorProps> = ({
   };
 
   return (
-    <OptionsStyle>
+    <Box>
       {choices?.map((choice) => {
         let [choiceId, label, settingsString] = choice;
         let settings = JSON.parse(settingsString || "{}") as ChoiceSettings;
         return (
-          <div className="radioButtonItem" key={choiceId}>
+          <Box
+            key={choiceId}
+            sx={{ display: "flex", flexDirection: "row", alignItems: "center" }}
+          >
             <Checkbox disabled key={choiceId + "checkbox"} />
-            {/* <Input
-              key={choiceId + "input"}
-              defaultValue={label}
-              onChange={(e) => {
-                handleLabelChange(
-                  e.target.value,
-                  choiceId!,
-                  choices,
-                  handleNewChoices
-                );
-              }}
-              placeholder="Enter an option"
-              className="choice-input"
-              disabled={settings.isOther}
-            /> */}
-            <ColorfulMarkdownTextarea
-              key={choiceId + "input"}
-              onChange={(val) => {
-                handleLabelChange(val, choiceId!, choices, handleNewChoices);
-              }}
-              placeholder={t("builder.inputPreviews.optionPlaceholder")}
-              className="choice-input"
-              disabled={settings.isOther}
-              value={label}
-            />
+            <Box sx={{ m: "10px", flex: 1 }}>
+              <ColorfulMarkdownTextarea
+                key={choiceId + "input"}
+                onChange={(val) => {
+                  handleLabelChange(val, choiceId!, choices, handleNewChoices);
+                }}
+                placeholder={t("builder.inputPreviews.optionPlaceholder")}
+                disabled={settings.isOther}
+                value={label}
+              />
+            </Box>
             {settings.isOther && (
-              <Input
+              <TextField
                 placeholder={t("builder.inputPreviews.customRespondentAnswer")}
                 disabled
-                style={{ maxWidth: 200 }}
-                className="choice-input"
+                size="small"
+                variant="standard"
+                slotProps={{ input: { disableUnderline: true } }}
+                sx={{ maxWidth: 200, m: "10px" }}
               />
             )}
             {choices.length >= 2 && (
-              <CloseOutlined
-                onClick={(e) => {
+              <IconButton
+                size="small"
+                key={choiceId + "close"}
+                onClick={() => {
                   handleDelete(choiceId!, choices, handleNewChoices);
                 }}
-                key={choiceId + "close"}
-              />
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
             )}
-          </div>
+          </Box>
         );
       })}
       <AddOption
@@ -93,6 +86,6 @@ export const CheckboxCreator: React.FC<CheckboxCreatorProps> = ({
         callback={handleNewChoices}
         displayOther={!hasOtherOption(choices)}
       />
-    </OptionsStyle>
+    </Box>
   );
 };

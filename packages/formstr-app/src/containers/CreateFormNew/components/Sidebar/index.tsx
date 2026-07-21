@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { Divider } from "antd";
+import { Divider } from "@mui/material";
 import BasicMenu from "../BasicMenu";
 import InputsMenu from "../InputsMenu";
 import PreBuiltMenu from "../PreBuiltMenu";

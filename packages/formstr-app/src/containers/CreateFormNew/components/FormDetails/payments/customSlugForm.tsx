@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import {
-  Button,
-  Input,
-  Typography,
   Alert,
-  Space,
-  Row,
-  Col,
-  Divider,
+  Box,
+  Button,
   Card,
-} from "antd";
-import { CheckCircleOutlined, LoadingOutlined } from "@ant-design/icons";
+  CardContent,
+  CircularProgress,
+  Divider,
+  InputAdornment,
+  Link,
+  TextField,
+  Typography,
+} from "@mui/material";
+import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import axios from "../../../../../utils/axiosInstance";
 import { useNostrAuth } from "../../../../../hooks/useNostrAuth";
 import { appConfig } from "../../../../../config";
@@ -19,8 +21,6 @@ import { ZapQRCodeModal } from "./zapQRModal";
 import { useNavigate } from "react-router-dom";
 import UniversalMarkdownModal from "../../../../../components/UniversalMarkdownModal";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 export const CustomSlugForm = ({
   formId,
@@ -86,7 +86,10 @@ export const CustomSlugForm = ({
       if (err.response?.status === 404) {
         setAvailable(true); // not found = available
       } else {
-        setError(err.response?.data?.error || t("builder.formDetails.customSlug.serverError"));
+        setError(
+          err.response?.data?.error ||
+            t("builder.formDetails.customSlug.serverError"),
+        );
       }
     } finally {
       setChecking(false);
@@ -137,162 +140,177 @@ export const CustomSlugForm = ({
           t("builder.formDetails.customSlug.paymentError", { error: err }),
       );
     } finally {
-      setPaying(false); // ✅ stop loading no matter what
+      setPaying(false); // stop loading no matter what
     }
   };
 
   const isLoggedIn = !!pubkey;
 
   return (
-    <div style={{ marginTop: 32, maxWidth: 800 }}>
+    <Box sx={{ mt: 4, maxWidth: 800 }}>
       {(serverAvailable === true || serverAvailable === null) && (
-        <Card style={{ marginTop: 5 }}>
-          <Typography.Title level={5}>
-            {t("builder.formDetails.customSlug.title")}
-          </Typography.Title>
-          {serverAvailable === null && (
-            <Typography.Paragraph type="secondary">
-              {t("builder.formDetails.customSlug.checkingServer")}
-            </Typography.Paragraph>
-          )}
-          {serverAvailable && (
-            <>
-              <Typography.Paragraph type="secondary">
-                {t("builder.formDetails.customSlug.introPrefix")}{" "}
-                <Typography.Text code>/i/your-name</Typography.Text>{" "}
-                {t("builder.formDetails.customSlug.introSuffix")}{" "}
-                <Typography.Text strong>{price} sats</Typography.Text>.
-                <br />
-                {t("builder.formDetails.customSlug.oneTimePurchase")}{" "}
-                <Typography.Text code>Nostr</Typography.Text>{" "}
-                {t("builder.formDetails.customSlug.nostrProfile")}
-              </Typography.Paragraph>
-              {!showCustomForm ? (
-                <Button
-                  type="primary"
-                  onClick={() =>
-                    userPub ? setShowCustomForm(true) : requestPubkey
-                  }
-                  disabled={!userPub}
-                >
-                  {userPub
-                    ? t("builder.formDetails.customSlug.claimCustomUrl")
-                    : t("builder.formDetails.customSlug.loginToClaim")}
-                </Button>
-              ) : (
-                <>
-                  <Divider />
-                  <Space
-                    direction="vertical"
-                    size="middle"
-                    style={{ width: "100%" }}
+        <Card variant="outlined" sx={{ mt: 0.5 }}>
+          <CardContent>
+            <Typography variant="h6">
+              {t("builder.formDetails.customSlug.title")}
+            </Typography>
+            {serverAvailable === null && (
+              <Typography color="text.secondary">
+                {t("builder.formDetails.customSlug.checkingServer")}
+              </Typography>
+            )}
+            {serverAvailable && (
+              <>
+                <Typography color="text.secondary" sx={{ my: 1 }}>
+                  {t("builder.formDetails.customSlug.introPrefix")}{" "}
+                  <code>/i/your-name</code>{" "}
+                  {t("builder.formDetails.customSlug.introSuffix")}{" "}
+                  <Typography component="span" sx={{ fontWeight: 600 }}>
+                    {price} sats
+                  </Typography>
+                  .
+                  <br />
+                  {t("builder.formDetails.customSlug.oneTimePurchase")}{" "}
+                  <code>Nostr</code>{" "}
+                  {t("builder.formDetails.customSlug.nostrProfile")}
+                </Typography>
+                {!showCustomForm ? (
+                  <Button
+                    variant="contained"
+                    onClick={() =>
+                      userPub ? setShowCustomForm(true) : requestPubkey
+                    }
+                    disabled={!userPub}
                   >
-                    {!isLoggedIn && (
-                      <Alert
-                        message={t("builder.formDetails.customSlug.loginRequired")}
-                        type="warning"
-                        showIcon
-                      />
-                    )}
-
-                    <Input
-                      placeholder={t("builder.formDetails.customSlug.slugPlaceholder")}
-                      value={slug}
-                      onChange={(e) => {
-                        setSlug(e.target.value.trim());
-                        setAvailable(null); // reset availability
+                    {userPub
+                      ? t("builder.formDetails.customSlug.claimCustomUrl")
+                      : t("builder.formDetails.customSlug.loginToClaim")}
+                  </Button>
+                ) : (
+                  <>
+                    <Divider sx={{ my: 2 }} />
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                        width: "100%",
                       }}
-                      onPressEnter={checkAvailability}
-                      addonBefore="/i/"
-                      suffix={
-                        checking ? (
-                          <LoadingOutlined />
-                        ) : available ? (
-                          <CheckCircleOutlined style={{ color: "green" }} />
-                        ) : null
-                      }
-                      disabled={!isLoggedIn}
-                    />
-                    <Row gutter={8}>
-                      <Col>
+                    >
+                      {!isLoggedIn && (
+                        <Alert severity="warning">
+                          {t("builder.formDetails.customSlug.loginRequired")}
+                        </Alert>
+                      )}
+
+                      <TextField
+                        fullWidth
+                        size="small"
+                        placeholder={t(
+                          "builder.formDetails.customSlug.slugPlaceholder",
+                        )}
+                        value={slug}
+                        onChange={(e) => {
+                          setSlug(e.target.value.trim());
+                          setAvailable(null); // reset availability
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") checkAvailability();
+                        }}
+                        slotProps={{
+                          input: {
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                /i/
+                              </InputAdornment>
+                            ),
+                            endAdornment: checking ? (
+                              <InputAdornment position="end">
+                                <CircularProgress size={18} />
+                              </InputAdornment>
+                            ) : available ? (
+                              <InputAdornment position="end">
+                                <CheckCircleOutlineOutlinedIcon
+                                  sx={{ color: "success.main" }}
+                                />
+                              </InputAdornment>
+                            ) : null,
+                          },
+                        }}
+                        disabled={!isLoggedIn}
+                      />
+                      <Box sx={{ display: "flex", gap: 1 }}>
                         <Button
+                          variant="outlined"
                           onClick={checkAvailability}
                           disabled={!slug || !isLoggedIn}
                         >
-                          {t("builder.formDetails.customSlug.checkAvailability")}
+                          {t(
+                            "builder.formDetails.customSlug.checkAvailability",
+                          )}
                         </Button>
-                      </Col>
-                      <Col>
                         <Button
-                          type="primary"
+                          variant="contained"
                           onClick={handlePay}
                           disabled={!available || !isLoggedIn || paying}
-                          loading={paying}
+                          startIcon={
+                            paying ? <CircularProgress size={16} /> : undefined
+                          }
                         >
                           {t("builder.formDetails.customSlug.payToClaim")}
                         </Button>
-                      </Col>
-                    </Row>
+                      </Box>
 
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {t("builder.formDetails.customSlug.termsIntro")}{" "}
-                      <a
-                        onClick={() => setShowTermsModal(true)}
-                        style={{ textDecoration: "underline" }}
+                      <Typography variant="body2" color="text.secondary">
+                        {t("builder.formDetails.customSlug.termsIntro")}{" "}
+                        <Link
+                          component="button"
+                          onClick={() => setShowTermsModal(true)}
+                          sx={{ textDecoration: "underline" }}
+                        >
+                          {t("builder.formDetails.customSlug.termsLink")}
+                        </Link>
+                        .
+                      </Typography>
+                      <Box
+                        sx={{
+                          minHeight: error ? "auto" : 0,
+                          transition: "all 0.3s ease",
+                        }}
                       >
-                        {t("builder.formDetails.customSlug.termsLink")}
-                      </a>
-                      .
-                    </Text>
-                    <div
-                      style={{
-                        minHeight: error ? "auto" : 0,
-                        transition: "all 0.3s ease",
-                      }}
-                    >
-                      {error && (
-                        <Alert
-                          type="error"
-                          message={error}
-                          style={{
-                            animation: "fadeIn 0.3s ease",
-                            margin: 0,
-                          }}
-                        />
-                      )}
-                    </div>
+                        {error && (
+                          <Alert
+                            severity="error"
+                            sx={{ animation: "fadeIn 0.3s ease", m: 0 }}
+                          >
+                            {error}
+                          </Alert>
+                        )}
+                      </Box>
 
-                    {showAccessWarning && (
-                      <Alert
-                        message={
-                          <>
-                            <Text style={{ fontSize: 10 }}>
-                              {t("builder.formDetails.customSlug.accessWarning")}
-                            </Text>
-                            {onEditClick && (
-                              <Button
-                                type="link"
-                                style={{
-                                  marginLeft: 2,
-                                  padding: 0,
-                                  fontSize: 10,
-                                }}
-                                onClick={onEditClick}
-                              >
-                                {t("builder.formDetails.customSlug.here")}
-                              </Button>
-                            )}
-                          </>
-                        }
-                        type="warning"
-                        showIcon
-                      />
-                    )}
-                  </Space>
-                </>
-              )}
-            </>
-          )}
+                      {showAccessWarning && (
+                        <Alert severity="warning">
+                          <Typography component="span" sx={{ fontSize: 10 }}>
+                            {t("builder.formDetails.customSlug.accessWarning")}
+                          </Typography>
+                          {onEditClick && (
+                            <Button
+                              variant="text"
+                              size="small"
+                              sx={{ ml: 0.25, p: 0, fontSize: 10, minWidth: 0 }}
+                              onClick={onEditClick}
+                            >
+                              {t("builder.formDetails.customSlug.here")}
+                            </Button>
+                          )}
+                        </Alert>
+                      )}
+                    </Box>
+                  </>
+                )}
+              </>
+            )}
+          </CardContent>
         </Card>
       )}
 
@@ -310,6 +328,6 @@ export const CustomSlugForm = ({
         title={t("builder.formDetails.customSlug.termsTitle")}
         filePath="/docs/TermsOfUse.md"
       />
-    </div>
+    </Box>
   );
 };

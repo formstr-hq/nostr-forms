@@ -4,7 +4,6 @@ import useFormBuilderContext from "./hooks/useFormBuilderContext";
 import { useEffect, useRef, useState } from "react";
 import { HEADER_MENU_KEYS } from "./components/Header/config";
 import { FormRenderer } from "../FormFillerNew/FormRenderer";
-import { Form } from "antd";
 
 function CreateForm() {
   const { state } = useLocation();
@@ -12,7 +11,6 @@ function CreateForm() {
     useFormBuilderContext();
   const [initialized, setInitialized] = useState(false);
   const lastFormIdRef = useRef<string | undefined>(undefined);
-  const [form] = Form.useForm();
 
   useEffect(() => {
     if (state && state.id && state.id !== lastFormIdRef.current) {
@@ -32,17 +30,12 @@ function CreateForm() {
   }
   if (selectedTab === HEADER_MENU_KEYS.PREVIEW) {
     return (
+      // The renderer self-manages preview values (antd Form removed in the
+      // MUI rewrite); onInput is a no-op by design.
       <FormRenderer
         formTemplate={getFormSpec()}
-        form={form}
         footer={null}
-        onInput={(questionId, answer, message) => {
-          if (!answer || answer === "") {
-            form.setFieldValue(questionId, null);
-          } else {
-            form.setFieldValue(questionId, [answer, message]);
-          }
-        }}
+        onInput={() => {}}
         formstrBranding={formSettings.formstrBranding}
         isPreview={true}
       />

@@ -1,25 +1,23 @@
 import {
   Avatar,
+  Box,
   Button,
   Divider,
-  Input,
-  Space,
+  IconButton,
+  TextField,
   Tooltip,
   Typography,
-  message,
-} from "antd";
-import AddNpubStyle from "../addNpub.style";
+} from "@mui/material";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import { FC, useEffect, useState } from "react";
 import { isValidNpub } from "./utils";
 import { nip19 } from "nostr-tools";
 import { useTranslation } from "react-i18next";
-import {
-  CloseCircleOutlined,
-  CopyOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
 import { pool } from "../../../../../pool";
 import { getDefaultRelays, toHexNpub } from "../../../../../nostr/common";
+import { useSnackbar } from "../../../../../providers/SnackbarProvider";
 
 interface NpubListProps {
   NpubList: Set<string> | null;
@@ -38,6 +36,7 @@ const NpubListItem: FC<{
   onRemove: (pubkey: string) => void;
 }> = ({ pubkey, onRemove }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [profile, setProfile] = useState<Profile | undefined>(undefined);
 
   // Old forms stored npub (bech32) strings while new forms store hex.
@@ -74,40 +73,46 @@ const NpubListItem: FC<{
 
   const handleCopy = () => {
     navigator.clipboard.writeText(npub);
-    message.success(t("builder.sharing.copiedNpub"));
+    showMessage(t("builder.sharing.copiedNpub"), "success");
   };
 
   return (
-    <div
-      style={{
+    <Box
+      sx={{
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        padding: "8px 0",
-        borderBottom: "1px solid #f0f0f0",
+        py: 1,
+        borderBottom: "1px solid",
+        borderColor: "divider",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <Avatar src={profile?.picture} icon={<UserOutlined />} />
-        <Typography.Text>{displayName}</Typography.Text>
-      </div>
-      <Space>
-        <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Avatar src={profile?.picture}>
+          <PersonOutlinedIcon />
+        </Avatar>
+        <Typography>{displayName}</Typography>
+      </Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Typography color="text.secondary" sx={{ fontSize: 12 }}>
           {shortNpub}
-        </Typography.Text>
+        </Typography>
         <Tooltip title={t("builder.sharing.copyNpub")}>
-          <Button type="text" icon={<CopyOutlined />} onClick={handleCopy} />
+          <IconButton size="small" onClick={handleCopy}>
+            <ContentCopyOutlinedIcon fontSize="small" />
+          </IconButton>
         </Tooltip>
         <Tooltip title={t("common.actions.delete")}>
-          <Button
-            type="text"
-            danger
-            icon={<CloseCircleOutlined />}
+          <IconButton
+            size="small"
+            color="error"
             onClick={() => onRemove(pubkey)}
-          />
+          >
+            <HighlightOffIcon fontSize="small" />
+          </IconButton>
         </Tooltip>
-      </Space>
-    </div>
+      </Box>
+    </Box>
   );
 };
 
@@ -126,66 +131,60 @@ export const NpubList: React.FC<NpubListProps> = ({
   };
 
   return (
-    <div>
-      <AddNpubStyle className="modal-container">
-        <Typography.Text
-          style={{
-            fontSize: 18,
-          }}
-        >
-          {ListHeader}
-        </Typography.Text>
-        <Divider />
+    <Box>
+      <Typography sx={{ fontSize: 18 }}>{ListHeader}</Typography>
+      <Divider sx={{ my: 1 }} />
 
-        <div
-          style={{
-            maxHeight: "200px",
-            overflowY: "auto",
-            marginBottom: "16px",
-          }}
-        >
-          {NpubList && Array.from(NpubList).length > 0 ? (
-            Array.from(NpubList).map((pubkey) => (
-              <NpubListItem
-                key={pubkey}
-                pubkey={pubkey}
-                onRemove={removeParticipant}
-              />
-            ))
-          ) : (
-            <Typography.Text type="secondary">
-              {t("builder.sharing.noUsers")}
-            </Typography.Text>
-          )}
-        </div>
-
-        <Input
-          placeholder={t("builder.sharing.enterNpub")}
-          value={newNpub}
-          onChange={(e) => setNewNpub(e.target.value)}
-          className="npub-input"
-        />
-        {newNpub && !isValidNpub(newNpub) && (
-          <div>
-            <Typography.Text className="error-npub">
-              {t("builder.sharing.invalidNpub")}
-            </Typography.Text>
-          </div>
+      <Box
+        sx={{
+          maxHeight: 200,
+          overflowY: "auto",
+          mb: 2,
+        }}
+      >
+        {NpubList && Array.from(NpubList).length > 0 ? (
+          Array.from(NpubList).map((pubkey) => (
+            <NpubListItem
+              key={pubkey}
+              pubkey={pubkey}
+              onRemove={removeParticipant}
+            />
+          ))
+        ) : (
+          <Typography color="text.secondary">
+            {t("builder.sharing.noUsers")}
+          </Typography>
         )}
-        <Button
-          type="primary"
-          className="add-button"
-          disabled={!isValidNpub(newNpub || "")}
-          onClick={() => {
-            setNpubList(
-              new Set(NpubList).add(nip19.decode(newNpub!).data as string),
-            );
-            setNewNpub("");
-          }}
-        >
-          {t("common.actions.add")}
-        </Button>
-      </AddNpubStyle>
-    </div>
+      </Box>
+
+      <TextField
+        size="small"
+        fullWidth
+        placeholder={t("builder.sharing.enterNpub")}
+        value={newNpub ?? ""}
+        onChange={(e) => setNewNpub(e.target.value)}
+        sx={{ mb: 1 }}
+      />
+      {newNpub && !isValidNpub(newNpub) && (
+        <Box>
+          <Typography color="error" sx={{ fontSize: 12, display: "block" }}>
+            {t("builder.sharing.invalidNpub")}
+          </Typography>
+        </Box>
+      )}
+      <Button
+        variant="contained"
+        sx={{ mt: 1 }}
+        disabled={!isValidNpub(newNpub || "")}
+        onClick={() => {
+          setNpubList(
+            new Set(NpubList).add(nip19.decode(newNpub!).data as string),
+          );
+          setNewNpub("");
+        }}
+      >
+        {t("common.actions.add")}
+      </Button>
+    </Box>
   );
 };

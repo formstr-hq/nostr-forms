@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { Upload, Typography, Space, Select, Input, Button } from "antd";
-import { InboxOutlined } from "@ant-design/icons";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  FormControl,
+  InputAdornment,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from "@mui/material";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 import { IAnswerSettings } from "../../AnswerSettings/types";
-import { DEFAULT_SERVERS, ServerInfo } from "../../AnswerSettings/settings/FileUploadSettings";
+import {
+  DEFAULT_SERVERS,
+  ServerInfo,
+} from "../../AnswerSettings/settings/FileUploadSettings";
 import { pool } from "../../../../../pool";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
-const { Dragger } = Upload;
-const { Option } = Select;
 
 const PUBLIC_RELAYS = [
   "wss://relay.damus.io",
@@ -23,17 +32,18 @@ interface FileUploadBuilderProps {
 
 const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
   answerSettings,
-  handleAnswerSettings
+  handleAnswerSettings,
 }) => {
   const { t } = useTranslation();
   const [servers, setServers] = useState<ServerInfo[]>(
-    DEFAULT_SERVERS.map((url) => ({ url, source: "default" as const }))
+    DEFAULT_SERVERS.map((url) => ({ url, source: "default" as const })),
   );
   const [loading, setLoading] = useState(true);
   const [customUrl, setCustomUrl] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
 
-  const blossomServer: string = answerSettings.blossomServer || DEFAULT_SERVERS[0];
+  const blossomServer: string =
+    answerSettings.blossomServer || DEFAULT_SERVERS[0];
   const maxFileSize: number = answerSettings.maxFileSize || 10;
   const allowedTypes: string[] = answerSettings.allowedTypes || [];
 
@@ -82,7 +92,10 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
     if (!customUrl.trim() || !handleAnswerSettings) return;
 
     let normalizedUrl = customUrl.trim();
-    if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
+    if (
+      !normalizedUrl.startsWith("http://") &&
+      !normalizedUrl.startsWith("https://")
+    ) {
       normalizedUrl = "https://" + normalizedUrl;
     }
     normalizedUrl = normalizedUrl.replace(/\/$/, "");
@@ -111,87 +124,119 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
   };
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <Dragger disabled={true} style={{ cursor: "not-allowed" }}>
-        <p className="ant-upload-drag-icon">
-          <InboxOutlined />
-        </p>
-        <p className="ant-upload-text">
+    <Box
+      sx={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}
+    >
+      {/* Disabled dropzone preview (antd Dragger equivalent) */}
+      <Box
+        sx={{
+          border: "1px dashed",
+          borderColor: "divider",
+          borderRadius: 2,
+          backgroundColor: "rgba(0, 0, 0, 0.02)",
+          textAlign: "center",
+          px: 2,
+          py: 3,
+          cursor: "not-allowed",
+        }}
+      >
+        <InboxOutlinedIcon sx={{ fontSize: 48, color: "primary.main" }} />
+        <Typography variant="body1" sx={{ mt: 1 }}>
           {t("builder.fileUploadSettings.uploadFieldHint")}
-        </p>
-        <p className="ant-upload-hint">
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
           {t("builder.fileUploadSettings.uploadFieldBody")}
-        </p>
-      </Dragger>
+        </Typography>
+      </Box>
 
       {handleAnswerSettings && (
-        <div>
-          <Text type="secondary" style={{ fontSize: "12px", display: "block", marginBottom: 4 }}>
-            {t("builder.fileUploadSettings.blossomServer")}:
-          </Text>
-          <Select
-            style={{ width: "100%" }}
-            value={blossomServer}
-            onChange={(value) => handleAnswerSettings({ ...answerSettings, blossomServer: value })}
-            loading={loading}
-            size="small"
-            dropdownRender={(menu) => (
-              <>
-                {menu}
-                <div style={{ padding: "8px", borderTop: "1px solid #f0f0f0" }}>
-                  {!showCustomInput ? (
-                    <Button
-                      type="link"
-                      onClick={() => setShowCustomInput(true)}
-                      style={{ padding: 0 }}
-                      size="small"
-                    >
-                      + {t("builder.fileUploadSettings.addCustomServer")}
-                    </Button>
-                  ) : (
-                    <Space.Compact style={{ width: "100%" }}>
-                      <Input
-                        placeholder="https://your-server.com"
-                        value={customUrl}
-                        onChange={(e) => setCustomUrl(e.target.value)}
-                        onPressEnter={handleAddCustomServer}
-                        size="small"
-                      />
-                      <Button onClick={handleAddCustomServer} size="small">
-                        {t("builder.fileUploadSettings.add")}
-                      </Button>
-                    </Space.Compact>
-                  )}
-                </div>
-              </>
-            )}
+        <Box>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", mb: 0.5 }}
           >
-            {servers.map((server) => (
-              <Option key={server.url} value={server.url}>
-                {server.url}
-                {getSourceLabel(server.source)}
-              </Option>
-            ))}
-          </Select>
-        </div>
+            {t("builder.fileUploadSettings.blossomServer")}:
+          </Typography>
+          <FormControl fullWidth size="small">
+            <Select
+              value={blossomServer}
+              onChange={(e) =>
+                handleAnswerSettings({
+                  ...answerSettings,
+                  blossomServer: e.target.value,
+                })
+              }
+              renderValue={(value) => value}
+              displayEmpty
+              endAdornment={
+                loading ? (
+                  <InputAdornment position="end" sx={{ mr: 3 }}>
+                    <CircularProgress size={14} />
+                  </InputAdornment>
+                ) : undefined
+              }
+            >
+              {servers.map((server) => (
+                <MenuItem key={server.url} value={server.url}>
+                  {server.url}
+                  {getSourceLabel(server.source)}
+                </MenuItem>
+              ))}
+              <Box
+                sx={{ p: 1, borderTop: "1px solid", borderColor: "divider" }}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                {!showCustomInput ? (
+                  <Button
+                    variant="text"
+                    onClick={() => setShowCustomInput(true)}
+                    sx={{ p: 0 }}
+                    size="small"
+                  >
+                    + {t("builder.fileUploadSettings.addCustomServer")}
+                  </Button>
+                ) : (
+                  <Box sx={{ display: "flex", width: "100%" }}>
+                    <TextField
+                      placeholder="https://your-server.com"
+                      value={customUrl}
+                      onChange={(e) => setCustomUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === "Enter") handleAddCustomServer();
+                      }}
+                      size="small"
+                      sx={{ flex: 1 }}
+                    />
+                    <Button onClick={handleAddCustomServer} size="small">
+                      {t("builder.fileUploadSettings.add")}
+                    </Button>
+                  </Box>
+                )}
+              </Box>
+            </Select>
+          </FormControl>
+        </Box>
       )}
 
-      <Space direction="vertical" size={0} style={{ width: "100%" }}>
-        <Text type="secondary" style={{ fontSize: "12px" }}>
+      <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
+        <Typography variant="caption" color="text.secondary">
           {t("builder.fileUploadSettings.maxSize", { size: maxFileSize })}
-        </Text>
+        </Typography>
         {allowedTypes.length > 0 && (
-          <Text type="secondary" style={{ fontSize: "12px" }}>
+          <Typography variant="caption" color="text.secondary">
             {t("builder.fileUploadSettings.allowedTypes", {
               types: allowedTypes.join(", "),
             })}
-          </Text>
+          </Typography>
         )}
-        <Text type="secondary" style={{ fontSize: "12px" }}>
+        <Typography variant="caption" color="text.secondary">
           {t("builder.fileUploadSettings.encryptionHint")}
-        </Text>
-      </Space>
-    </Space>
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 

@@ -1,7 +1,5 @@
-import { Spin, Typography, Button } from "antd";
+import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 export const SaveStatus = ({
   savedLocally,
@@ -16,32 +14,50 @@ export const SaveStatus = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <div className="save-status">
-      <div>
+    <Box className="save-status" sx={{ py: 1 }}>
+      <Box>
         {t("builder.formDetails.savedLocally")} {savedLocally ? "✅" : "❌"}
-      </div>
+      </Box>
       {userPub ? (
-        <div className="nostr-save-status">
+        <Box className="nostr-save-status">
           {!savedOnNostr ? (
-            <div className="saving-indicator">
-              <Text>{t("builder.formDetails.savingToProfile")}</Text>
-              <Spin size="small" style={{ marginLeft: 4 }} />
-            </div>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0.5,
+              }}
+            >
+              <Typography>
+                {t("builder.formDetails.savingToProfile")}
+              </Typography>
+              <CircularProgress size={16} />
+            </Box>
           ) : (
-            <div>
+            <Box>
               {t("builder.formDetails.savedToProfile")}{" "}
               {savedOnNostr ? "✅" : "❌"}
-            </div>
+            </Box>
           )}
-        </div>
+        </Box>
       ) : (
-        <div className="login-prompt">
-          <Text>{t("builder.formDetails.loginToSave")}</Text>
-          <Button onClick={requestPubkey} className="ml-2">
+        <Box
+          className="login-prompt"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            mt: 1,
+          }}
+        >
+          <Typography>{t("builder.formDetails.loginToSave")}</Typography>
+          <Button variant="outlined" size="small" onClick={requestPubkey}>
             {t("common.actions.login")}
           </Button>
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };

@@ -1,8 +1,20 @@
-import { PictureOutlined, AudioOutlined, VideoCameraOutlined } from "@ant-design/icons";
-import { Button, Modal, Input, Tabs, Alert, Typography } from "antd";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import AudioFileOutlinedIcon from "@mui/icons-material/AudioFileOutlined";
+import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+} from "@mui/material";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-const { Text } = Typography;
 
 interface Props {
   onImageUpload?: (url: string) => void;
@@ -15,11 +27,17 @@ const UploadFile: React.FC<Props> = ({ onImageUpload }) => {
   const [urlInput, setUrlInput] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewError, setPreviewError] = useState(false);
-  const [selectedMediaType, setSelectedMediaType] = useState<MediaType>("image");
+  const [selectedMediaType, setSelectedMediaType] =
+    useState<MediaType>("image");
 
   const formatMediaUrl = (url: string, mediaType: MediaType = "image") => {
     if (mediaType === "image") {
-      const fileName = (url.split("/").pop()?.replace(/\.[^/.]+$/, "") || "image").slice(0, 5);
+      const fileName = (
+        url
+          .split("/")
+          .pop()
+          ?.replace(/\.[^/.]+$/, "") || "image"
+      ).slice(0, 5);
       return `![${fileName}](${url})`;
     } else if (mediaType === "audio") {
       return `<audio controls src="${url}"></audio>`;
@@ -43,7 +61,9 @@ const UploadFile: React.FC<Props> = ({ onImageUpload }) => {
     setSelectedMediaType("image");
   };
 
-  const handleUrlInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleUrlInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setUrlInput(e.target.value);
     setPreviewError(false);
   };
@@ -62,40 +82,42 @@ const UploadFile: React.FC<Props> = ({ onImageUpload }) => {
   };
 
   const renderMediaTab = (mediaType: MediaType) => (
-    <div style={{ padding: "20px 0" }}>
-      <Input.TextArea
+    <Box sx={{ py: "20px" }}>
+      <TextField
+        multiline
+        rows={4}
+        fullWidth
         placeholder={t("builder.inputPreviews.mediaEnterUrl", {
           type: t(`builder.inputPreviews.${mediaType}`).toLowerCase(),
         })}
         value={urlInput}
         onChange={handleUrlInputChange}
-        style={{ marginBottom: 16 }}
-        rows={4}
-        aria-label={`${mediaType} URL input`}
+        sx={{ mb: "16px" }}
+        slotProps={{
+          htmlInput: { "aria-label": `${mediaType} URL input` },
+        }}
       />
       {urlInput && selectedMediaType === mediaType && (
-        <div style={{ marginBottom: 16 }}>
+        <Box sx={{ mb: "16px" }}>
           {previewError ? (
-            <Alert
-              message={t("builder.inputPreviews.mediaInvalidUrl", {
+            <Alert severity="error" sx={{ mb: "16px" }}>
+              {t("builder.inputPreviews.mediaInvalidUrl", {
                 type: t(`builder.inputPreviews.${mediaType}`).toLowerCase(),
               })}
-              type="error"
-              showIcon
-              style={{ marginBottom: 16 }}
-            />
+            </Alert>
           ) : (
-            <div
-              style={{
-                border: "1px solid #d9d9d9",
+            <Box
+              sx={{
+                border: "1px solid",
+                borderColor: "divider",
                 borderRadius: "8px",
-                padding: "8px",
-                marginBottom: "16px",
+                p: "8px",
+                mb: "16px",
               }}
             >
-              <Text style={{ display: "block", marginBottom: 8 }}>
+              <Typography sx={{ display: "block", mb: "8px" }}>
                 {t("builder.inputPreviews.preview")}
-              </Text>
+              </Typography>
               {mediaType === "image" ? (
                 <img
                   src={urlInput}
@@ -110,84 +132,79 @@ const UploadFile: React.FC<Props> = ({ onImageUpload }) => {
                   }}
                 />
               ) : mediaType === "audio" ? (
-                <audio controls src={urlInput} onError={handlePreviewError} style={{ width: "100%" }} />
+                <audio
+                  controls
+                  src={urlInput}
+                  onError={handlePreviewError}
+                  style={{ width: "100%" }}
+                />
               ) : (
                 <video
                   controls
                   src={urlInput}
                   onError={handlePreviewError}
-                  style={{ maxWidth: "100%", maxHeight: "200px", display: "block" }}
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "200px",
+                    display: "block",
+                  }}
                 />
               )}
-            </div>
+            </Box>
           )}
-        </div>
+        </Box>
       )}
       <Button
-        type="primary"
+        variant="contained"
         onClick={() => handleUrlSubmit(mediaType)}
         disabled={!urlInput || previewError}
-        style={{ width: "100%" }}
+        fullWidth
       >
         {t("builder.inputPreviews.submitUrl")}
       </Button>
-    </div>
+    </Box>
   );
 
-  const items = [
-    {
-      key: "image",
-      label: (
-        <span>
-          <PictureOutlined /> {t("builder.inputPreviews.image")}
-        </span>
-      ),
-      children: renderMediaTab("image"),
-    },
-    {
-      key: "audio",
-      label: (
-        <span>
-          <AudioOutlined /> {t("builder.inputPreviews.audio")}
-        </span>
-      ),
-      children: renderMediaTab("audio"),
-    },
-    {
-      key: "video",
-      label: (
-        <span>
-          <VideoCameraOutlined /> {t("builder.inputPreviews.video")}
-        </span>
-      ),
-      children: renderMediaTab("video"),
-    },
-  ];
-
   return (
-    <div>
-      <Button onClick={showModal} type="default" style={{ marginRight: "10px" }}>
+    <Box>
+      <Button onClick={showModal} variant="outlined" sx={{ mr: "10px" }}>
         {t("builder.inputPreviews.mediaButton")}
       </Button>
 
-      <Modal
-        title={t("builder.inputPreviews.mediaModalTitle")}
-        open={isModalOpen}
-        onCancel={handleCancel}
-        footer={null}
-        width={480}
-      >
-        <Tabs
-          defaultActiveKey="image"
-          items={items}
-          onChange={(key) => {
-            setSelectedMediaType(key as MediaType);
-            setUrlInput("");
-            setPreviewError(false);
-          }}
-        />
-      </Modal>
-    </div>
+      <Dialog open={isModalOpen} onClose={handleCancel} maxWidth="sm" fullWidth>
+        <DialogTitle>{t("builder.inputPreviews.mediaModalTitle")}</DialogTitle>
+        <DialogContent>
+          <Tabs
+            value={selectedMediaType}
+            onChange={(_, key) => {
+              setSelectedMediaType(key as MediaType);
+              setUrlInput("");
+              setPreviewError(false);
+            }}
+          >
+            <Tab
+              value="image"
+              icon={<ImageOutlinedIcon />}
+              iconPosition="start"
+              label={t("builder.inputPreviews.image")}
+            />
+            <Tab
+              value="audio"
+              icon={<AudioFileOutlinedIcon />}
+              iconPosition="start"
+              label={t("builder.inputPreviews.audio")}
+            />
+            <Tab
+              value="video"
+              icon={<VideocamOutlinedIcon />}
+              iconPosition="start"
+              label={t("builder.inputPreviews.video")}
+            />
+          </Tabs>
+          {renderMediaTab(selectedMediaType)}
+        </DialogContent>
+      </Dialog>
+    </Box>
   );
 };
 

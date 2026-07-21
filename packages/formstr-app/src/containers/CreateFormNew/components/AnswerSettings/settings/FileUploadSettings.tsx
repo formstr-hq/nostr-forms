@@ -1,11 +1,19 @@
-import { Input, InputNumber, Select, Typography, Space, Button, message } from "antd";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Divider,
+  FormControl,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { IAnswerSettings } from "../types";
 import { pool } from "../../../../../pool";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
-const { Option } = Select;
+import { useSnackbar } from "../../../../../providers/SnackbarProvider";
 
 const PUBLIC_RELAYS = [
   "wss://relay.damus.io",
@@ -33,15 +41,17 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
   handleAnswerSettings,
 }) => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [servers, setServers] = useState<ServerInfo[]>(
-    DEFAULT_SERVERS.map((url) => ({ url, source: "default" as const }))
+    DEFAULT_SERVERS.map((url) => ({ url, source: "default" as const })),
   );
   const [loading, setLoading] = useState(true);
   const [customUrl, setCustomUrl] = useState("");
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
 
-  const blossomServer: string = answerSettings.blossomServer || DEFAULT_SERVERS[0];
+  const blossomServer: string =
+    answerSettings.blossomServer || DEFAULT_SERVERS[0];
   const maxFileSize: number = answerSettings.maxFileSize || 10;
   const allowedTypes: string[] = answerSettings.allowedTypes || [];
 
@@ -99,7 +109,10 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
     if (!customUrl.trim()) return;
 
     let normalizedUrl = customUrl.trim();
-    if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
+    if (
+      !normalizedUrl.startsWith("http://") &&
+      !normalizedUrl.startsWith("https://")
+    ) {
       normalizedUrl = "https://" + normalizedUrl;
     }
     normalizedUrl = normalizedUrl.replace(/\/$/, "");
@@ -121,20 +134,27 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
         method: "OPTIONS", // Check CORS preflight
       });
       if (response.ok || response.status === 204) {
-        message.success(t("builder.fileUploadSettings.uploadEndpointAccessible"));
+        showMessage(
+          t("builder.fileUploadSettings.uploadEndpointAccessible"),
+          "success",
+        );
       } else {
-        message.warning(
+        showMessage(
           t("builder.fileUploadSettings.uploadEndpointStatus", {
             status: response.status,
           }),
+          "warning",
         );
       }
     } catch (e: any) {
       console.error("Connection test failed:", e);
       if (e instanceof TypeError || e.message?.includes("Failed to fetch")) {
-        message.error(t("builder.fileUploadSettings.connectionCorsError"));
+        showMessage(
+          t("builder.fileUploadSettings.connectionCorsError"),
+          "error",
+        );
       } else {
-        message.error(t("builder.fileUploadSettings.connectionFailed"));
+        showMessage(t("builder.fileUploadSettings.connectionFailed"), "error");
       }
     } finally {
       setTestingConnection(false);
@@ -153,106 +173,171 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
   };
 
   const commonMimeTypes = [
-    { label: t("builder.fileUploadSettings.mimeTypes.images"), value: "image/*" },
-    { label: t("builder.fileUploadSettings.mimeTypes.pdfs"), value: "application/pdf" },
-    { label: t("builder.fileUploadSettings.mimeTypes.documents"), value: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
-    { label: t("builder.fileUploadSettings.mimeTypes.spreadsheets"), value: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
-    { label: t("builder.fileUploadSettings.mimeTypes.videos"), value: "video/*" },
-    { label: t("builder.fileUploadSettings.mimeTypes.audio"), value: "audio/*" },
+    {
+      label: t("builder.fileUploadSettings.mimeTypes.images"),
+      value: "image/*",
+    },
+    {
+      label: t("builder.fileUploadSettings.mimeTypes.pdfs"),
+      value: "application/pdf",
+    },
+    {
+      label: t("builder.fileUploadSettings.mimeTypes.documents"),
+      value:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    },
+    {
+      label: t("builder.fileUploadSettings.mimeTypes.spreadsheets"),
+      value:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    },
+    {
+      label: t("builder.fileUploadSettings.mimeTypes.videos"),
+      value: "video/*",
+    },
+    {
+      label: t("builder.fileUploadSettings.mimeTypes.audio"),
+      value: "audio/*",
+    },
     { label: t("builder.fileUploadSettings.mimeTypes.text"), value: "text/*" },
   ];
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }} size="middle">
-      <div>
-        <Text className="property-name" style={{ display: "block", marginBottom: 8 }}>
-          {t("builder.fileUploadSettings.blossomServer")}
-        </Text>
-        <Select
-          style={{ width: "100%" }}
-          value={blossomServer}
-          onChange={(value) => updateSetting("blossomServer", value)}
-          loading={loading}
-          dropdownRender={(menu) => (
-            <>
-              {menu}
-              <div style={{ padding: "8px", borderTop: "1px solid #f0f0f0" }}>
-                {!showCustomInput ? (
-                  <Button
-                    type="link"
-                    onClick={() => setShowCustomInput(true)}
-                    style={{ padding: 0 }}
-                  >
-                    + {t("builder.fileUploadSettings.addCustomServer")}
-                  </Button>
-                ) : (
-                  <Space.Compact style={{ width: "100%" }}>
-                    <Input
-                      placeholder="https://your-server.com"
-                      value={customUrl}
-                      onChange={(e) => setCustomUrl(e.target.value)}
-                      onPressEnter={handleAddCustomServer}
-                    />
-                    <Button onClick={handleAddCustomServer}>
-                      {t("builder.fileUploadSettings.add")}
-                    </Button>
-                  </Space.Compact>
-                )}
-              </div>
-            </>
-          )}
+    <Box
+      sx={{ display: "flex", flexDirection: "column", gap: 2, width: "100%" }}
+    >
+      <Box>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ display: "block", mb: 1 }}
         >
-          {servers.map((server) => (
-            <Option key={server.url} value={server.url}>
-              {server.url}
-              {getSourceLabel(server.source)}
-            </Option>
-          ))}
-        </Select>
-      </div>
+          {t("builder.fileUploadSettings.blossomServer")}
+        </Typography>
+        <FormControl fullWidth size="small">
+          <Select
+            value={blossomServer}
+            onChange={(e) => updateSetting("blossomServer", e.target.value)}
+            endAdornment={
+              loading ? (
+                <CircularProgress size={16} sx={{ mr: 3 }} />
+              ) : undefined
+            }
+          >
+            {servers.map((server) => (
+              <MenuItem key={server.url} value={server.url}>
+                {server.url}
+                {getSourceLabel(server.source)}
+              </MenuItem>
+            ))}
+            <Divider />
+            <Box sx={{ p: 1 }} onKeyDown={(e) => e.stopPropagation()}>
+              {!showCustomInput ? (
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => setShowCustomInput(true)}
+                  sx={{ p: 0 }}
+                >
+                  + {t("builder.fileUploadSettings.addCustomServer")}
+                </Button>
+              ) : (
+                <Box sx={{ display: "flex", gap: 1, width: "100%" }}>
+                  <TextField
+                    size="small"
+                    fullWidth
+                    placeholder="https://your-server.com"
+                    value={customUrl}
+                    onChange={(e) => setCustomUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      e.stopPropagation();
+                      if (e.key === "Enter") handleAddCustomServer();
+                    }}
+                  />
+                  <Button variant="outlined" onClick={handleAddCustomServer}>
+                    {t("builder.fileUploadSettings.add")}
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          </Select>
+        </FormControl>
+      </Box>
 
       <Button
+        variant="outlined"
+        fullWidth
         onClick={handleTestConnection}
-        loading={testingConnection}
-        style={{ width: "100%" }}
+        disabled={testingConnection}
+        startIcon={
+          testingConnection ? <CircularProgress size={16} /> : undefined
+        }
       >
         {t("builder.fileUploadSettings.testConnection")}
       </Button>
 
-      <div className="property-setting">
-        <Text className="property-name">
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          my: 1.5,
+          fontSize: 14,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
           {t("builder.fileUploadSettings.maxFileSize")}
-        </Text>
-        <InputNumber
-          min={1}
-          max={100}
+        </Typography>
+        <TextField
+          type="number"
+          size="small"
           value={maxFileSize}
-          onChange={(v) => updateSetting("maxFileSize", v || 10)}
+          onChange={(e) =>
+            updateSetting("maxFileSize", Number(e.target.value) || 10)
+          }
+          slotProps={{ htmlInput: { min: 1, max: 100 } }}
+          sx={{ width: 100 }}
         />
-      </div>
+      </Box>
 
-      <div>
-        <Text className="property-name" style={{ display: "block", marginBottom: 8 }}>
-          {t("builder.fileUploadSettings.allowedFileTypes")}
-        </Text>
-        <Select
-          mode="multiple"
-          style={{ width: "100%" }}
-          placeholder={t("builder.fileUploadSettings.allowAllTypes")}
-          value={allowedTypes}
-          onChange={(v) => updateSetting("allowedTypes", v)}
+      <Box>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ display: "block", mb: 1 }}
         >
-          {commonMimeTypes.map((type) => (
-            <Option key={type.value} value={type.value}>
-              {type.label}
-            </Option>
-          ))}
-        </Select>
-      </div>
+          {t("builder.fileUploadSettings.allowedFileTypes")}
+        </Typography>
+        <FormControl fullWidth size="small">
+          <Select
+            multiple
+            displayEmpty
+            value={allowedTypes}
+            onChange={(e) =>
+              updateSetting("allowedTypes", e.target.value as string[])
+            }
+            renderValue={(selected) =>
+              selected.length === 0
+                ? t("builder.fileUploadSettings.allowAllTypes")
+                : selected.join(", ")
+            }
+          >
+            {commonMimeTypes.map((type) => (
+              <MenuItem key={type.value} value={type.value}>
+                {type.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
 
-      <Text type="secondary" style={{ fontSize: "12px", display: "block" }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: "block" }}
+      >
         {t("builder.fileUploadSettings.filesEncrypted")}
-      </Text>
-    </Space>
+      </Typography>
+    </Box>
   );
 };

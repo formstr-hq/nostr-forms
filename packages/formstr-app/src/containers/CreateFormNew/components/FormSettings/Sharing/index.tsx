@@ -1,10 +1,7 @@
-import { Tooltip, Typography } from "antd";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { useTranslation } from "react-i18next";
-import { isMobile } from "../../../../../utils/utility";
-import useFormBuilderContext from "../../../hooks/useFormBuilderContext";
-import { EditOutlined } from "@ant-design/icons";
 import { useState } from "react";
-import AddNpubStyle from "../addNpub.style";
 import { Editors } from "./Editors";
 import { Participants } from "./Participants";
 import { useProfileContext } from "../../../../../hooks/useProfileContext";
@@ -14,41 +11,63 @@ enum ROLE {
   EDIT,
 }
 
-const { Text } = Typography;
 export const Sharing = () => {
   const { t } = useTranslation();
   const { pubkey: userPubkey, requestPubkey } = useProfileContext();
   const [isEditListOpen, setIsEditListOpen] = useState<boolean>(false);
   const [isViewListOpen, setIsViewListOpen] = useState<boolean>(false);
   return (
-    <>
-      <Tooltip
-        title={t("builder.sharing.configureTooltip")}
-        trigger={isMobile() ? "click" : "hover"}
+    <Tooltip title={t("builder.sharing.configureTooltip")}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          my: 1.5,
+          fontSize: 14,
+        }}
       >
-        <div className="sharing-settings">
-          <div className="property-setting">
-            <Text>{t("builder.sharing.configureAdmins")}</Text>
-            <EditOutlined
-              onClick={() => {
-                setIsEditListOpen(true);
-              }}
-            />
-          </div>
-          <div className="property-setting">
-            <Text>{t("builder.sharing.participantsVisibility")}</Text>
-            <EditOutlined onClick={() => setIsViewListOpen(true)} />
-          </div>
-          <Editors
-            open={isEditListOpen}
-            onCancel={() => setIsEditListOpen(false)}
-          />
-          <Participants
-            open={isViewListOpen}
-            onCancel={() => setIsViewListOpen(false)}
-          />
-        </div>
-      </Tooltip>
-    </>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography sx={{ fontSize: 14 }}>
+            {t("builder.sharing.configureAdmins")}
+          </Typography>
+          <IconButton
+            size="small"
+            onClick={() => {
+              setIsEditListOpen(true);
+            }}
+          >
+            <EditOutlinedIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography sx={{ fontSize: 14 }}>
+            {t("builder.sharing.participantsVisibility")}
+          </Typography>
+          <IconButton size="small" onClick={() => setIsViewListOpen(true)}>
+            <EditOutlinedIcon fontSize="small" />
+          </IconButton>
+        </Box>
+        <Editors
+          open={isEditListOpen}
+          onCancel={() => setIsEditListOpen(false)}
+        />
+        <Participants
+          open={isViewListOpen}
+          onCancel={() => setIsViewListOpen(false)}
+        />
+      </Box>
+    </Tooltip>
   );
 };

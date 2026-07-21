@@ -1,11 +1,7 @@
-import { Tooltip, Typography } from "antd";
-import { InputStyle } from "./validation.style";
+import { Box, TextField, Tooltip, Typography } from "@mui/material";
 import { ChangeEvent, useState } from "react";
-import { isMobile } from "../../../../utils/utility";
 import { RegexRule, ValidationRuleTypes } from "../../../../nostr/types";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 function isValidRegex(input: string): boolean {
   try {
@@ -15,6 +11,13 @@ function isValidRegex(input: string): boolean {
     return false;
   }
 }
+
+const rowSx = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  mb: 1,
+};
 
 function Regex({ rule, onChange }: { rule?: RegexRule; onChange: Function }) {
   const { t } = useTranslation();
@@ -47,29 +50,35 @@ function Regex({ rule, onChange }: { rule?: RegexRule; onChange: Function }) {
 
   return (
     <>
-      <Tooltip
-        title={t("builder.validation.patternTooltip")}
-        trigger={isMobile() ? "click" : "hover"}
-      >
-        <InputStyle>
-          <Text className="property-name">{t("builder.validation.patternLabel")}</Text>
-          <input
-            className="number-input"
+      <Tooltip title={t("builder.validation.patternTooltip")}>
+        <Box sx={rowSx}>
+          <Typography variant="body2" color="text.secondary">
+            {t("builder.validation.patternLabel")}
+          </Typography>
+          <TextField
+            size="small"
             value={tempPattern}
             onChange={handlePatternChange}
+            sx={{ width: "50%" }}
           />
-        </InputStyle>
+        </Box>
       </Tooltip>
-      {patternError && <Text type="danger">{patternError}</Text>}
-      <InputStyle>
-        <Text className="property-name">{t("builder.validation.errorMessage")}</Text>
-        <input
-          className="number-input"
-          type="text"
-          value={rule?.errorMessage}
+      {patternError && (
+        <Typography variant="body2" color="error">
+          {patternError}
+        </Typography>
+      )}
+      <Box sx={rowSx}>
+        <Typography variant="body2" color="text.secondary">
+          {t("builder.validation.errorMessage")}
+        </Typography>
+        <TextField
+          size="small"
+          value={rule?.errorMessage ?? ""}
           onChange={handleErrorMessageChange}
+          sx={{ width: "50%" }}
         />
-      </InputStyle>
+      </Box>
     </>
   );
 }

@@ -2,9 +2,13 @@ import ShortText from "./InputElements/ShortText";
 import { RadioButtonCreator } from "./InputElements/OptionTypes/RadioButtonCreator";
 import { CheckboxCreator } from "./InputElements/OptionTypes/CheckBoxCreator";
 import { DropdownCreator } from "./InputElements/OptionTypes/DropdownCreator";
-import { DatePicker, Input, InputNumber, TimePicker } from "antd";
+import { TextField } from "@mui/material";
 import { Choice } from "./InputElements/OptionTypes/types";
-import { AnswerSettings, AnswerTypes, GridOptions } from "../../../../nostr/types";
+import {
+  AnswerSettings,
+  AnswerTypes,
+  GridOptions,
+} from "../../../../nostr/types";
 import SignatureInput from "./InputElements/Signature";
 import { GridCreator } from "./InputElements/GridCreator";
 import FileUploadBuilder from "./InputElements/FileUploadBuilder";
@@ -19,6 +23,11 @@ interface InputsProps {
   optionsHandler: (options: Array<Choice>) => void;
 }
 
+/**
+ * Builder edit-mode input previews (MUI, ui-rewrite-mui Phase 5). Date/time
+ * previews are plain disabled text fields — interactive pickers live in the
+ * filler (MUI X), and these previews never take input.
+ */
 const Inputs: React.FC<InputsProps> = ({
   inputType,
   options,
@@ -27,10 +36,6 @@ const Inputs: React.FC<InputsProps> = ({
   optionsHandler,
 }) => {
   const { t } = useTranslation();
-  const updateAnswerSettings = (settingKey: string, property: unknown) => {
-    let newAnswerSettings = { ...answerSettings, [settingKey]: property };
-    answerSettingsHandler(newAnswerSettings);
-  };
   const getInputElement = () => {
     switch (inputType) {
       case AnswerTypes.shortText:
@@ -40,9 +45,9 @@ const Inputs: React.FC<InputsProps> = ({
           </>
         );
       case AnswerTypes.paragraph:
-        return <Input.TextArea disabled={true} />;
+        return <TextField multiline rows={2} disabled fullWidth />;
       case AnswerTypes.number:
-        return <InputNumber disabled={true} />;
+        return <TextField type="number" disabled size="small" />;
       case AnswerTypes.radioButton:
         return (
           <RadioButtonCreator
@@ -65,22 +70,52 @@ const Inputs: React.FC<InputsProps> = ({
           />
         );
       case AnswerTypes.date:
-        return <DatePicker disabled={true} />;
+        return (
+          <TextField
+            disabled
+            size="small"
+            placeholder={t(
+              "builder.inputPreviews.datePlaceholder",
+              "Select date",
+            )}
+          />
+        );
       case AnswerTypes.time:
-        return <TimePicker disabled={true} />;
+        return (
+          <TextField
+            disabled
+            size="small"
+            placeholder={t(
+              "builder.inputPreviews.timePlaceholder",
+              "Select time",
+            )}
+          />
+        );
       case AnswerTypes.rating:
-        return <Rating initialValue={0} maxStars={answerSettings.maxStars || 5} onChange={() => {}} />;
+        return (
+          <Rating
+            initialValue={0}
+            maxStars={answerSettings.maxStars || 5}
+            onChange={() => {}}
+          />
+        );
       case AnswerTypes.signature:
         return <SignatureInput answerSettings={answerSettings} />;
       case AnswerTypes.datetime:
         return (
-          <DatePicker
-            disabled={true}
+          <TextField
+            disabled
+            size="small"
             placeholder={t("builder.inputPreviews.dateTimePlaceholder")}
           />
         );
       case AnswerTypes.fileUpload:
-        return <FileUploadBuilder answerSettings={answerSettings} handleAnswerSettings={answerSettingsHandler} />;
+        return (
+          <FileUploadBuilder
+            answerSettings={answerSettings}
+            handleAnswerSettings={answerSettingsHandler}
+          />
+        );
       case AnswerTypes.multipleChoiceGrid:
       case AnswerTypes.checkboxGrid: {
         const gridOptions = options as unknown as GridOptions;

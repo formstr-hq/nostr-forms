@@ -1,7 +1,6 @@
-import { CloseOutlined } from "@ant-design/icons";
-import { Input, Radio } from "antd";
+import CloseIcon from "@mui/icons-material/Close";
+import { Box, IconButton, Radio, TextField } from "@mui/material";
 import { useState } from "react";
-import OptionsStyle from "./Options.style";
 import { AddOption } from "./AddOption";
 import {
   handleDelete,
@@ -10,7 +9,6 @@ import {
   normalizeChoices,
 } from "./utils";
 import { Choice, ChoiceSettings } from "./types";
-import { makeTag } from "../../../../../../utils/utility";
 import { ColorfulMarkdownTextarea } from "../../../../../../components/SafeMarkdown/ColorfulMarkdownInput";
 import { useTranslation } from "react-i18next";
 
@@ -34,54 +32,48 @@ export const RadioButtonCreator: React.FC<RadioButtonCreatorProps> = ({
   };
 
   return (
-    <OptionsStyle>
+    <Box>
       {choices?.map((choice) => {
         let [choiceId, label, settingsString] = choice;
         let settings = JSON.parse(settingsString || "{}") as ChoiceSettings;
         return (
-          <div className="radioButtonItem" key={choiceId}>
+          <Box
+            key={choiceId}
+            sx={{ display: "flex", flexDirection: "row", alignItems: "center" }}
+          >
             <Radio disabled key={choiceId + "choice"} />
-            {/* <Input
-              key={choiceId + "input"}
-              defaultValue={label}
-              onChange={(e) => {
-                handleLabelChange(
-                  e.target.value,
-                  choiceId,
-                  choices,
-                  handleNewChoices
-                );
-              }}
-              placeholder="Enter an option"
-              className="choice-input"
-              disabled={settings.isOther}
-            /> */}
-            <ColorfulMarkdownTextarea
-              key={choiceId + "input"}
-              onChange={(val) => {
-                handleLabelChange(val, choiceId!, choices, handleNewChoices);
-              }}
-              value={label}
-              placeholder={t("builder.inputPreviews.optionPlaceholder")}
-              className="choice-input"
-              disabled={settings.isOther}
-            />
+            <Box sx={{ m: "10px", flex: 1 }}>
+              <ColorfulMarkdownTextarea
+                key={choiceId + "input"}
+                onChange={(val) => {
+                  handleLabelChange(val, choiceId!, choices, handleNewChoices);
+                }}
+                value={label}
+                placeholder={t("builder.inputPreviews.optionPlaceholder")}
+                disabled={settings.isOther}
+              />
+            </Box>
             {settings.isOther && (
-              <Input
+              <TextField
                 placeholder={t("builder.inputPreviews.customRespondentAnswer")}
                 disabled
-                style={{ maxWidth: 200 }}
-                className="choice-input"
+                size="small"
+                variant="standard"
+                slotProps={{ input: { disableUnderline: true } }}
+                sx={{ maxWidth: 200, m: "10px" }}
               />
             )}
             {choices.length >= 2 && (
-              <CloseOutlined
-                onClick={(e) => {
+              <IconButton
+                size="small"
+                onClick={() => {
                   handleDelete(choiceId!, choices, handleNewChoices);
                 }}
-              />
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
             )}
-          </div>
+          </Box>
         );
       })}
       <AddOption
@@ -93,6 +85,6 @@ export const RadioButtonCreator: React.FC<RadioButtonCreatorProps> = ({
         callback={handleNewChoices}
         displayOther={!hasOtherOption(choices)}
       />
-    </OptionsStyle>
+    </Box>
   );
 };

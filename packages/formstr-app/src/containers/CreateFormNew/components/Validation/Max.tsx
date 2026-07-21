@@ -1,24 +1,31 @@
-import { Typography } from "antd";
-import { InputStyle } from "./validation.style";
+import { Box, TextField, Typography } from "@mui/material";
 import { MaxRule, ValidationRuleTypes } from "../../../../nostr/types";
 import { useTranslation } from "react-i18next";
-
-const { Text } = Typography;
 
 function Max({ rule, onChange }: { rule?: MaxRule; onChange: Function }) {
   const { t } = useTranslation();
   return (
-    <InputStyle>
-      <Text className="property-name">{t("builder.validation.maxLength")}</Text>
-      <input
-        className="number-input"
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        mb: 1,
+      }}
+    >
+      <Typography variant="body2" color="text.secondary">
+        {t("builder.validation.maxLength")}
+      </Typography>
+      <TextField
         type="number"
-        value={rule?.max}
+        size="small"
+        value={rule?.max ?? ""}
         onChange={(e) =>
           onChange(ValidationRuleTypes.max, { max: e.target.value })
         }
+        sx={{ width: "50%" }}
       />
-    </InputStyle>
+    </Box>
   );
 }
 

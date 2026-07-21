@@ -1,12 +1,17 @@
-import { Modal, Tooltip, Typography } from "antd";
+import {
+  Box,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { useTranslation } from "react-i18next";
-import { isMobile } from "../../../../utils/utility";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
-import { EditOutlined } from "@ant-design/icons";
 import { useState } from "react";
 import { NpubList } from "./Sharing/NpubList";
 
-const { Text } = Typography;
 export const Notifications = () => {
   const { t } = useTranslation();
   const { updateFormSetting, formSettings } = useFormBuilderContext();
@@ -22,41 +27,59 @@ export const Notifications = () => {
 
   return (
     <>
-      <Tooltip
-        title={t("builder.notifications.configureTooltip")}
-        trigger={isMobile() ? "click" : "hover"}
-      >
-        <div className="property-setting">
-          <Text>{t("builder.notifications.configure")}</Text>
-          <EditOutlined onClick={() => setIsModalOpen(true)} />
-        </div>
+      <Tooltip title={t("builder.notifications.configureTooltip")}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            my: 1.5,
+          }}
+        >
+          <Typography sx={{ fontSize: 14 }}>
+            {t("builder.notifications.configure")}
+          </Typography>
+          <IconButton size="small" onClick={() => setIsModalOpen(true)}>
+            <EditOutlinedIcon fontSize="small" />
+          </IconButton>
+        </Box>
       </Tooltip>
-      <Modal
+      <Dialog
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        footer={null}
-        destroyOnClose
+        onClose={() => setIsModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
       >
-        <NpubList
-          NpubList={new Set(formSettings.notifyNpubs || [])}
-          setNpubList={handleSetNpubs}
-          ListHeader={t("builder.notifications.recipients")}
-        />
-        {hasNpubs && (
-          <Text className="warning-text">
-            {t("builder.notifications.warningPrefix")}
-            <a
-              href="https://github.com/nostr-protocol/nips/blob/master/04.md"
-              target="_blank"
-              rel="noreferrer"
+        <DialogContent>
+          <NpubList
+            NpubList={new Set(formSettings.notifyNpubs || [])}
+            setNpubList={handleSetNpubs}
+            ListHeader={t("builder.notifications.recipients")}
+          />
+          {hasNpubs && (
+            <Typography
+              sx={{
+                fontSize: 12,
+                color: "#ea8dea",
+                display: "block",
+                mt: 0.5,
+                "& a": { color: "inherit", textDecoration: "underline" },
+              }}
             >
-              {" "}
-              nip-04{" "}
-            </a>
-            {t("builder.notifications.warningSuffix")}
-          </Text>
-        )}
-      </Modal>
+              {t("builder.notifications.warningPrefix")}
+              <a
+                href="https://github.com/nostr-protocol/nips/blob/master/04.md"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {" "}
+                nip-04{" "}
+              </a>
+              {t("builder.notifications.warningSuffix")}
+            </Typography>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

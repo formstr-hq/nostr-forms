@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Input, Drawer, Button, Typography } from "antd";
+import { Box, Button, Drawer, TextField, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { ImagePicker } from "../../BackgroundImagePicker";
 import { sampleThankYouScreens } from "../constants";
-const { Text } = Typography;
 
 interface Props {
   value?: string;
@@ -18,40 +17,53 @@ export const ThankYouScreenImageSetting: React.FC<Props> = ({
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div style={{ marginTop: 16 }}>
-      <Text className="property-name">
+    <Box sx={{ mt: 2 }}>
+      <Typography sx={{ fontSize: 14 }}>
         {t("builder.formSettings.thankYouImage")}
-      </Text>
-      <div
-        style={{
+      </Typography>
+      <Box
+        sx={{
           display: "flex",
-          gap: 6,
+          gap: 0.75,
           alignItems: "center",
         }}
       >
-        <Input
+        <TextField
+          size="small"
+          fullWidth
           placeholder={t("builder.formSettings.customImageUrl")}
-          value={value}
+          value={value ?? ""}
           onChange={(e) => onChange(e.target.value)}
         />
-        <Button onClick={() => setDrawerOpen(true)}>...</Button>
-      </div>
+        <Button
+          variant="outlined"
+          onClick={() => setDrawerOpen(true)}
+          sx={{ minWidth: 40, px: 1 }}
+        >
+          ...
+        </Button>
+      </Box>
 
       <Drawer
-        title={t("builder.formSettings.chooseBackground")}
+        anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        width={500}
+        slotProps={{ paper: { sx: { width: { xs: "100%", sm: 500 } } } }}
       >
-        <ImagePicker
-          options={sampleThankYouScreens}
-          selectedUrl={value}
-          onSelect={(url) => {
-            onChange(url);
-            setDrawerOpen(false);
-          }}
-        />
+        <Box sx={{ p: 2 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            {t("builder.formSettings.chooseBackground")}
+          </Typography>
+          <ImagePicker
+            options={sampleThankYouScreens}
+            selectedUrl={value}
+            onSelect={(url) => {
+              onChange(url);
+              setDrawerOpen(false);
+            }}
+          />
+        </Box>
       </Drawer>
-    </div>
+    </Box>
   );
 };

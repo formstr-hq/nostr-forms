@@ -1,11 +1,9 @@
 import React from "react";
-import {
-  ArrowDownOutlined,
-  ArrowUpOutlined,
-  MoreOutlined,
-} from "@ant-design/icons";
+import { Box, IconButton } from "@mui/material";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { ReactComponent as Asterisk } from "../../../../Images/asterisk.svg";
-import StyledWrapper from "./CardHeader.style";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 import useDeviceType from "../../../../hooks/useDeviceType";
 import { classNames } from "../../../../utils/utility";
@@ -21,6 +19,14 @@ interface CardHeaderProps {
   lastQuestion: boolean;
 }
 
+const actionIconSx = {
+  height: 28,
+  width: 28,
+  bgcolor: "rgba(0, 0, 0, 0.05)",
+  borderRadius: "50%",
+  mr: 1,
+} as const;
+
 const CardHeader: React.FC<CardHeaderProps> = ({
   required,
   onRequired,
@@ -34,55 +40,81 @@ const CardHeader: React.FC<CardHeaderProps> = ({
     useFormBuilderContext();
 
   return (
-    <StyledWrapper>
-      <div className="action-wrapper">
-        <div style={{ display: "flex" }}>
-          {!firstQuestion && (
-            <div
-              className="action-icon"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                onReorderKey("UP", question[1]);
-              }}
-            >
-              <ArrowUpOutlined className="icon-svg" />
-            </div>
-          )}
-          {!lastQuestion && (
-            <div
-              className="action-icon"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                onReorderKey("DOWN", question[1]);
-              }}
-            >
-              <ArrowDownOutlined className="icon-svg" />
-            </div>
-          )}
-          <div className="action-icon">
-            <Asterisk
-              className={classNames("asterisk", { asteriskSelected: required })}
-              onClick={() => {
-                onRequired(!required);
-              }}
-            />
-          </div>
-          <DeleteButton
-            className="action-icon"
-            onDelete={() => {
-              deleteQuestion(question[1]);
-              setQuestionIdInFocus(undefined);
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        pb: "10px",
+        pt: "5px",
+        ".asterisk": {
+          transition: "fill 0.2s ease-in-out",
+          fontSize: 12,
+          m: "2.5px",
+          height: 12,
+          width: 12,
+        },
+        ".asterisk:hover": { fill: "#ea8dea" },
+        ".asteriskSelected": { fill: "#ea8dea" },
+      }}
+    >
+      <Box sx={{ display: "flex" }}>
+        {!firstQuestion && (
+          <IconButton
+            aria-label="move question up"
+            size="small"
+            sx={actionIconSx}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onReorderKey("UP", question[1]);
             }}
-          />
-        </div>
-
-        {MOBILE && (
-          <div className="action-icon">
-            <MoreOutlined onClick={toggleSettingsWindow} />
-          </div>
+          >
+            <ArrowUpwardIcon sx={{ fontSize: 14 }} />
+          </IconButton>
         )}
-      </div>
-    </StyledWrapper>
+        {!lastQuestion && (
+          <IconButton
+            aria-label="move question down"
+            size="small"
+            sx={actionIconSx}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onReorderKey("DOWN", question[1]);
+            }}
+          >
+            <ArrowDownwardIcon sx={{ fontSize: 14 }} />
+          </IconButton>
+        )}
+        <IconButton
+          aria-label="toggle required"
+          size="small"
+          sx={actionIconSx}
+          onClick={() => {
+            onRequired(!required);
+          }}
+        >
+          <Asterisk
+            className={classNames("asterisk", { asteriskSelected: required })}
+          />
+        </IconButton>
+        <DeleteButton
+          onDelete={() => {
+            deleteQuestion(question[1]);
+            setQuestionIdInFocus(undefined);
+          }}
+        />
+      </Box>
+
+      {MOBILE && (
+        <IconButton
+          aria-label="question settings"
+          size="small"
+          sx={actionIconSx}
+          onClick={toggleSettingsWindow}
+        >
+          <MoreVertIcon sx={{ fontSize: 16 }} />
+        </IconButton>
+      )}
+    </Box>
   );
 };
 

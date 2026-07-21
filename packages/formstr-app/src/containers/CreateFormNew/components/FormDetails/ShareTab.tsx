@@ -1,9 +1,7 @@
 import { UrlBox } from "./UrlBox";
 import { ReactComponent as Success } from "../../../../Images/success.svg";
-import { Typography } from "antd";
+import { Box, Typography } from "@mui/material";
 import { SupportUsButton } from "@formstr/support-us-button";
-
-const { Text } = Typography;
 
 export const ShareTab = ({
   formUrl,
@@ -13,10 +11,17 @@ export const ShareTab = ({
   responsesUrl?: string;
 }) => {
   return (
-    <div className="share-links" style={{ textAlign: "center" }}>
+    <Box
+      className="share-links"
+      sx={{
+        textAlign: "center",
+        wordWrap: "break-word",
+        overflowWrap: "anywhere",
+      }}
+    >
       <Success />
 
-      <div style={{ marginTop: 12 }}>
+      <Box sx={{ mt: 1.5 }}>
         <UrlBox label="Live Form URL" url={formUrl} />
 
         {responsesUrl && (
@@ -28,11 +33,12 @@ export const ShareTab = ({
             />
           </>
         )}
-      </div>
+      </Box>
 
-      <Text
-        type="secondary"
-        style={{ display: "block", marginTop: 20, fontSize: 12 }}
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ display: "block", mt: 2.5 }}
       >
         Enjoying Formstr?{" "}
         <SupportUsButton
@@ -40,7 +46,7 @@ export const ShareTab = ({
           type="link"
           style={{ fontSize: 12, padding: 0, height: "auto" }}
         />
-      </Text>
-    </div>
+      </Typography>
+    </Box>
   );
 };

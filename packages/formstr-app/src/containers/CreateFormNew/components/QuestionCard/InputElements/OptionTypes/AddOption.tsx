@@ -1,10 +1,9 @@
-import { PlusOutlined } from "@ant-design/icons";
-import { Button, Typography } from "antd";
+import AddIcon from "@mui/icons-material/Add";
+import { Box, Button, Typography } from "@mui/material";
 import { makeTag } from "../../../../../../utils/utility";
 import { addOption } from "./utils";
 import { Choice } from "./types";
 import UploadFile from "../../UploadFile";
-const { Text } = Typography;
 
 interface AddOptionProps {
   choices: Array<Choice>;
@@ -19,14 +18,23 @@ export const AddOption: React.FC<AddOptionProps> = ({
   callback,
 }) => {
   return (
-    <div className="addOptionButtons">
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        m: "2px",
+      }}
+    >
       <Button
         disabled={disable}
-        type="dashed"
-        onClick={(e) => {
+        variant="outlined"
+        onClick={() => {
           addOption([makeTag(6), "Add option"], choices, callback);
         }}
-        icon={<PlusOutlined />}
+        startIcon={<AddIcon />}
+        sx={{ borderStyle: "dashed" }}
       >
         Add Option
       </Button>
@@ -37,20 +45,30 @@ export const AddOption: React.FC<AddOptionProps> = ({
       />
       {displayOther && (
         <>
-          <div className="orText">
-            <Text disabled={disable}>{" or "}</Text>
-          </div>
+          <Box sx={{ m: "5px" }}>
+            <Typography
+              component="span"
+              color={disable ? "text.disabled" : "text.primary"}
+            >
+              {" or "}
+            </Typography>
+          </Box>
           <Button
-            type="dashed"
+            variant="outlined"
             disabled={disable}
-            onClick={(e) => {
-              addOption([makeTag(6), "Other", JSON.stringify({ isOther: true })], choices, callback);
+            onClick={() => {
+              addOption(
+                [makeTag(6), "Other", JSON.stringify({ isOther: true })],
+                choices,
+                callback,
+              );
             }}
+            sx={{ borderStyle: "dashed" }}
           >
             add other
           </Button>
         </>
       )}
-    </div>
+    </Box>
   );
 };

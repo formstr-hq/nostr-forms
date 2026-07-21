@@ -1,10 +1,9 @@
 import QuestionCard from "../QuestionCard";
-import { Button, Input, Empty, Typography } from "antd";
+import { Box, Fab, Typography } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import FormTitle from "../FormTitle";
-import StyleWrapper from "./style";
-import DescriptionStyle from "./description.style";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
-import React, { ChangeEvent, useRef } from "react";
+import React, { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AnimatePresence, motion } from "framer-motion";
 import { Field } from "../../../../nostr/types";
@@ -12,8 +11,7 @@ import AIFormGeneratorModal from "../AIFormGeneratorModal";
 import Section from "../SectionManager/Section";
 import { ColorfulMarkdownTextarea } from "../../../../components/SafeMarkdown/ColorfulMarkdownInput";
 import GoogleFormImportModal from "../GoogleFormImportModal";
-
-const { Text } = Typography;
+import { MEDIA_QUERY_MOBILE } from "../../../../utils/css";
 
 interface FloatingButtonProps {
   onClick: () => void;
@@ -35,22 +33,14 @@ const FloatingButton = ({ onClick }: FloatingButtonProps) => {
         cursor: "grab",
       }}
     >
-      <Button
-        type="primary"
-        shape="circle"
-        size="large"
-        icon={<span style={{ fontSize: "24px", lineHeight: "0" }}>+</span>}
+      <Fab
+        color="primary"
+        aria-label="add question"
         onClick={onClick}
-        style={{
-          width: 56,
-          height: 56,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          paddingTop: 15,
-        }}
-      />
+        sx={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+      >
+        <AddIcon />
+      </Fab>
     </motion.div>
   );
 };
@@ -162,24 +152,24 @@ export const QuestionsList = () => {
     }
 
     const unsectionedQuestions = questionsList.filter(
-      (question) => !getSectionForQuestion(question[1])
+      (question) => !getSectionForQuestion(question[1]),
     );
 
     return (
       <div className="sectioned-form">
         {unsectionedQuestions.length > 0 && (
-          <div
-            style={{
-              marginBottom: 24,
-              padding: 16,
+          <Box
+            sx={{
+              mb: 3,
+              p: 2,
               border: "1.5px dashed #000000",
-              borderRadius: 8,
-              backgroundColor: "rgba(255, 255, 255, 0.4)"
+              borderRadius: 2,
+              backgroundColor: "rgba(255, 255, 255, 0.4)",
             }}
           >
-            <h4 style={{ margin: "0 0 16px 0", color: "#8c8c8c" }}>
+            <Typography variant="h6" sx={{ mb: 2, color: "text.secondary" }}>
               {t("builder.questionsList.unsectionedQuestions")}
-            </h4>
+            </Typography>
             {unsectionedQuestions.map((question, idx) => (
               <QuestionItem
                 key={question[1]}
@@ -190,12 +180,12 @@ export const QuestionsList = () => {
                 lastQuestion={idx === unsectionedQuestions.length - 1}
               />
             ))}
-          </div>
+          </Box>
         )}
 
         {sections.map((section) => {
           const sectionQuestions = questionsList.filter(
-            (question) => getSectionForQuestion(question[1]) === section.id
+            (question) => getSectionForQuestion(question[1]) === section.id,
           );
 
           return (
@@ -206,10 +196,12 @@ export const QuestionsList = () => {
               totalSections={sections.length}
             >
               {sectionQuestions.length === 0 ? (
-                <Empty
-                  description={t("builder.questionsList.emptySection")}
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                />
+                <Typography
+                  color="text.secondary"
+                  sx={{ textAlign: "center", py: 3 }}
+                >
+                  {t("builder.questionsList.emptySection")}
+                </Typography>
               ) : (
                 sectionQuestions.map((question, idx) => (
                   <QuestionItem
@@ -231,45 +223,92 @@ export const QuestionsList = () => {
   };
 
   return (
-    <StyleWrapper
+    <Box
       className="main-content"
       onClick={() => setQuestionIdInFocus()}
       ref={containerRef}
-      style={{ position: "relative" }}
-      $bgImage={formSettings.backgroundImageUrl}
-      $titleImageUrl={formSettings.titleImageUrl}
+      sx={{
+        position: "relative",
+        backgroundColor: formSettings.backgroundImageUrl
+          ? "transparent"
+          : "#dedede",
+        backgroundImage: formSettings.backgroundImageUrl
+          ? `url(${formSettings.backgroundImageUrl})`
+          : "none",
+        backgroundRepeat: "repeat",
+        backgroundPosition: "center top",
+        backgroundSize: "auto",
+        px: 4,
+        overflow: "scroll",
+        // Height comes from .builder-row — percentage, not viewport units.
+        height: "100%",
+        width: "calc(100vw - 482px)",
+        [MEDIA_QUERY_MOBILE]: { width: "100%", px: 1 },
+        ".form-title": {
+          position: "relative",
+          mt: "30px",
+          borderRadius: "10px",
+          overflow: "hidden",
+          ...(formSettings.titleImageUrl
+            ? { height: 250, backgroundColor: "primary.main" }
+            : {
+                height: "auto",
+                backgroundColor: "transparent",
+                borderRadius: 0,
+                mt: "16px",
+              }),
+        },
+        ".form-description": {
+          textAlign: "left",
+          p: "1em",
+        },
+        ".mobile-add-btn": {
+          display: "none",
+          [MEDIA_QUERY_MOBILE]: {
+            display: "block",
+            position: "fixed",
+            right: 10,
+            bottom: 80,
+            m: 1,
+            zIndex: 1000,
+          },
+        },
+        ".reorder-group": { listStyle: "none", p: 0 },
+      }}
     >
       <div>
         <FormTitle className="form-title" />
-        <DescriptionStyle>
-          <div className="form-description">
-            <ColorfulMarkdownTextarea
-              value={formSettings.description || ""}
-              onChange={handleDescriptionChange}
-              placeholder={t("builder.questionsList.descriptionPlaceholder")}
-              color={formSettings.colors?.description ?? formSettings.colors?.global ?? formSettings.globalColor}
-            />
-          </div>
-        </DescriptionStyle>
+        <Box className="form-description">
+          <ColorfulMarkdownTextarea
+            value={formSettings.description || ""}
+            onChange={handleDescriptionChange}
+            placeholder={t("builder.questionsList.descriptionPlaceholder")}
+            color={
+              formSettings.colors?.description ??
+              formSettings.colors?.global ??
+              formSettings.globalColor
+            }
+          />
+        </Box>
       </div>
 
       {questionsList.length > 0 ? (
         renderQuestions()
       ) : (
-        <div style={{ textAlign: "center", padding: "40px", color: "grey" }}>
-          <Text type="secondary">
+        <Box sx={{ textAlign: "center", p: "40px" }}>
+          <Typography color="text.secondary">
             {t("builder.questionsList.empty")}
-          </Text>
-        </div>
+          </Typography>
+        </Box>
       )}
 
       <div ref={bottomElementRef} style={{ height: "1px" }}></div>
-      <div className="mobile-add-btn">
+      <Box className="mobile-add-btn">
         <FloatingButton
           onClick={onPlusButtonClick}
           containerRef={containerRef}
         />
-      </div>
+      </Box>
       <AIFormGeneratorModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
@@ -278,7 +317,7 @@ export const QuestionsList = () => {
       <GoogleFormImportModal
         isOpen={isImportModalVisible}
         onClose={() => setIsImportModalVisible(false)}
-       />
-    </StyleWrapper>
+      />
+    </Box>
   );
 };

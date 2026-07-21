@@ -1,7 +1,15 @@
-import { Modal, Card, Divider, Typography, Button, Alert } from "antd";
+import {
+  Box,
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  Divider,
+  Tab,
+  Tabs,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import FormDetailsStyle from "./FormDetails.style";
 import { useProfileContext } from "../../../../hooks/useProfileContext";
 import {
   constructFormUrl,
@@ -84,74 +92,86 @@ export const FormDetails = ({
   );
 
   return (
-    <Modal
-      open={isOpen}
-      onCancel={onClose}
-      footer={null}
-      closable={false}
-      width={600}
-    >
-      <FormDetailsStyle className="form-details">
-        <Card
-          bordered={false}
-          tabList={[
-            { key: "share", label: t("builder.formDetails.share") },
-            { key: "sdk", label: t("builder.formDetails.embedWithSdk") },
-            { key: "embed", label: t("builder.formDetails.embedAsIframe") },
-          ]}
-          onTabChange={(key) => setActiveTab(key as "share" | "embed" | "sdk")}
-          style={{
+    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
+      <DialogContent sx={{ p: 0 }}>
+        <Box
+          className="form-details"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            textAlign: "center",
+            flexDirection: "column",
             width: "100%",
-            minWidth: 0,
           }}
         >
-          {activeTab === "share" ? (
-            <ShareTab formUrl={formUrl} responsesUrl={responsesUrl} />
-          ) : null}
-          {activeTab === "embed" ? (
-            <EmbedTab
-              pubKey={pubKey}
-              formId={formId}
-              relays={relays}
-              viewKey={viewKey}
-            />
-          ) : null}
-          {activeTab === "sdk" ? (
-            <EmbedWithSDKTab
-              pubKey={pubKey}
-              formId={formId}
-              relays={relays}
-              viewKey={viewKey}
-            />
-          ) : null}
+          <Card
+            variant="outlined"
+            sx={{ width: "100%", minWidth: 0, border: "none" }}
+          >
+            <Tabs
+              value={activeTab}
+              onChange={(_e, value: "share" | "embed" | "sdk") =>
+                setActiveTab(value)
+              }
+              sx={{ px: 2 }}
+            >
+              <Tab value="share" label={t("builder.formDetails.share")} />
+              <Tab value="sdk" label={t("builder.formDetails.embedWithSdk")} />
+              <Tab
+                value="embed"
+                label={t("builder.formDetails.embedAsIframe")}
+              />
+            </Tabs>
+            <CardContent>
+              {activeTab === "share" ? (
+                <ShareTab formUrl={formUrl} responsesUrl={responsesUrl} />
+              ) : null}
+              {activeTab === "embed" ? (
+                <EmbedTab
+                  pubKey={pubKey}
+                  formId={formId}
+                  relays={relays}
+                  viewKey={viewKey}
+                />
+              ) : null}
+              {activeTab === "sdk" ? (
+                <EmbedWithSDKTab
+                  pubKey={pubKey}
+                  formId={formId}
+                  relays={relays}
+                  viewKey={viewKey}
+                />
+              ) : null}
 
-          <CustomSlugForm
-            formId={formId}
-            formPubkey={pubKey}
-            relays={relays}
-            viewKey={viewKey}
-            showAccessWarning={/viewKey/.test(formUrl)}
-            onEditClick={() =>
-              navigate(
-                editPath(
-                  secretKey,
-                  makeFormNAddr(pubKey, formId, relays),
-                  viewKey,
-                  disablePreview,
-                ),
-              )
-            }
-          />
+              <CustomSlugForm
+                formId={formId}
+                formPubkey={pubKey}
+                relays={relays}
+                viewKey={viewKey}
+                showAccessWarning={/viewKey/.test(formUrl)}
+                onEditClick={() =>
+                  navigate(
+                    editPath(
+                      secretKey,
+                      makeFormNAddr(pubKey, formId, relays),
+                      viewKey,
+                      disablePreview,
+                    ),
+                  )
+                }
+              />
 
-          <Divider />
-          <SaveStatus
-            savedLocally={savedLocally}
-            savedOnNostr={inMyForms(pubKey, formId)}
-            userPub={userPub}
-            requestPubkey={requestPubkey}
-          />
-        </Card>
-      </FormDetailsStyle>
-    </Modal>
+              <Divider />
+              <SaveStatus
+                savedLocally={savedLocally}
+                savedOnNostr={inMyForms(pubKey, formId)}
+                userPub={userPub}
+                requestPubkey={requestPubkey}
+              />
+            </CardContent>
+          </Card>
+        </Box>
+      </DialogContent>
+    </Dialog>
   );
 };

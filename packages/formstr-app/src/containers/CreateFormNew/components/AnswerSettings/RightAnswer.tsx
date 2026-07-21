@@ -1,4 +1,4 @@
-import { Tooltip, Typography } from "antd";
+import { Box, Tooltip, Typography } from "@mui/material";
 import { InputFiller } from "../../../FormFillerNew/QuestionNode/InputFiller";
 import {
   AnswerSettings,
@@ -7,14 +7,20 @@ import {
 } from "../../../../nostr/types";
 import { useTranslation } from "react-i18next";
 
-const { Text } = Typography;
-
 interface RightAnswerProps {
   answerType: AnswerTypes;
   answerSettings: AnswerSettings;
   choices?: string;
   onChange: (answer: string | string[]) => void;
 }
+
+const rightAnswerSx = {
+  display: "flex",
+  flexDirection: "column",
+  m: "10px",
+  maxWidth: "100%",
+  height: "auto",
+};
 
 export const RightAnswer: React.FC<RightAnswerProps> = ({
   answerType,
@@ -47,10 +53,10 @@ export const RightAnswer: React.FC<RightAnswerProps> = ({
 
     return (
       <Tooltip title={t("builder.rightAnswer.gridTooltip")}>
-        <div className="right-answer">
-          <Text className="property-name">
+        <Box sx={rightAnswerSx}>
+          <Typography variant="body2" color="text.secondary">
             {t("builder.rightAnswer.label_other")}
-          </Text>
+          </Typography>
           <InputFiller
             defaultValue={answerSettings?.validationRules?.match?.answer}
             options={parsedChoices}
@@ -58,7 +64,7 @@ export const RightAnswer: React.FC<RightAnswerProps> = ({
             fieldConfig={answerSettings}
             onChange={onChange}
           />
-        </div>
+        </Box>
       </Tooltip>
     );
   }
@@ -81,21 +87,21 @@ export const RightAnswer: React.FC<RightAnswerProps> = ({
           : "builder.rightAnswer.tooltip_one",
       )}
     >
-      <div className="right-answer">
-        <Text className="property-name">
+      <Box sx={rightAnswerSx}>
+        <Typography variant="body2" color="text.secondary">
           {t(
             isMultipleChoice
               ? "builder.rightAnswer.label_other"
               : "builder.rightAnswer.label_one",
           )}
-        </Text>
+        </Typography>
         <InputFiller
           defaultValue={answerSettings?.validationRules?.match?.answer}
           options={parsedChoices}
           fieldConfig={processedAnswerSettings}
           onChange={onChange}
         />
-      </div>
+      </Box>
     </Tooltip>
   );
 };

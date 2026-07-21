@@ -1,23 +1,27 @@
-import { Layout, Menu, Row, Col, Typography, MenuProps, message } from "antd";
+import { Box, Button, IconButton, Tab, Tabs, Typography } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Link } from "react-router-dom";
-import { ArrowLeftOutlined, MenuOutlined } from "@ant-design/icons";
-import { getHeaderMenu, HEADER_MENU_KEYS } from "./config";
-import { Button } from "antd";
+import { HEADER_MENU_KEYS } from "./config";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
-import StyleWrapper from "./Header.style";
 import { useState } from "react";
 import { normalizeURL } from "nostr-tools/utils";
 import { RelayPublishModal } from "../../../../components/RelayPublishModal/RelaysPublishModal";
 import { useTranslation } from "react-i18next";
+import { useSnackbar } from "../../../../providers/SnackbarProvider";
+import { MEDIA_QUERY_MOBILE } from "../../../../utils/css";
 
+/**
+ * Builder header (MUI, ui-rewrite-mui Phase 5): back link, Publish action,
+ * and the Builder/Preview tab switch. Import/AI-builder are action buttons
+ * (previously non-selectable antd menu items).
+ */
 export const CreateFormHeader: React.FC = () => {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const [isPostPublishModalOpen, setIsPostPublishModalOpen] = useState(false);
   const [acceptedRelays, setAcceptedRelays] = useState<string[]>([]);
   const [publishFailed, setPublishFailed] = useState(false);
 
-  const { Header } = Layout;
-  const { Text } = Typography;
   const {
     saveForm,
     setSelectedTab,
@@ -29,31 +33,14 @@ export const CreateFormHeader: React.FC = () => {
     questionsList,
   } = useFormBuilderContext();
 
-  const onMenuClickHandler: MenuProps["onClick"] = (e) => {
-    if (e.key === HEADER_MENU_KEYS.AI_BUILDER) {
-      setIsAiModalOpen(true);
-      return;
-    }
-    if (e.key === HEADER_MENU_KEYS.IMPORT_FORMS) {
-      setIsImportModalVisible(true);
-      return;
-    }
-    if (
-      e.key === HEADER_MENU_KEYS.BUILDER ||
-      e.key === HEADER_MENU_KEYS.PREVIEW
-    ) {
-      setSelectedTab(e.key);
-    }
-  };
-
   const handlePublishClick = async () => {
     if (questionsList.length === 0) {
-      message.error(t("builder.header.noQuestions"));
+      showMessage(t("builder.header.noQuestions"), "error");
       return;
     }
 
     if (!formSettings?.formId) {
-      message.error(t("builder.header.formIdRequired"));
+      showMessage(t("builder.header.formIdRequired"), "error");
       return;
     }
 
@@ -73,71 +60,76 @@ export const CreateFormHeader: React.FC = () => {
   };
 
   return (
-    <StyleWrapper>
-      <Header className="create-form-header">
-        <Row className="header-row" justify="space-between" align="middle">
-          <Col>
-            <Row className="header-row" justify="space-between" align="middle">
-              <Col
-                style={{
-                  paddingRight: 10,
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <Link className="app-link" to="/">
-                  <ArrowLeftOutlined style={{ color: "black" }} />
-                </Link>
-              </Col>
-              <Col style={{ paddingTop: 5 }}>
-                <Text>{t("builder.header.allForms")}</Text>
-              </Col>
-            </Row>
-          </Col>
+    <Box
+      className="create-form-header"
+      sx={{
+        boxShadow:
+          "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)",
+        bgcolor: "background.paper",
+        borderBottom: 1,
+        borderColor: "divider",
+        px: 2,
+        height: 64,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        [MEDIA_QUERY_MOBILE]: { px: "15px" },
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+        <IconButton component={Link} to="/" aria-label="back to forms">
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography>{t("builder.header.allForms")}</Typography>
+      </Box>
 
-          <Col md={10} xs={12} sm={12}>
-            <Row
-              className="header-row"
-              justify="end"
-              align="middle"
-              gutter={[8, 0]}
-            >
-              <Col>
-                <Button
-                  type="primary"
-                  onClick={handlePublishClick}
-                  disabled={isPostPublishModalOpen}
-                >
-                  {t("builder.header.publish")}
-                </Button>
-              </Col>
-              <Col md={12} xs={5} sm={2}>
-                <Menu
-                  mode="horizontal"
-                  theme="light"
-                  selectedKeys={[selectedTab]}
-                  defaultSelectedKeys={[HEADER_MENU_KEYS.BUILDER]}
-                  overflowedIndicator={<MenuOutlined />}
-                  items={getHeaderMenu(t)}
-                  onClick={onMenuClickHandler}
-                  style={{ borderBottom: "none" }}
-                />
-              </Col>
-            </Row>
-          </Col>
-        </Row>
-
-        <RelayPublishModal
-          relays={relayList.map((r) => r.url)}
-          acceptedRelays={acceptedRelays}
-          isOpen={isPostPublishModalOpen}
-          publishFailed={publishFailed}
-          onClose={() => {
-            setIsPostPublishModalOpen(false);
-            setPublishFailed(false);
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Button
+          variant="contained"
+          onClick={handlePublishClick}
+          disabled={isPostPublishModalOpen}
+        >
+          {t("builder.header.publish")}
+        </Button>
+        <Button onClick={() => setIsImportModalVisible(true)}>
+          {t("builder.header.importForms")}
+        </Button>
+        <Button onClick={() => setIsAiModalOpen(true)}>
+          {t("builder.header.aiBuilder")}
+        </Button>
+        <Tabs
+          value={selectedTab}
+          onChange={(_e, value) => {
+            if (
+              value === HEADER_MENU_KEYS.BUILDER ||
+              value === HEADER_MENU_KEYS.PREVIEW
+            ) {
+              setSelectedTab(value);
+            }
           }}
-        />
-      </Header>
-    </StyleWrapper>
+          sx={{ minHeight: 40, "& .MuiTab-root": { minHeight: 40 } }}
+        >
+          <Tab
+            value={HEADER_MENU_KEYS.BUILDER}
+            label={t("builder.header.formBuilder")}
+          />
+          <Tab
+            value={HEADER_MENU_KEYS.PREVIEW}
+            label={t("builder.header.preview")}
+          />
+        </Tabs>
+      </Box>
+
+      <RelayPublishModal
+        relays={relayList.map((r) => r.url)}
+        acceptedRelays={acceptedRelays}
+        isOpen={isPostPublishModalOpen}
+        publishFailed={publishFailed}
+        onClose={() => {
+          setIsPostPublishModalOpen(false);
+          setPublishFailed(false);
+        }}
+      />
+    </Box>
   );
 };

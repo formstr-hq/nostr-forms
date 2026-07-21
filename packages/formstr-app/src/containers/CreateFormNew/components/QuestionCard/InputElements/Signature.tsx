@@ -1,9 +1,7 @@
 import React from "react";
-import { Input, Button, Typography, Space } from "antd";
+import { Box, Button, TextField, Typography } from "@mui/material";
 import { IAnswerSettings } from "../../AnswerSettings/types";
 import { useTranslation } from "react-i18next";
-
-const { Text, Paragraph } = Typography;
 
 interface SignatureInputProps {
   answerSettings: IAnswerSettings;
@@ -14,39 +12,53 @@ const SignatureInput: React.FC<SignatureInputProps> = ({ answerSettings }) => {
   const sig = answerSettings.signature ?? {};
 
   return (
-    <Space direction="vertical" style={{ width: "100%" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 1,
+        width: "100%",
+        alignItems: "flex-start",
+      }}
+    >
       {sig.editableContent ? (
         // Case 1: Editable content
-        <Input.TextArea
+        <TextField
           value={sig.prefilledContent}
           placeholder={t("builder.inputPreviews.editContentToSign")}
+          multiline
           rows={4}
+          fullWidth
           disabled={true}
         />
       ) : sig.prefilledContent ? (
         // Case 2: Prefilled but not editable
-        <Paragraph
-          style={{
+        <Box
+          sx={{
             backgroundColor: "#fafafa",
             border: "1px solid #e0e0e0",
             padding: "8px 12px",
-            borderRadius: 6,
+            borderRadius: "6px",
             whiteSpace: "pre-wrap",
+            width: "100%",
+            boxSizing: "border-box",
           }}
         >
-          {sig.prefilledContent}
-        </Paragraph>
+          <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+            {sig.prefilledContent}
+          </Typography>
+        </Box>
       ) : (
         // Case 3: No prefilled content and not editable
-        <Text type="secondary">
+        <Typography variant="body2" color="text.secondary">
           {t("builder.inputPreviews.noContentToSign")}
-        </Text>
+        </Typography>
       )}
 
-      <Button type="primary" onClick={() => {}}>
+      <Button variant="contained" onClick={() => {}}>
         {t("builder.inputPreviews.attachSignature")}
       </Button>
-    </Space>
+    </Box>
   );
 };
 

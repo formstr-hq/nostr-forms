@@ -1,32 +1,29 @@
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
   Button,
-  Collapse,
   Divider,
   Popover,
-  Input,
-  Select,
   Slider,
   Switch,
   Tooltip,
   Typography,
-} from "antd";
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTranslation } from "react-i18next";
-import StyleWrapper from "./style";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
 import TitleImage from "./TitleImage";
 import { Sharing } from "./Sharing";
 import FormIdentifier from "./FormIdentifier";
 import { Notifications } from "./Notifications";
-import { isMobile } from "../../../../utils/utility";
 import RelayManagerModal from "./RelayManagerModal";
 import { BackgroundImageSetting } from "./BackgroundImage";
 import { SketchPicker, ColorResult } from "react-color";
 import { useState } from "react";
 import { ThankYouScreenImageSetting } from "./ThankYouImage";
 import { IColorSettings } from "./types";
-
-const { Text } = Typography;
-const { Panel } = Collapse;
 import Automations from "./Automations";
 
 type ColorKey = keyof IColorSettings;
@@ -37,6 +34,20 @@ const COLOR_LABELS: Record<ColorKey, string> = {
   description: "builder.formSettings.colorLabels.description",
   question: "builder.formSettings.colorLabels.question",
 };
+
+/** Replaces the old styled-components `.property-setting` row. */
+const propertyRowSx = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  my: 1.5,
+} as const;
+
+const accordionSx = {
+  "&:before": { display: "none" },
+  borderTop: "1px solid",
+  borderColor: "divider",
+} as const;
 
 function ColorSwatch({
   colorKey,
@@ -49,57 +60,64 @@ function ColorSwatch({
   value: string;
   onChange: (hex: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const open = Boolean(anchorEl);
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 0.75,
+      }}
+    >
+      <Box
+        role="button"
+        aria-label={`Open ${label} color picker`}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        sx={{
+          width: 32,
+          height: 32,
+          borderRadius: "50%",
+          background: value,
+          boxShadow: "0 0 0 2px #fff, 0 0 0 3px #d9d9d9",
+          cursor: "pointer",
+          transition: "box-shadow 0.15s",
+          "&:hover": {
+            boxShadow: "0 0 0 2px #fff, 0 0 0 3px #1677ff",
+          },
+        }}
+      />
       <Popover
         open={open}
-        onOpenChange={setOpen}
-        content={
-          <div style={{ padding: 4 }}>
-            <SketchPicker
-              color={value}
-              onChange={(c: ColorResult) => onChange(c.hex)}
-            />
-            <div style={{ marginTop: 8, textAlign: "right" }}>
-              <Button
-                size="small"
-                onClick={() => {
-                  onChange("#000000");
-                  setOpen(false);
-                }}
-              >
-                Reset
-              </Button>
-            </div>
-          </div>
-        }
-        placement="topLeft"
-        overlayStyle={{ padding: 0 }}
-        destroyTooltipOnHide
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
+        transformOrigin={{ vertical: "bottom", horizontal: "left" }}
+        slotProps={{ paper: { sx: { p: 0.5 } } }}
       >
-        <div
-          role="button"
-          aria-label={`Open ${label} color picker`}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: "50%",
-            background: value,
-            boxShadow: "0 0 0 2px #fff, 0 0 0 3px #d9d9d9",
-            cursor: "pointer",
-            transition: "box-shadow 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 2px #fff, 0 0 0 3px #1677ff";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 0 0 2px #fff, 0 0 0 3px #d9d9d9";
-          }}
-        />
+        <Box>
+          <SketchPicker
+            color={value}
+            onChange={(c: ColorResult) => onChange(c.hex)}
+          />
+          <Box sx={{ mt: 1, textAlign: "right" }}>
+            <Button
+              size="small"
+              onClick={() => {
+                onChange("#000000");
+                setAnchorEl(null);
+              }}
+            >
+              Reset
+            </Button>
+          </Box>
+        </Box>
       </Popover>
-      <Text style={{ fontSize: 11, color: "#8c8c8c" }}>{label}</Text>
-    </div>
+      <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
+        {label}
+      </Typography>
+    </Box>
   );
 }
 
@@ -119,175 +137,217 @@ function FormSettings() {
     updateFormSetting({ colors: { ...colors, [key]: hex } });
   };
   return (
-    <StyleWrapper>
+    <Box sx={{ bgcolor: "background.paper", overflow: "auto" }}>
       {/* Always visible */}
-      <div className="form-setting">
-        <Text className="property-name">
+      <Box sx={{ m: 2 }}>
+        <Typography sx={{ fontSize: 14 }}>
           {t("builder.formSettings.formIdentifier")}
-        </Text>
+        </Typography>
         <FormIdentifier />
-      </div>
+      </Box>
 
       {/* Collapsible groups */}
-      <Collapse expandIconPosition="end">
-        <Panel header={t("builder.formSettings.sections.access")} key="access">
-          <Tooltip
-            title={t("builder.formSettings.postToBulletinTooltip")}
-            trigger={isMobile() ? "click" : "hover"}
-          >
-            <div className="property-setting">
-              <Text className="property-text">
-                {t("builder.formSettings.postToBulletin")}
-              </Text>
+      <Box>
+        <Accordion disableGutters elevation={0} sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+            <Typography>{t("builder.formSettings.sections.access")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+            <Tooltip title={t("builder.formSettings.postToBulletinTooltip")}>
+              <Box sx={propertyRowSx}>
+                <Typography sx={{ fontSize: 14 }}>
+                  {t("builder.formSettings.postToBulletin")}
+                </Typography>
+                <Switch
+                  checked={!formSettings.encryptForm}
+                  onChange={(_e, checked) =>
+                    updateFormSetting({ encryptForm: !checked })
+                  }
+                />
+              </Box>
+            </Tooltip>
+            <Sharing />
+
+            <Divider />
+
+            <Box sx={propertyRowSx}>
+              <Typography sx={{ fontSize: 14 }}>
+                {t("builder.formSettings.disallowAnonymous")}
+              </Typography>
               <Switch
-                checked={!formSettings.encryptForm}
-                onChange={(checked) =>
-                  updateFormSetting({ encryptForm: !checked })
+                checked={formSettings.disallowAnonymous}
+                onChange={(_e, checked) =>
+                  updateFormSetting({ disallowAnonymous: checked })
                 }
               />
-            </div>
-          </Tooltip>
-          <Sharing />
+            </Box>
+            {formSettings.disallowAnonymous && (
+              <Typography
+                color="text.secondary"
+                sx={{ fontSize: 12, display: "block" }}
+              >
+                {t("builder.formSettings.disallowAnonymousHint")}
+              </Typography>
+            )}
+            <Divider />
+            <Tooltip title={t("builder.formSettings.disablePreviewTooltip")}>
+              <Box sx={propertyRowSx}>
+                <Typography sx={{ fontSize: 14 }}>
+                  {t("builder.formSettings.disablePreview")}
+                </Typography>
+                <Switch
+                  checked={formSettings.disablePreview}
+                  onChange={(_e, checked) =>
+                    updateFormSetting({ disablePreview: checked })
+                  }
+                />
+              </Box>
+            </Tooltip>
+            {!formSettings.disablePreview && (
+              <Typography
+                color="text.secondary"
+                sx={{ fontSize: 12, display: "block" }}
+              >
+                {t("builder.formSettings.disablePreviewHint")}
+              </Typography>
+            )}
+          </AccordionDetails>
+        </Accordion>
 
-          <Divider className="divider" />
+        <Accordion disableGutters elevation={0} sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+            <Typography>
+              {t("builder.formSettings.sections.notifications")}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+            <Notifications />
+          </AccordionDetails>
+        </Accordion>
 
-          <div className="property-setting">
-            <Text className="property-text">
-              {t("builder.formSettings.disallowAnonymous")}
-            </Text>
-            <Switch
-              checked={formSettings.disallowAnonymous}
-              onChange={(checked) =>
-                updateFormSetting({ disallowAnonymous: checked })
-              }
+        <Accordion disableGutters elevation={0} sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+            <Typography>
+              {t("builder.formSettings.sections.customization")}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+            <Typography sx={{ fontSize: 12, display: "block", mb: 1 }}>
+              {t("common.labels.colors")}
+            </Typography>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "16px 8px",
+                mb: 0.5,
+              }}
+            >
+              {(Object.keys(COLOR_LABELS) as ColorKey[]).map((key) => (
+                <ColorSwatch
+                  key={key}
+                  colorKey={key}
+                  label={t(COLOR_LABELS[key])}
+                  value={colors[key] || "#000000"}
+                  onChange={(hex) => updateColor(key, hex)}
+                />
+              ))}
+            </Box>
+            <Typography
+              color="text.secondary"
+              sx={{ fontSize: 11, display: "block", mb: 1 }}
+            >
+              {t("builder.formSettings.colorsFallback")}
+            </Typography>
+            <Divider />
+            <TitleImage titleImageUrl={formSettings.titleImageUrl} />
+            <Divider />
+            <BackgroundImageSetting
+              value={formSettings.backgroundImageUrl}
+              onChange={(url: string) => {
+                updateFormSetting({ backgroundImageUrl: url });
+              }}
             />
-          </div>
-          {formSettings.disallowAnonymous && (
-            <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-              {t("builder.formSettings.disallowAnonymousHint")}
-            </Text>
-          )}
-          <Divider className="divider" />
-          <Tooltip
-            title={t("builder.formSettings.disablePreviewTooltip")}
-            trigger={isMobile() ? "click" : "hover"}
-          >
-            <div className="property-setting">
-              <Text className="property-text">
-                {t("builder.formSettings.disablePreview")}
-              </Text>
-              <Switch
-                checked={formSettings.disablePreview}
-                onChange={(checked) =>
-                  updateFormSetting({ disablePreview: checked })
-                }
-              />
-            </div>
-          </Tooltip>
-          {!formSettings.disablePreview && (
-            <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-              {t("builder.formSettings.disablePreviewHint")}
-            </Text>
-          )}
-        </Panel>
+            <ThankYouScreenImageSetting
+              value={formSettings.thankYouScreenImageUrl}
+              onChange={(url: string) => {
+                updateFormSetting({ thankYouScreenImageUrl: url });
+              }}
+            />
+            <Divider />
+            <Box sx={propertyRowSx}>
+              <Box
+                sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}
+              >
+                <Typography sx={{ fontSize: 14 }}>
+                  {t("builder.formSettings.cardTransparency")}
+                </Typography>
+                <Slider
+                  min={0.5}
+                  max={1}
+                  step={0.01}
+                  value={formSettings.cardTransparency ?? 1}
+                  onChange={(_e, value) =>
+                    updateFormSetting({ cardTransparency: value as number })
+                  }
+                />
+                <Typography color="text.secondary" sx={{ fontSize: 12 }}>
+                  {t("builder.formSettings.cardTransparencyHint")}
+                </Typography>
+              </Box>
+            </Box>
+            <Tooltip title={t("builder.formSettings.brandingTooltip")}>
+              <Box sx={propertyRowSx}>
+                <Typography sx={{ fontSize: 14 }}>
+                  {t("builder.formSettings.branding")}
+                </Typography>
+                <Switch
+                  checked={formSettings.formstrBranding}
+                  onChange={(_e, checked) =>
+                    updateFormSetting({ formstrBranding: checked })
+                  }
+                />
+              </Box>
+            </Tooltip>
+          </AccordionDetails>
+        </Accordion>
 
-        <Panel
-          header={t("builder.formSettings.sections.notifications")}
-          key="notifications"
-        >
-          <Notifications />
-        </Panel>
+        <Accordion disableGutters elevation={0} sx={accordionSx}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+            <Typography>{t("builder.formSettings.sections.relays")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={toggleRelayManagerModal}
+            >
+              {t("builder.formSettings.manageRelays", {
+                count: relayList.length,
+              })}
+            </Button>
+          </AccordionDetails>
+        </Accordion>
 
-        <Panel
-          header={t("builder.formSettings.sections.customization")}
-          key="customization"
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{
+            ...accordionSx,
+            borderBottom: "1px solid",
+            borderColor: "divider",
+          }}
         >
-          <Text style={{ fontSize: 12, display: "block", marginBottom: 8 }}>
-            {t("common.labels.colors")}
-          </Text>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 8px", marginBottom: 4 }}>
-            {(Object.keys(COLOR_LABELS) as ColorKey[]).map((key) => (
-              <ColorSwatch
-                key={key}
-                colorKey={key}
-                label={t(COLOR_LABELS[key])}
-                value={colors[key] || "#000000"}
-                onChange={(hex) => updateColor(key, hex)}
-              />
-            ))}
-          </div>
-          <Text type="secondary" style={{ fontSize: 11, display: "block", marginBottom: 8 }}>
-            {t("builder.formSettings.colorsFallback")}
-          </Text>
-          <Divider className="divider" />
-          <TitleImage titleImageUrl={formSettings.titleImageUrl} />
-          <Divider className="divider" />
-          <BackgroundImageSetting
-            value={formSettings.backgroundImageUrl}
-            onChange={(url: string) => {
-              updateFormSetting({ backgroundImageUrl: url });
-            }}
-          />
-          <ThankYouScreenImageSetting
-            value={formSettings.thankYouScreenImageUrl}
-            onChange={(url: string) => {
-              updateFormSetting({ thankYouScreenImageUrl: url });
-            }}
-          />
-          <Divider className="divider" />
-          <div className="property-setting">
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <Text>{t("builder.formSettings.cardTransparency")}</Text>
-              <Slider
-                min={0.5}
-                max={1}
-                step={0.01}
-                value={formSettings.cardTransparency}
-                onChange={(value) =>
-                  updateFormSetting({ cardTransparency: value })
-                }
-              />
-              <Text type="secondary" style={{ fontSize: 12 }}>
-                {t("builder.formSettings.cardTransparencyHint")}
-              </Text>
-            </div>
-          </div>
-          <Tooltip
-            title={t("builder.formSettings.brandingTooltip")}
-            trigger={isMobile() ? "click" : "hover"}
-          >
-            <div className="property-setting">
-              <Text className="property-text">
-                {t("builder.formSettings.branding")}
-              </Text>
-              <Switch
-                checked={formSettings.formstrBranding}
-                onChange={(checked) =>
-                  updateFormSetting({ formstrBranding: checked })
-                }
-              />
-            </div>
-          </Tooltip>
-        </Panel>
-
-        <Panel header={t("builder.formSettings.sections.relays")} key="relays">
-          <Button
-            onClick={toggleRelayManagerModal}
-            type="default"
-            style={{ width: "100%" }}
-          >
-            {t("builder.formSettings.manageRelays", {
-              count: relayList.length,
-            })}
-          </Button>
-        </Panel>
-        <Panel
-          header={t("builder.formSettings.sections.automations")}
-          key="nrpc-webhook"
-        >
-          <Automations />
-        </Panel>
-      </Collapse>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+            <Typography>
+              {t("builder.formSettings.sections.automations")}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+            <Automations />
+          </AccordionDetails>
+        </Accordion>
+      </Box>
 
       {isRelayManagerModalOpen && (
         <RelayManagerModal
@@ -295,7 +355,7 @@ function FormSettings() {
           onClose={toggleRelayManagerModal}
         />
       )}
-    </StyleWrapper>
+    </Box>
   );
 }
 

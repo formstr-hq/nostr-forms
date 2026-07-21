@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   FormInitData,
   IFormBuilderContext,
@@ -20,7 +26,7 @@ import {
   setItem,
 } from "../../../../utils/localStorage";
 import { AnswerSettings, Field, Tag } from "../../../../nostr/types";
-import { message } from "antd";
+import { useSnackbar } from "../../../../providers/SnackbarProvider";
 import { ProcessedFormData } from "../../components/AIFormGeneratorModal/aiProcessor";
 import {
   sampleBackgrounds,
@@ -108,6 +114,7 @@ export default function FormBuilderProvider({
   children: React.ReactNode;
 }) {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const initialFormSettings = useMemo(() => createInitialFormSettings(t), [t]);
   const { userRelays } = useProfileContext();
 
@@ -121,9 +128,7 @@ export default function FormBuilderProvider({
     useState<IFormSettings>(initialFormSettings);
   const [isRightSettingsOpen, setIsRightSettingsOpen] = useState(false);
   const [isLeftMenuOpen, setIsLeftMenuOpen] = useState(false);
-  const [formName, setFormName] = useState<string>(
-    t("builder.initialTitle"),
-  );
+  const [formName, setFormName] = useState<string>(t("builder.initialTitle"));
   const bottomElement = useRef<HTMLDivElement>(null);
   const { pubkey: userPubkey } = useProfileContext();
   const [editList, setEditList] = useState<Set<string>>(
@@ -228,35 +233,38 @@ export default function FormBuilderProvider({
     [],
   );
 
-  const removeSection = useCallback((id: string) => {
-    setSections((prev) => {
-      const sectionToRemove = prev.find((s) => s.id === id);
-      const remaining = prev.filter((section) => section.id !== id);
+  const removeSection = useCallback(
+    (id: string) => {
+      setSections((prev) => {
+        const sectionToRemove = prev.find((s) => s.id === id);
+        const remaining = prev.filter((section) => section.id !== id);
 
-      // If this was the last section, disable sections feature
-      // if (remaining.length === 0) {
-      //   updateFormSetting({ enableSections: false });
-      //   return remaining;
-      // }
+        // If this was the last section, disable sections feature
+        // if (remaining.length === 0) {
+        //   updateFormSetting({ enableSections: false });
+        //   return remaining;
+        // }
 
-      // Renumber the remaining sections
-      const renumberedSections = remaining.map((section, index) => {
-        const sectionNumber = index + 1;
-        const isDefaultTitle = /^Section \d+$/.test(section.title);
-        const newTitle = isDefaultTitle
-          ? getDefaultSectionTitle(t, sectionNumber)
-          : section.title;
+        // Renumber the remaining sections
+        const renumberedSections = remaining.map((section, index) => {
+          const sectionNumber = index + 1;
+          const isDefaultTitle = /^Section \d+$/.test(section.title);
+          const newTitle = isDefaultTitle
+            ? getDefaultSectionTitle(t, sectionNumber)
+            : section.title;
 
-        return {
-          ...section,
-          title: newTitle,
-          order: index,
-        };
+          return {
+            ...section,
+            title: newTitle,
+            order: index,
+          };
+        });
+
+        return renumberedSections;
       });
-
-      return renumberedSections;
-    });
-  }, [t]);
+    },
+    [t],
+  );
 
   const moveQuestionToSection = useCallback(
     (questionId: string, sectionId?: string) => {
@@ -292,67 +300,80 @@ export default function FormBuilderProvider({
     [sections],
   );
 
-  const reorderSections = useCallback((newOrder: SectionData[]) => {
-    setSections(
-      newOrder.map((section, index) => {
-        const sectionNumber = index + 1;
-        const isDefaultTitle = /^Section \d+$/.test(section.title);
-        const newTitle = isDefaultTitle
-          ? getDefaultSectionTitle(t, sectionNumber)
-          : section.title;
+  const reorderSections = useCallback(
+    (newOrder: SectionData[]) => {
+      setSections(
+        newOrder.map((section, index) => {
+          const sectionNumber = index + 1;
+          const isDefaultTitle = /^Section \d+$/.test(section.title);
+          const newTitle = isDefaultTitle
+            ? getDefaultSectionTitle(t, sectionNumber)
+            : section.title;
 
-        return {
-          ...section,
-          title: newTitle,
-          order: index,
-        };
-      }),
-    );
-  }, [t]);
+          return {
+            ...section,
+            title: newTitle,
+            order: index,
+          };
+        }),
+      );
+    },
+    [t],
+  );
 
   // Relay management functions
   const toggleRelayManagerModal = useCallback(() => {
     setIsRelayManagerModalOpen((prev) => !prev);
   }, []);
 
-  const addRelayToList = useCallback((url: string) => {
-    setRelayList((prevRelayList) => {
-      if (prevRelayList.some((relay) => relay.url === url)) {
-        message.warning(t("builder.relayManager.duplicateUrl", { url }));
-        return prevRelayList;
-      }
-      const newRelay: RelayItem = { url, tempId: makeTag(6) };
-      const updatedList = [...prevRelayList, newRelay];
-      setItem(
-        LOCAL_STORAGE_CUSTOM_RELAYS_KEY,
-        updatedList.filter((r) => !getDefaultRelays().includes(r.url)),
-      );
-      return updatedList;
-    });
-  }, [t]);
-
-  const editRelayInList = useCallback((tempId: string, newUrl: string) => {
-    setRelayList((prevRelayList) => {
-      if (
-        prevRelayList.some(
-          (relay) => relay.url === newUrl && relay.tempId !== tempId,
-        )
-      ) {
-        message.warning(
-          t("builder.relayManager.duplicateUrl", { url: newUrl }),
+  const addRelayToList = useCallback(
+    (url: string) => {
+      setRelayList((prevRelayList) => {
+        if (prevRelayList.some((relay) => relay.url === url)) {
+          showMessage(
+            t("builder.relayManager.duplicateUrl", { url }),
+            "warning",
+          );
+          return prevRelayList;
+        }
+        const newRelay: RelayItem = { url, tempId: makeTag(6) };
+        const updatedList = [...prevRelayList, newRelay];
+        setItem(
+          LOCAL_STORAGE_CUSTOM_RELAYS_KEY,
+          updatedList.filter((r) => !getDefaultRelays().includes(r.url)),
         );
-        return prevRelayList;
-      }
-      const updatedList = prevRelayList.map((relay) =>
-        relay.tempId === tempId ? { ...relay, url: newUrl } : relay,
-      );
-      setItem(
-        LOCAL_STORAGE_CUSTOM_RELAYS_KEY,
-        updatedList.filter((r) => !getDefaultRelays().includes(r.url)),
-      );
-      return updatedList;
-    });
-  }, [t]);
+        return updatedList;
+      });
+    },
+    [t],
+  );
+
+  const editRelayInList = useCallback(
+    (tempId: string, newUrl: string) => {
+      setRelayList((prevRelayList) => {
+        if (
+          prevRelayList.some(
+            (relay) => relay.url === newUrl && relay.tempId !== tempId,
+          )
+        ) {
+          showMessage(
+            t("builder.relayManager.duplicateUrl", { url: newUrl }),
+            "warning",
+          );
+          return prevRelayList;
+        }
+        const updatedList = prevRelayList.map((relay) =>
+          relay.tempId === tempId ? { ...relay, url: newUrl } : relay,
+        );
+        setItem(
+          LOCAL_STORAGE_CUSTOM_RELAYS_KEY,
+          updatedList.filter((r) => !getDefaultRelays().includes(r.url)),
+        );
+        return updatedList;
+      });
+    },
+    [t],
+  );
 
   const deleteRelayFromList = useCallback((tempId: string) => {
     setRelayList((prevRelayList) => {
@@ -398,7 +419,7 @@ export default function FormBuilderProvider({
   const saveForm = async (onRelayAccepted?: (url: string) => void) => {
     const formToSave = getFormSpec();
     if (!formSettings.formId) {
-      message.error(t("builder.header.formIdRequired"));
+      showMessage(t("builder.header.formIdRequired"), "error");
       return;
     }
     const relayUrls = relayList.map((relay) => relay.url);
@@ -562,14 +583,17 @@ export default function FormBuilderProvider({
         setQuestionsList(processedData.fields);
         setQuestionIdInFocus(undefined);
       } else {
-        message.warning("AI generated data, but no fields were created.");
+        showMessage(
+          "AI generated data, but no fields were created.",
+          "warning",
+        );
       }
     } catch (error) {
       const errorMsg =
         error instanceof Error
           ? error.message
           : "Failed to apply the generated form data.";
-      message.error(errorMsg);
+      showMessage(errorMsg, "error");
     }
   };
 

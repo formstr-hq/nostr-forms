@@ -1,13 +1,19 @@
 import {
-  Divider,
-  Input,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Alert,
+  Box,
+  FormControl,
+  InputLabel,
+  Link,
+  MenuItem,
   Select,
   Switch,
+  TextField,
   Typography,
-  message,
-  Alert,
-  Collapse,
-} from "antd";
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useState, useEffect } from "react";
 import useFormBuilderContext from "../../../hooks/useFormBuilderContext";
 import {
@@ -16,13 +22,11 @@ import {
 } from "../../../../../nostr/common";
 import { nip19 } from "nostr-tools";
 import { useTranslation } from "react-i18next";
-
-const { Text, Paragraph, Link } = Typography;
-
-const { Panel } = Collapse;
+import { useSnackbar } from "../../../../../providers/SnackbarProvider";
 
 export default function Automations() {
   const { t } = useTranslation();
+  const { showMessage } = useSnackbar();
   const { formSettings, relayList, updateFormSetting } =
     useFormBuilderContext();
 
@@ -33,7 +37,7 @@ export default function Automations() {
   >([]);
   const [loadingServers, setLoadingServers] = useState(false);
   const [introspectionError, setIntrospectionError] = useState<string | null>(
-    null
+    null,
   );
 
   // 🔹 Fetch list of NRPC servers (Kind 0 tagged as "nrpc_server")
@@ -44,7 +48,7 @@ export default function Automations() {
         const events = await fetchKind0Events(
           relayList.map((r) => r.url),
           "nrpc_server",
-          100
+          100,
         );
 
         const parsed = events.map((ev: any) => {
@@ -63,7 +67,7 @@ export default function Automations() {
         setAvailableServers(parsed);
       } catch (err) {
         console.error("Failed to fetch NRPC servers", err);
-        message.error(t("builder.automations.fetchServersFailed"));
+        showMessage(t("builder.automations.fetchServersFailed"), "error");
       } finally {
         setLoadingServers(false);
       }
@@ -81,14 +85,14 @@ export default function Automations() {
       setIntrospectionError(null);
 
       const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Introspection timed out")), 10000)
+        setTimeout(() => reject(new Error("Introspection timed out")), 10000),
       );
 
       try {
         const result = await Promise.race([
           fetchNRPCMethods(
             relayList.map((url) => url.url),
-            formSettings.nrpcPubkey
+            formSettings.nrpcPubkey,
           ),
           timeout,
         ]);
@@ -102,7 +106,7 @@ export default function Automations() {
             ? t("builder.automations.timedOut")
             : t("builder.automations.methodsFailed");
         setIntrospectionError(msg);
-        message.warning(msg);
+        showMessage(msg, "warning");
       } finally {
         setLoadingMethods(false);
       }
@@ -112,47 +116,53 @@ export default function Automations() {
   }, [formSettings.nrpcPubkey, relayList]);
 
   return (
-    <div style={{ alignItems: "flex-start", alignContent: "flex-start" }}>
+    <Box sx={{ alignItems: "flex-start", alignContent: "flex-start" }}>
       {/* Select Existing Server */}
-      <div
-        className="property-setting"
-        style={{
+      <Box
+        sx={{
+          display: "flex",
           flexDirection: "column",
-          gap: 8,
-          alignContent: "flex-start",
+          gap: 1,
           alignItems: "flex-start",
+          my: 1.5,
+          width: "100%",
         }}
       >
-        <Text className="property-text">
+        <Typography sx={{ fontSize: 14 }}>
           {t("builder.automations.selectExistingServer")}
-        </Text>
-        <Select
-          showSearch
-          placeholder={t("builder.automations.searchServer")}
-          optionFilterProp="label"
-          loading={loadingServers}
-          value={formSettings.nrpcPubkey || undefined}
-          style={{ width: "100%" }}
-          options={availableServers.map((s) => ({
-            value: s.pubkey,
-            label: s.name,
-          }))}
-          onChange={(val) => updateFormSetting({ nrpcPubkey: val })}
-        />
-      </div>
-      <div
-        className="property-setting"
-        style={{
+        </Typography>
+        <FormControl fullWidth size="small">
+          <InputLabel>{t("builder.automations.searchServer")}</InputLabel>
+          <Select
+            label={t("builder.automations.searchServer")}
+            value={formSettings.nrpcPubkey ?? ""}
+            disabled={loadingServers}
+            onChange={(e) => updateFormSetting({ nrpcPubkey: e.target.value })}
+          >
+            {availableServers.map((s) => (
+              <MenuItem key={s.pubkey} value={s.pubkey}>
+                {s.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
           flexDirection: "column",
-          gap: 8,
-          alignContent: "flex-start",
+          gap: 1,
           alignItems: "flex-start",
+          my: 1.5,
+          width: "100%",
         }}
       >
-        <Text className="property-text">
+        <Typography sx={{ fontSize: 14 }}>
           {t("builder.automations.enterServerPubkey")}
-        </Text>
-        <Input
+        </Typography>
+        <TextField
+          size="small"
+          fullWidth
           placeholder={t("builder.automations.npubPlaceholder")}
           value={
             formSettings.nrpcPubkey
@@ -173,7 +183,7 @@ export default function Automations() {
             }
 
             if (!val.startsWith("npub1")) {
-              message.warning(t("builder.automations.validNpub"));
+              showMessage(t("builder.automations.validNpub"), "warning");
               return;
             }
 
@@ -182,76 +192,102 @@ export default function Automations() {
               if (type === "npub") {
                 updateFormSetting({ nrpcPubkey: data as string });
               } else {
-                message.warning(t("builder.automations.invalidNpubFormat"));
+                showMessage(
+                  t("builder.automations.invalidNpubFormat"),
+                  "warning",
+                );
               }
             } catch {
-              message.error(t("builder.automations.decodeFailed"));
+              showMessage(t("builder.automations.decodeFailed"), "error");
             }
           }}
-          style={{ width: "100%" }}
         />
-      </div>
+      </Box>
       {/* Methods */}
-      <div
-        className="property-setting"
-        style={{
+      <Box
+        sx={{
+          display: "flex",
           flexDirection: "column",
-          gap: 8,
-          marginTop: 16,
+          gap: 1,
+          mt: 2,
           alignItems: "flex-start",
+          width: "100%",
         }}
       >
-        <Text className="property-text">
+        <Typography sx={{ fontSize: 14 }}>
           {t("builder.automations.methodToCall")}
-        </Text>
-        <Select
-          placeholder={t("builder.automations.selectMethod")}
-          value={formSettings.nrpcMethod}
-          style={{ width: "100%" }}
-          loading={loadingMethods}
-          disabled={loadingMethods || methods.length === 0}
-          options={methods.map((m) => ({ value: m, label: m }))}
-          onChange={(val) => updateFormSetting({ nrpcMethod: val })}
-        />
-      </div>
+        </Typography>
+        <FormControl fullWidth size="small">
+          <InputLabel>{t("builder.automations.selectMethod")}</InputLabel>
+          <Select
+            label={t("builder.automations.selectMethod")}
+            value={formSettings.nrpcMethod ?? ""}
+            disabled={loadingMethods || methods.length === 0}
+            onChange={(e) => updateFormSetting({ nrpcMethod: e.target.value })}
+          >
+            {methods.map((m) => (
+              <MenuItem key={m} value={m}>
+                {m}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
       {/* Introspection Warning */}
       {introspectionError && (
-        <Alert
-          message={introspectionError}
-          type="warning"
-          showIcon
-          style={{ marginTop: 12 }}
-        />
+        <Alert severity="warning" sx={{ mt: 1.5 }}>
+          {introspectionError}
+        </Alert>
       )}
       {/* Require Webhook */}
-      <div
-        className="property-setting"
-        style={{ flexDirection: "row", gap: 8, marginTop: 16 }}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 1,
+          mt: 2,
+        }}
       >
-        <Text className="property-text">
+        <Typography sx={{ fontSize: 14 }}>
           {t("builder.automations.requireWebhookPass")}
-        </Text>
+        </Typography>
         <Switch
           checked={formSettings.requireWebhookPass}
-          onChange={(checked) =>
+          onChange={(_e, checked) =>
             updateFormSetting({ requireWebhookPass: checked })
           }
         />
-      </div>
-      <Text
-        type="secondary"
-        style={{ fontSize: 12, marginTop: 12, display: "block" }}
+      </Box>
+      <Typography
+        color="text.secondary"
+        sx={{ fontSize: 12, mt: 1.5, display: "block" }}
       >
         {t("builder.automations.afterSubmission")}
         {formSettings.requireWebhookPass &&
           t("builder.automations.requireWebhookSuffix")}
-      </Text>
-      <Collapse ghost style={{ textAlign: "left", marginTop: 8 }}>
-        <Panel header={`💡 ${t("builder.automations.learnMore")}`} key="1">
-          <Paragraph type="secondary" style={{ fontSize: 12, marginBottom: 0 }}>
+      </Typography>
+      <Accordion
+        disableGutters
+        elevation={0}
+        sx={{
+          mt: 1,
+          textAlign: "left",
+          "&:before": { display: "none" },
+        }}
+      >
+        <AccordionSummary
+          expandIcon={<ExpandMoreIcon />}
+          sx={{ px: 0, minHeight: 36 }}
+        >
+          <Typography>{`💡 ${t("builder.automations.learnMore")}`}</Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ px: 0 }}>
+          <Typography color="text.secondary" sx={{ fontSize: 12, mb: 0 }}>
             {t("builder.automations.description")}
-          </Paragraph>
-          <ul style={{ fontSize: 12, paddingLeft: 20, marginTop: 8 }}>
+          </Typography>
+          <Box component="ul" sx={{ fontSize: 12, pl: 2.5, mt: 1 }}>
             <li>
               {t("builder.automations.readSpec")}{" "}
               <Link
@@ -274,9 +310,9 @@ export default function Automations() {
               </Link>{" "}
               {t("builder.automations.tinkerLocally")}
             </li>
-          </ul>
-        </Panel>
-      </Collapse>
-    </div>
+          </Box>
+        </AccordionDetails>
+      </Accordion>
+    </Box>
   );
 }

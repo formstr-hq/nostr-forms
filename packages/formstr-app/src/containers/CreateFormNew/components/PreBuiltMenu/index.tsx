@@ -1,31 +1,29 @@
-import { Menu } from "antd";
 import { useTranslation } from "react-i18next";
 import { getPreBuiltMenu } from "../../configs/menuConfig";
 import useFormBuilderContext from "../../hooks/useFormBuilderContext";
+import { MenuList } from "../MenuList";
 
 function PreBuiltMenu() {
   const { t } = useTranslation();
   const { addQuestion } = useFormBuilderContext();
   const preBuiltMenu = getPreBuiltMenu(t);
 
-  const onMenuClick = ({ key }: { key: string }) => {
+  const onMenuClick = (key: string) => {
     const selectedItem = preBuiltMenu.find((item) => item.key === key);
     addQuestion(
       selectedItem?.primitive,
       selectedItem?.label,
-      selectedItem?.answerSettings
+      selectedItem?.answerSettings,
     );
   };
 
-  const items = [
-    {
-      key: "Pre-built",
-      label: t("builder.menus.prebuilt"),
-      children: preBuiltMenu,
-      type: "group",
-    },
-  ];
-  return <Menu selectedKeys={[]} items={items} onClick={onMenuClick} />;
+  return (
+    <MenuList
+      items={preBuiltMenu}
+      subheader={t("builder.menus.prebuilt")}
+      onSelect={onMenuClick}
+    />
+  );
 }
 
 export default PreBuiltMenu;
