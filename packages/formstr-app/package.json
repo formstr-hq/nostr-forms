@@ -6,6 +6,7 @@
     "@babel/core": "^7.16.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@formstr/local-relay": "^0.5.0",
     "@formstr/signer": "^0.2.2",
     "@formstr/support-us-button": "*",
     "@mui/icons-material": "^9.2.0",

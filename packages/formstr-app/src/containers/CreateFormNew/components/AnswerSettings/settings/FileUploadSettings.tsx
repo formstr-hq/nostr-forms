@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { IAnswerSettings } from "../types";
-import { pool } from "../../../../../pool";
+import { fetchMany } from "../../../../../dataLayer";
 import { useTranslation } from "react-i18next";
 import { useSnackbar } from "../../../../../providers/SnackbarProvider";
 
@@ -58,10 +58,10 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
   useEffect(() => {
     const queryServers = async () => {
       try {
-        const events = await pool.querySync(PUBLIC_RELAYS, {
-          kinds: [36363],
-          limit: 50,
-        });
+        const events = await fetchMany(
+            [{ kinds: [36363], limit: 50 }],
+            PUBLIC_RELAYS,
+          );
 
         const relayServers: ServerInfo[] = [];
         const seenUrls = new Set(DEFAULT_SERVERS);

@@ -12,7 +12,7 @@ import { AddressPointer } from "nostr-tools/nip19";
 import { FormRenderer } from "../FormFillerNew/FormRenderer";
 import { decodeNKeys } from "../../utils/nkeys";
 import { getDefaultRelays } from "../../nostr/common";
-import { pool } from "../../pool";
+import { fetchOne } from "../../dataLayer";
 
 function EditForm() {
   const { naddr } = useParams();
@@ -49,9 +49,9 @@ function EditForm() {
       "#d": [dTag],
       kinds: [30168],
     };
-    let formEvent = await pool.get(
+    let formEvent = await fetchOne(
+      [filter],
       Array.from(new Set([...(relays || []), ...getDefaultRelays()]) || []),
-      filter,
     );
     if (!formEvent) {
       setError("Form Not Found :(");

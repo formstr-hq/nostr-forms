@@ -9,9 +9,9 @@ import {
 import { Event } from "nostr-tools";
 import { useProfileContext } from "../hooks/useProfileContext";
 import { KINDS, Tag } from "../nostr/types";
-import { getDefaultRelays } from "../nostr/common";
+import { getDefaultRelays, customPublish } from "../nostr/common";
+import { subscribe, fetchOne, fetchMany } from "../dataLayer";
 import { signerManager } from "../signer";
-import { pool } from "../pool";
 
 /* ----------------------------- Types ----------------------------- */
 
@@ -109,24 +109,22 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     const dTags = [...initial.values()].map((v) => v.formId);
     const pubkeys = [...initial.values()].map((v) => v.formPubkey);
 
-    fetchSubRef.current = pool.subscribeMany(
-      getDefaultRelays(),
-      { kinds: [30168], "#d": dTags, authors: pubkeys },
-      {
-        onevent(event) {
-          const dTag = event.tags.find((t) => t[0] === "d")?.[1];
-          if (!dTag) return;
-          const formId = formLookup.get(`${event.pubkey}:${dTag}`);
-          if (!formId) return;
-          setFormEvents((prev) => {
-            const existing = prev.get(formId);
-            if (!existing) return prev;
-            const next = new Map(prev);
-            next.set(formId, { ...existing, event });
-            return next;
-          });
-        },
+    fetchSubRef.current = subscribe(
+      [{ kinds: [30168], "#d": dTags, authors: pubkeys }],
+      (event) => {
+        const dTag = event.tags.find((t) => t[0] === "d")?.[1];
+        if (!dTag) return;
+        const formId = formLookup.get(`${event.pubkey}:${dTag}`);
+        if (!formId) return;
+        setFormEvents((prev) => {
+          const existing = prev.get(formId);
+          if (!existing) return prev;
+          const next = new Map(prev);
+          next.set(formId, { ...existing, event });
+          return next;
+        });
       },
+      getDefaultRelays(),
     );
   };
 
@@ -145,14 +143,16 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
       ? [...new Set([relay, ...getDefaultRelays()])]
       : getDefaultRelays();
 
-    const events = await pool.querySync(
+    const events = await fetchMany(
+      [
+        {
+          kinds: [30168],
+          "#d": [formId],
+          authors: [formPubkey],
+        },
+      ],
       relaysToTry,
-      {
-        kinds: [30168],
-        "#d": [formId],
-        authors: [formPubkey],
-      },
-      { maxWait: 6000 },
+      6000,
     );
 
     const event =
@@ -185,10 +185,10 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     try {
       const signer = await signerManager.getSigner();
 
-      const existing = await pool.get(
+      const existing = await fetchOne(
+        [{ kinds: [KINDS.myFormsList], authors: [userPub] }],
         targetRelays,
-        { kinds: [KINDS.myFormsList], authors: [userPub] },
-        { maxWait: 6000 },
+        6000,
       );
 
       let forms: Tag[] = [];
@@ -221,7 +221,7 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
         content: encrypted,
       });
 
-      await Promise.allSettled(pool.publish(targetRelays, event));
+      await Promise.allSettled(customPublish(targetRelays, event));
 
       await refreshForms(true); // 🔥 force refresh to sync state
       callback?.("saved");
@@ -249,10 +249,10 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
       // Bounded so a slow/unreachable relay can't stall the whole list
       // (and, combined with the per-pubkey tracking above, can't block a
       // subsequent account switch either).
-      const list = await pool.get(
+      const list = await fetchOne(
+        [{ kinds: [14083], authors: [targetPubkey] }],
         getDefaultRelays(),
-        { kinds: [14083], authors: [targetPubkey] },
-        { maxWait: 6000 },
+        6000,
       );
 
       // A different account has since become active — this result is
@@ -287,10 +287,10 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
     try {
       const signer = await signerManager.getSigner();
 
-      const list = await pool.get(
+      const list = await fetchOne(
+        [{ kinds: [14083], authors: [userPub] }],
         getDefaultRelays(),
-        { kinds: [14083], authors: [userPub] },
-        { maxWait: 6000 },
+        6000,
       );
 
       if (!list) return;
@@ -314,7 +314,7 @@ export const MyFormsProvider = ({ children }: { children: ReactNode }) => {
         ),
       });
 
-      pool.publish(getDefaultRelays(), event);
+      customPublish(getDefaultRelays(), event);
       await refreshForms(true); // Force refresh after delete
     } catch (err) {
       console.error("Error deleting form:", err);

@@ -1,5 +1,5 @@
 import { Event } from "nostr-tools";
-import { pool } from "../pool";
+import { subscribe } from "../dataLayer";
 
 export const getPublicForms = (
   relays: string[],
@@ -10,9 +10,5 @@ export const getPublicForms = (
     limit: 50,
     "#t": ["public"],
   };
-  pool.subscribeMany(relays, filter, {
-    onevent: (e: Event) => {
-      callback(e);
-    },
-  });
+  subscribe([filter], callback, relays);
 };

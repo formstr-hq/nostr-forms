@@ -2,7 +2,7 @@ import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import { Avatar } from "@mui/material";
 import { FC, useEffect, useState } from "react";
 import { getDefaultRelays } from "../../nostr/common";
-import { pool } from "../../pool";
+import { fetchOne } from "../../dataLayer";
 
 const defaultRelays = getDefaultRelays();
 
@@ -22,7 +22,7 @@ export const NostrAvatar: FC<NostrAvatarProps> = ({ pubkey }) => {
       kinds: [0],
       authors: [pubkey!],
     };
-    const profile = await pool.get(defaultRelays, filter);
+    const profile = await fetchOne([filter], defaultRelays);
     if (profile) setProfile(JSON.parse(profile.content) as Profile);
   }
   useEffect(() => {

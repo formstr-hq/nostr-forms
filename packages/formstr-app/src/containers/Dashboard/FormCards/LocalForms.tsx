@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { ILocalForm } from "../../CreateFormNew/providers/FormBuilder/typeDefs";
 import { LocalFormCard } from "./LocalFormCard";
-import { pool } from "../../../pool";
+import { subscribe, type Subscription } from "../../../dataLayer";
 import { getDefaultRelays } from "../../../nostr/common";
 import { Event } from "nostr-tools";
 import { FormEventCard } from "./FormEventCard";
-import { SubCloser } from "nostr-tools/abstract-pool";
 
 interface LocaLFormsProps {
   localForms: ILocalForm[];
@@ -28,7 +27,7 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
   };
 
   useEffect(() => {
-    let closer: SubCloser;
+    let closer: Subscription;
     const initialize = () => {
       let pubkeys = localForms.map((l) => l.publicKey);
       let dTags = localForms.map((f) => f.formId);
@@ -37,9 +36,7 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
         "#d": dTags,
         authors: pubkeys,
       };
-      closer = pool.subscribeMany(getDefaultRelays(), filter, {
-        onevent: onFormEvent,
-      });
+      closer = subscribe([filter], onFormEvent, getDefaultRelays());
     };
     initialize();
     return () => {

@@ -105,16 +105,15 @@ export async function completeSignupModal(
 ) {
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("tab", { name: "Create Account" }).click();
-  // Once a key has been saved before (e.g. a prior signup in this session),
-  // the Sign In tab also renders its own "Password" field for it — even
-  // while hidden, antd keeps inactive tab panes mounted, so scope to the
-  // active pane rather than the whole dialog to avoid matching both.
-  const panel = dialog.getByRole("tabpanel", { name: "Create Account" });
-  await panel.getByPlaceholder("Password", { exact: true }).fill(password);
-  await panel.getByPlaceholder("Confirm password").fill(password);
-  await panel.getByRole("button", { name: "Create Account" }).click();
-  // Backup step: a primary button proceeds into the app.
-  await dialog.getByRole("button").last().click();
+  // The MUI LoginModal (ui-rewrite-mui) mounts only the ACTIVE tab's panel —
+  // unlike the old antd Tabs, which kept inactive panes mounted. So the signup
+  // form's fields are the only "Password"/"Confirm password" inputs present and
+  // we can scope to the whole dialog without matching the Sign In tab's field.
+  await dialog.getByPlaceholder("Password", { exact: true }).fill(password);
+  await dialog.getByPlaceholder("Confirm password").fill(password);
+  await dialog.getByRole("button", { name: "Create Account" }).click();
+  // Backup step: the primary button ("I've saved my key") proceeds into the app.
+  await dialog.getByRole("button", { name: "I've saved my key" }).click();
   await expect(dialog).toBeHidden({ timeout: 10_000 });
 }
 
@@ -278,10 +277,10 @@ export async function activeAccountPubkeyHex(
 export async function dismissStraySignInPrompt(page: Page) {
   const dialog = page.getByRole("dialog");
   if (await dialog.isVisible().catch(() => false)) {
-    // The modal auto-focuses itself on open, but by the time this runs
-    // something else may already hold focus — click its own Close button
-    // rather than relying on Escape reaching an unfocused dialog.
-    await dialog.getByRole("button", { name: "Close" }).click();
+    // The MUI LoginModal (ui-rewrite-mui) has no explicit "Close" button — it
+    // dismisses on Escape / backdrop. MUI listens for Escape at the document
+    // level, so it reaches the dialog regardless of what currently holds focus.
+    await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden({ timeout: 5_000 });
   }
 }

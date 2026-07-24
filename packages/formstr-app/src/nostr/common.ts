@@ -19,7 +19,7 @@ import { Field, Response, Tag } from "./types";
 import { IFormSettings } from "../containers/CreateFormNew/components/FormSettings/types";
 import { signerManager } from "../signer";
 import { AbstractRelay } from "nostr-tools/abstract-relay";
-import { pool } from "../pool";
+import { subscribe, fetchOne, fetchMany } from "../dataLayer";
 
 declare global {
   interface Window {
@@ -201,10 +201,10 @@ const getDisplayAnswer = (answer: string | number | boolean, field: Field) => {
 // Bounded by maxWait so a slow/unreachable relay can't stall notifications.
 const fetchDmRelays = async (hexPubkey: string): Promise<string[]> => {
   try {
-    const event = await pool.get(
+    const event = await fetchOne(
+      [{ kinds: [10050], authors: [hexPubkey] }],
       defaultRelays,
-      { kinds: [10050], authors: [hexPubkey] },
-      { maxWait: 4000 },
+      4000,
     );
     if (!event) return [];
     return event.tags
@@ -252,7 +252,7 @@ export const sendNotification = async (
       sig: "",
     };
     const kind4Event = finalizeEvent(baseKind4Event, newSk);
-    pool.publish(defaultRelays, kind4Event);
+    customPublish(defaultRelays, kind4Event);
   };
 
   // Notify each recipient. Prefer NIP-17 gift-wrapped DMs for those who have
@@ -271,7 +271,7 @@ export const sendNotification = async (
             message,
             name,
           );
-          pool.publish(dmRelays, giftWrap);
+          customPublish(dmRelays, giftWrap);
           return;
         } catch (err) {
           console.error("NIP-17 notification failed, falling back to NIP-04", err);
@@ -552,31 +552,22 @@ async function callRPC(
   console.log("Waiting for NRPC Response");
   // wait for response
   return new Promise((resolve, reject) => {
-    const sub = pool.subscribeMany(
-      relays,
-      { kinds: [21169], "#e": [rumor.id] },
-      {
-        async onevent(resp) {
-          try {
-            console.log("Got reply");
-            const rumorResp = await unwrapGiftwrap(
-              resp,
-              serverPubkey,
-              callerSk,
-            );
+    const sub = subscribe(
+      [{ kinds: [21169], "#e": [rumor.id] }],
+      async (resp) => {
+        try {
+          console.log("Got reply");
+          const rumorResp = await unwrapGiftwrap(resp, serverPubkey, callerSk);
 
-            if (rumorResp.kind === 69) {
-              resolve(rumorResp);
-              sub.close();
-            }
-          } catch (err) {
-            console.error("Failed to decrypt response:", err);
+          if (rumorResp.kind === 69) {
+            resolve(rumorResp);
+            sub.close();
           }
-        },
-        oneose() {
-          console.log("Relay reports EOSE");
-        },
+        } catch (err) {
+          console.error("Failed to decrypt response:", err);
+        }
       },
+      relays,
     );
   });
 }
@@ -623,7 +614,7 @@ export async function fetchKind0Events(
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const events = await pool.querySync(relayUrls, filter);
+    const events = await fetchMany([filter], relayUrls, timeoutMs);
     clearTimeout(timeout);
 
     // ✅ Deduplicate by pubkey: keep only the newest event per pubkey

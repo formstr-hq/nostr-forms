@@ -28,7 +28,7 @@ import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import { FormAnalytics } from "./components/FormAnalytics";
 import { isMobile } from "../../utils/utility";
 import { useProfileContext } from "../../hooks/useProfileContext";
-import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
+import { subscribeFormTemplate } from "../../nostr/fetchFormTemplate";
 import { hexToBytes } from "@noble/hashes/utils.js";
 import {
   fetchKeys,
@@ -47,7 +47,6 @@ import {
 import AIAnalysisChat from "./components/AIAnalysisChat";
 import { ResponseHeader } from "./components/ResponseHeader";
 import { AddressPointer } from "nostr-tools/nip19";
-import { SubCloser } from "nostr-tools/abstract-pool";
 import SafeMarkdown from "../../components/SafeMarkdown";
 import { decodeNKeys } from "../../utils/nkeys";
 import { downloadEncryptedFile } from "../../utils/fileDownload";
@@ -105,7 +104,6 @@ export const Response = () => {
   const { pubkey: userPubkey, requestPubkey } = useProfileContext();
   let viewKeyParams = searchParams.get("viewKey");
   if (!viewKeyParams) viewKeyParams = decodedNKeys?.viewKey || "";
-  const [responseCloser, setResponsesCloser] = useState<SubCloser | null>(null);
   const [selectedEventForModal, setSelectedEventForModal] =
     useState<Event | null>(null);
   const [selectedResponseInputsForModal, setSelectedResponseInputsForModal] =
@@ -130,64 +128,79 @@ export const Response = () => {
     });
   };
 
-  const initialize = async () => {
-    if (!formId) return;
-    if (!(pubkey || secretKey)) return;
-    setIsFormSpecLoading(true);
-
-    if (secretKey) {
-      setEditKey(secretKey);
-      pubkey = getPublicKey(hexToBytes(secretKey));
-    }
-    let relay: string | null = null;
-    if (!relays?.length) relay = searchParams.get("relay");
-    fetchFormTemplate(
-      pubkey!,
-      formId,
-      async (event: Event) => {
-        setFormEvent(event);
-        if (!secretKey) {
-          if (userPubkey) {
-            let keys = await fetchKeys(event.pubkey, formId!, userPubkey);
-            let fetchedEditKey =
-              keys?.find((k) => k[0] === "EditAccess")?.[1] || null;
-            setEditKey(fetchedEditKey);
-          }
-        }
-        const spec = await getFormSpecFromEventUtil(
-          event,
-          userPubkey,
-          null,
-          viewKeyParams,
-        );
-        setFormSpec(spec);
-        setIsFormSpecLoading(false);
-      },
-      relays?.length ? relays : relay ? [relay] : undefined,
-    );
-  };
-
+  // STABLE template subscription — the key reliability fix. A one-shot
+  // observe-then-unobserve races the local-relay worker's async fanout and can
+  // miss the template (the old SimplePool delivered synchronously and hid it);
+  // keeping the subscription alive for the component's lifetime does not. Keyed
+  // on the form's stable identity (pubkey/id/secret + relay hint) ONLY — NOT on
+  // `userPubkey`, whose async resolution would otherwise churn this down and
+  // rebuild it, reintroducing the very race. The userPubkey-dependent formSpec
+  // decode lives in its own effect below, driven off the delivered formEvent.
+  const relayParam = searchParams.get("relay");
+  const templateRelays = relays?.length
+    ? relays
+    : relayParam
+      ? [relayParam]
+      : undefined;
   useEffect(() => {
-    if (!(pubkey || secretKey) || !formId) {
-      if (responseCloser) {
-        responseCloser.close();
-        setResponsesCloser(null);
-      }
+    if (!formId || !pubkey) {
       setResponses(undefined);
       setFormEvent(undefined);
       setIsFormSpecLoading(true);
       return;
     }
-    initialize();
-    return () => {
-      if (responseCloser) {
-        responseCloser.close();
-        setResponsesCloser(null);
-      }
-    };
-  }, [pubkey, formId, secretKey, userPubkey, viewKeyParams]);
+    setIsFormSpecLoading(true);
+    if (secretKey) setEditKey(secretKey);
+    const sub = subscribeFormTemplate(
+      pubkey,
+      formId,
+      (event: Event) => setFormEvent(event),
+      templateRelays,
+    );
+    return () => sub.close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pubkey, formId, secretKey, templateRelays?.join(",")]);
+
+  // Decode the delivered template into a form spec. Separated from the template
+  // subscription because it depends on `userPubkey` (edit-key lookup + private
+  // form decryption): re-running it as the user resolves must not disturb the
+  // live template/response subscriptions.
   useEffect(() => {
-    if (!formEvent || !formId) {
+    if (!formEvent || !formId) return;
+    let cancelled = false;
+    (async () => {
+      if (!secretKey && userPubkey) {
+        const keys = await fetchKeys(formEvent.pubkey, formId, userPubkey);
+        const fetchedEditKey =
+          keys?.find((k) => k[0] === "EditAccess")?.[1] || null;
+        if (!cancelled) setEditKey(fetchedEditKey);
+      }
+      const spec = await getFormSpecFromEventUtil(
+        formEvent,
+        userPubkey,
+        null,
+        viewKeyParams,
+      );
+      if (cancelled) return;
+      setFormSpec(spec);
+      setIsFormSpecLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formEvent, userPubkey, viewKeyParams, secretKey, formId]);
+
+  // Keyed on the form's STABLE identity (author pubkey + id), NOT the formEvent
+  // object: the template is re-fetched whenever the effect above re-runs (e.g.
+  // `userPubkey` resolving), producing a fresh formEvent object each time. Keying
+  // on the object would tear down and rebuild the responses subscription on every
+  // such re-fetch of the SAME form — and the DataLayer worker's async delivery
+  // can drop an in-flight response during that churn. The form's pubkey/id don't
+  // change, so the subscription stays alive across template re-fetches.
+  const formPubkey = formEvent?.pubkey;
+  useEffect(() => {
+    if (!formEvent || !formPubkey || !formId) {
       return;
     }
     let allowedPubkeys;
@@ -195,18 +208,18 @@ export const Response = () => {
     if (pubkeys.length !== 0) allowedPubkeys = pubkeys;
     let formRelays = getResponseRelays(formEvent);
     const newCloser = fetchFormResponses(
-      formEvent.pubkey,
+      formPubkey,
       formId,
       handleResponseEvent,
       allowedPubkeys,
       formRelays,
     );
-    setResponsesCloser(newCloser);
 
     return () => {
       newCloser.close();
     };
-  }, [formEvent, formId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formPubkey, formId]);
 
   const getResponderCount = () => {
     if (!responses) return 0;

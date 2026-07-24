@@ -16,7 +16,7 @@ import {
   DEFAULT_SERVERS,
   ServerInfo,
 } from "../../AnswerSettings/settings/FileUploadSettings";
-import { pool } from "../../../../../pool";
+import { fetchMany } from "../../../../../dataLayer";
 import { useTranslation } from "react-i18next";
 
 const PUBLIC_RELAYS = [
@@ -50,10 +50,10 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
   useEffect(() => {
     const queryServers = async () => {
       try {
-        const events = await pool.querySync(PUBLIC_RELAYS, {
-          kinds: [36363],
-          limit: 50,
-        });
+        const events = await fetchMany(
+            [{ kinds: [36363], limit: 50 }],
+            PUBLIC_RELAYS,
+          );
 
         const relayServers: ServerInfo[] = [];
         const seenUrls = new Set(DEFAULT_SERVERS);

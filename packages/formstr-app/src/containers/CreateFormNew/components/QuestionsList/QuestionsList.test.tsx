@@ -91,8 +91,13 @@ jest.mock("../../../../providers/SnackbarProvider", () => ({
 
 // pool pulls the nostr signer chain (file-upload settings subscribe to
 // relays) — irrelevant to list logic.
-jest.mock("../../../../pool", () => ({
-  pool: { subscribeMany: jest.fn(() => ({ close: jest.fn() })) },
+// The DataLayer spawns a Web Worker (import.meta.url) that jsdom can't run,
+// so mock the module the migrated components read from.
+jest.mock("../../../../dataLayer", () => ({
+  subscribe: jest.fn(() => ({ close: jest.fn() })),
+  fetchOne: jest.fn(async () => null),
+  fetchMany: jest.fn(async () => []),
+  setUserRelays: jest.fn(),
 }));
 
 // react-markdown's dependency tree uses package "exports" subpaths that

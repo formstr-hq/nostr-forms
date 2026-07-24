@@ -16,7 +16,7 @@ import { signerManager } from "../signer";
 import { encodeNKeys } from "./nkeys";
 import { getDefaultRelays } from "../nostr/common";
 import { Tag } from "../nostr/types";
-import { pool } from "../pool";
+import { fetchMany } from "../dataLayer";
 
 export const createFormSpecFromTemplate = (
   template: FormTemplate,
@@ -46,7 +46,7 @@ export const fetchKeys = async (
     "#p": [aliasPubKey],
   };
 
-  const accessKeyEvents = await pool.querySync(defaultRelays, giftWrapsFilter);
+  const accessKeyEvents = await fetchMany([giftWrapsFilter], defaultRelays);
   let keys: Tag[] | undefined;
   await Promise.allSettled(
     accessKeyEvents.map(async (keyEvent: Event) => {

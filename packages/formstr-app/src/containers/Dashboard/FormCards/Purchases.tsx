@@ -3,8 +3,7 @@ import { StoredForm } from "./types";
 import axios from "../../../utils/axiosInstance";
 import { FormEventCard } from "../FormCards/FormEventCard";
 import { Box, Skeleton, Typography } from "@mui/material";
-import { pool } from "../../../pool";
-import { SubCloser } from "nostr-tools/abstract-pool";
+import { subscribe, type Subscription } from "../../../dataLayer";
 import { Event } from "nostr-tools";
 import { useProfileContext } from "../../../hooks/useProfileContext";
 import { getDefaultRelays } from "../../../nostr/common";
@@ -57,7 +56,7 @@ export const Purchases: React.FC = () => {
   const [formsWithEvents, setFormsWithEvents] = useState<FormWithEvent[]>([]);
   const [nostrEvents, setNostrEvents] = useState<Event[]>([]);
   const { pubkey, userRelays } = useProfileContext();
-  const subCloserRef = useRef<SubCloser | null>(null);
+  const subCloserRef = useRef<Subscription | null>(null);
 
   // Step 1: Fetch stored forms
   useEffect(() => {
@@ -81,19 +80,16 @@ export const Purchases: React.FC = () => {
       authors: formsWithEvents.map(({ form }) => form.pubkey),
     };
 
-    console.log("Final filter is", filter, pool);
-    subCloserRef.current = pool.subscribeMany(useRelays, filter, {
-      onevent: (event: Event) => {
-        console.log("GOT EVENT", event);
+    subCloserRef.current = subscribe(
+      [filter],
+      (event: Event) => {
         setNostrEvents((prev) => {
           const exists = prev.find((e) => e.id === event.id);
           return exists ? prev : [...prev, event];
         });
       },
-      onclose() {
-        subCloserRef.current?.close();
-      },
-    });
+      useRelays,
+    );
 
     return () => {
       subCloserRef.current?.close();

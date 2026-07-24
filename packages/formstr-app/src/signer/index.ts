@@ -45,6 +45,40 @@ function toNostrSigner(active: ActiveSigner): NostrSigner {
   };
 }
 
+/**
+ * TEST-ONLY session passphrase cache.
+ *
+ * Headless E2E has no NIP-07 extension, so the suite signs in with an ncryptsec
+ * (password) account. By design, `@formstr/signer` never persists that
+ * passphrase, so such an account cannot silently unlock after a full page
+ * reload (`unlock()` returns null for ncryptsec) — which would log the test out
+ * mid-flow. Gated strictly behind `REACT_APP_E2E`, which ONLY the Playwright dev
+ * server sets, so this is dead code in every real build and the passphrase is
+ * NEVER written to storage for actual users. sessionStorage (tab-scoped, wiped
+ * on close) lets the E2E suite reload freely instead of re-typing the passphrase.
+ */
+const E2E_PERSIST_PASSPHRASE = process.env.REACT_APP_E2E === "true";
+const e2ePassKey = (pubkey: string) => `formstr:e2e-session-pass:${pubkey}`;
+const e2eRememberPassphrase = (
+  pubkey: string | undefined,
+  passphrase: string,
+) => {
+  if (!E2E_PERSIST_PASSPHRASE || !pubkey) return;
+  try {
+    sessionStorage.setItem(e2ePassKey(pubkey), passphrase);
+  } catch {
+    /* ignore */
+  }
+};
+const e2eRecallPassphrase = (pubkey: string): string | null => {
+  if (!E2E_PERSIST_PASSPHRASE) return null;
+  try {
+    return sessionStorage.getItem(e2ePassKey(pubkey));
+  } catch {
+    return null;
+  }
+};
+
 class Signer {
   private pkg = createSigner({
     appName: "Formstr",
@@ -65,8 +99,18 @@ class Signer {
 
   private async restoreFromStorage() {
     try {
-      if (this.pkg.getActiveAccount()) {
-        const active = await this.pkg.unlock({ pool: this.pool });
+      const account = this.pkg.getActiveAccount();
+      if (account) {
+        let active = await this.pkg.unlock({ pool: this.pool });
+        // TEST-ONLY: re-unlock an ncryptsec account from the tab-scoped E2E
+        // passphrase cache (no-op in real builds — see E2E_PERSIST_PASSPHRASE).
+        if (!active && account.method === "ncryptsec" && account.ncryptsec) {
+          const passphrase = e2eRecallPassphrase(account.pubkey);
+          if (passphrase) {
+            await this.pkg.loginWithNcryptsec(account.ncryptsec, passphrase);
+            active = this.pkg.getActiveSigner();
+          }
+        }
         if (active) this.signer = toNostrSigner(active);
       } else {
         const legacySecret = readLegacyGuestSecret();
@@ -88,6 +132,7 @@ class Signer {
 
   async loginWithNcryptsec(ncryptsec: string, password: string): Promise<void> {
     await this.pkg.loginWithNcryptsec(ncryptsec, password);
+    e2eRememberPassphrase(this.pkg.getActiveAccount()?.pubkey, password);
     this.activateCurrent();
   }
 
@@ -96,6 +141,7 @@ class Signer {
     metadata: { name?: string; username?: string; about?: string; picture?: string },
   ): Promise<string> {
     const { ncryptsec } = await this.pkg.createAccount(password);
+    e2eRememberPassphrase(this.pkg.getActiveAccount()?.pubkey, password);
     this.activateCurrent();
     if (this.signer) publishKind0(this.signer, metadata).catch(console.error);
     return ncryptsec;
@@ -169,6 +215,7 @@ class Signer {
       throw new Error("Active account does not use a passphrase.");
     }
     await this.pkg.loginWithNcryptsec(account.ncryptsec, passphrase);
+    e2eRememberPassphrase(account.pubkey, passphrase);
     this.activateCurrent();
   }
 

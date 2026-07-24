@@ -15,7 +15,7 @@ import { FC, useEffect, useState } from "react";
 import { isValidNpub } from "./utils";
 import { nip19 } from "nostr-tools";
 import { useTranslation } from "react-i18next";
-import { pool } from "../../../../../pool";
+import { fetchOne } from "../../../../../dataLayer";
 import { getDefaultRelays, toHexNpub } from "../../../../../nostr/common";
 import { useSnackbar } from "../../../../../providers/SnackbarProvider";
 
@@ -47,11 +47,16 @@ const NpubListItem: FC<{
     const getProfile = async () => {
       const relays = getDefaultRelays();
       try {
-        const profileEvent = await pool.get(relays, {
-          kinds: [0],
-          authors: [hexPubkey],
-          limit: 1,
-        });
+        const profileEvent = await fetchOne(
+          [
+            {
+              kinds: [0],
+              authors: [hexPubkey],
+              limit: 1,
+            },
+          ],
+          relays,
+        );
         if (profileEvent) {
           setProfile(JSON.parse(profileEvent.content));
         }

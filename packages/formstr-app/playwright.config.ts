@@ -44,6 +44,11 @@ export default defineConfig({
       env: {
         BROWSER: "none",
         REACT_APP_DEFAULT_RELAYS: `ws://localhost:${RELAY_PORT}`,
+        // Lets ncryptsec (password) accounts silently re-unlock across a page
+        // reload in E2E — headless has no NIP-07 extension to use instead, and
+        // the passphrase is otherwise (correctly) never persisted. Test-only:
+        // real builds never set this, so the caching path stays dead code.
+        REACT_APP_E2E: "true",
       },
     },
   ],

@@ -47,8 +47,13 @@ jest.mock("../../provider/MyFormsProvider", () => ({
   }),
 }));
 
-jest.mock("../../pool", () => ({
-  pool: { subscribeMany: jest.fn(() => ({ close: jest.fn() })) },
+// The DataLayer spawns a Web Worker (import.meta.url) that jsdom can't run,
+// so mock the module the migrated components read from.
+jest.mock("../../dataLayer", () => ({
+  subscribe: jest.fn(() => ({ close: jest.fn() })),
+  fetchOne: jest.fn(async () => null),
+  fetchMany: jest.fn(async () => []),
+  setUserRelays: jest.fn(),
 }));
 
 // axios ships ESM which jest doesn't transform; Purchases isn't exercised.

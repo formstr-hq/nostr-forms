@@ -9,7 +9,7 @@ import { Event } from "nostr-tools";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { FormEventCard } from "./FormCards/FormEventCard";
 import EmptyScreen from "../../components/EmptyScreen";
-import { pool } from "../../pool";
+import { subscribe, type Subscription } from "../../dataLayer";
 import { ILocalForm } from "../CreateFormNew/providers/FormBuilder/typeDefs";
 import { nip19 } from "nostr-tools";
 import ImportFormModal from "../../components/ImportFormModal";
@@ -24,7 +24,6 @@ import { FormInitData } from "../CreateFormNew/providers/FormBuilder/typeDefs";
 import { createFormSpecFromTemplate } from "../../utils/formUtils";
 import { Purchases } from "./FormCards/Purchases";
 import { Submissions } from "./FormCards/Submissions";
-import { SubCloser } from "nostr-tools/abstract-pool";
 import { getDefaultRelays } from "../../nostr/common";
 
 type FilterType =
@@ -98,7 +97,7 @@ export const Dashboard = () => {
 
   const [filter, setFilter] = useState<FilterType>(getCurrentFilterFromPath());
 
-  const subCloserRef = useRef<SubCloser | null>(null);
+  const subCloserRef = useRef<Subscription | null>(null);
 
   useEffect(() => {
     const currentFilter = getCurrentFilterFromPath();
@@ -120,12 +119,7 @@ export const Dashboard = () => {
       "#p": [pubkey],
     };
 
-    subCloserRef.current = pool.subscribeMany(defaultRelays, queryFilter, {
-      onevent: handleEvent,
-      onclose() {
-        subCloserRef.current?.close();
-      },
-    });
+    subCloserRef.current = subscribe([queryFilter], handleEvent, defaultRelays);
   };
 
   useEffect(() => {

@@ -9,8 +9,7 @@ import React, {
 import { LOCAL_STORAGE_KEYS, getItem, setItem } from "../utils/localStorage";
 import { Filter } from "nostr-tools";
 import type { StoredAccount } from "@formstr/signer";
-import { pool } from "../pool";
-import { getDefaultRelays } from "../nostr/common";
+import { fetchOne, setUserRelays as setWorkerRelays } from "../dataLayer";
 import { isLoginCancelledError, LoginCancelledError, signerManager } from "../signer";
 import LoginModal from "../components/LoginModal";
 
@@ -52,12 +51,14 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
       kinds: [10002],
       authors: [pubkey],
     };
-    let relayEvent = await pool.get(getDefaultRelays(), filter);
+    let relayEvent = await fetchOne([filter]);
     if (!relayEvent) return;
     let relayUrls = relayEvent.tags
       .filter((t) => t[0] === "r")
       .map((r) => r[1]);
     setUserRelays(relayUrls);
+    // Point the worker's read routing at the user's own relays.
+    setWorkerRelays(relayUrls);
   };
 
   // Shared by both the implicit "you need to be signed in" prompt

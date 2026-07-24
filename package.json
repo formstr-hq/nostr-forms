@@ -3,6 +3,9 @@
     "packages/*"
   ],
   "private": true,
+  "resolutions": {
+    "nostr-tools": "2.24.0"
+  },
   "devDependencies": {
     "@typescript-eslint/parser": "^6.10.0",
     "eslint": "^8.53.0",

@@ -89,6 +89,19 @@ export function getDedupState(scopeKey: string): NotificationsDedupState {
   return all[scopeKey] ?? emptyDedupState();
 }
 
+/**
+ * Cap on how many seen-event ids we retain per scope. The DataLayer worker
+ * caches matching events in IndexedDB and replays the whole set on every
+ * subscription mount, so these dedup arrays would otherwise grow without bound
+ * and blow the localStorage quota. Keeping the most-recent ids (Set insertion
+ * order ≈ first-seen order, newest at the tail) bounds the payload; an evicted
+ * old id can at worst re-notify once if the same ancient event is redelivered.
+ */
+const MAX_DEDUP_IDS = 4000;
+
+const capTail = (ids: string[]): string[] =>
+  ids.length > MAX_DEDUP_IDS ? ids.slice(-MAX_DEDUP_IDS) : ids;
+
 export function saveDedupState(
   scopeKey: string,
   state: NotificationsDedupState,
@@ -99,6 +112,10 @@ export function saveDedupState(
     ) ?? {};
   setItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_STATE, {
     ...all,
-    [scopeKey]: state,
+    [scopeKey]: {
+      ...state,
+      knownShareKeys: capTail(state.knownShareKeys),
+      knownResponseIds: capTail(state.knownResponseIds),
+    },
   });
 }

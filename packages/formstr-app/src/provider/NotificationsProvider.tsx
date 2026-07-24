@@ -12,7 +12,7 @@ import { useProfileContext } from "../hooks/useProfileContext";
 import { useMyForms } from "./MyFormsProvider";
 import { useLocalForms } from "./LocalFormsProvider";
 import { getDefaultRelays } from "../nostr/common";
-import { pool } from "../pool";
+import { subscribe } from "../dataLayer";
 import {
   INotification,
   getNotifications,
@@ -157,11 +157,9 @@ export const NotificationsProvider = ({
       (f) => `30168:${f.formPubkey}:${f.formId}`,
     );
 
-    responsesSubRef.current = pool.subscribeMany(
-      getDefaultRelays(),
-      { kinds: [1069], "#a": aValues },
-      {
-        onevent(event: Event) {
+    responsesSubRef.current = subscribe(
+      [{ kinds: [1069], "#a": aValues }],
+      (event: Event) => {
           if (knownResponseIds.has(event.id)) return;
           knownResponseIds.add(event.id);
 
@@ -201,14 +199,14 @@ export const NotificationsProvider = ({
           }
           persist();
         },
-        oneose() {
+        getDefaultRelays(),
+        () => {
           if (eosed) return;
           eosed = true;
           baselineSeeded = true;
           persist();
         },
-      },
-    );
+      );
 
     return () => {
       active = false;
@@ -237,11 +235,9 @@ export const NotificationsProvider = ({
       });
     };
 
-    sharesSubRef.current = pool.subscribeMany(
-      getDefaultRelays(),
-      { kinds: [30168], "#p": [pubkey] },
-      {
-        onevent(event: Event) {
+    sharesSubRef.current = subscribe(
+      [{ kinds: [30168], "#p": [pubkey] }],
+      (event: Event) => {
           const dTag = event.tags.find((t) => t[0] === "d")?.[1];
           if (!dTag) return;
           const key = ownedFormKey(event.pubkey, dTag);
@@ -283,14 +279,14 @@ export const NotificationsProvider = ({
           }
           persist();
         },
-        oneose() {
+        getDefaultRelays(),
+        () => {
           if (eosed) return;
           eosed = true;
           baselineSeeded = true;
           persist();
         },
-      },
-    );
+      );
 
     return () => {
       active = false;
