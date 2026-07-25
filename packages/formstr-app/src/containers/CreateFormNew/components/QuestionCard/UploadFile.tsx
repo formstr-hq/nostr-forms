@@ -1,6 +1,7 @@
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import AudioFileOutlinedIcon from "@mui/icons-material/AudioFileOutlined";
 import VideocamOutlinedIcon from "@mui/icons-material/VideocamOutlined";
+import PermMediaOutlinedIcon from "@mui/icons-material/PermMediaOutlined";
 import {
   Alert,
   Box,
@@ -8,9 +9,11 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
+  IconButton,
   Tab,
   Tabs,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
@@ -167,9 +170,23 @@ const UploadFile: React.FC<Props> = ({ onImageUpload }) => {
 
   return (
     <Box>
-      <Button onClick={showModal} variant="outlined" sx={{ mr: "10px" }}>
-        {t("builder.inputPreviews.mediaButton")}
-      </Button>
+      <Tooltip title={t("builder.inputPreviews.mediaButton")}>
+        <IconButton
+          onClick={showModal}
+          aria-label={t("builder.inputPreviews.mediaButton")}
+          size="small"
+          sx={{
+            mr: "10px",
+            height: 32,
+            width: 32,
+            color: "primary.main",
+            bgcolor: "rgba(0, 0, 0, 0.05)",
+            "&:hover": { bgcolor: "rgba(0, 0, 0, 0.09)" },
+          }}
+        >
+          <PermMediaOutlinedIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+      </Tooltip>
 
       <Dialog open={isModalOpen} onClose={handleCancel} maxWidth="sm" fullWidth>
         <DialogTitle>{t("builder.inputPreviews.mediaModalTitle")}</DialogTitle>

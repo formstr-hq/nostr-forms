@@ -45,9 +45,18 @@ const propertyRowSx = {
 
 const accordionSx = {
   "&:before": { display: "none" },
+  // Square off the Paper so the full-bleed section dividers don't get clipped
+  // into odd rounded corners by the theme's default 8px radius.
+  borderRadius: 0,
   borderTop: "1px solid",
   borderColor: "divider",
 } as const;
+
+/** Section header row: inset to align with the Form Identifier label above. */
+const summarySx = { px: 2, minHeight: 52 } as const;
+
+/** Section body: same horizontal inset, no extra top padding under the header. */
+const detailsSx = { px: 2, pt: 0 } as const;
 
 function ColorSwatch({
   colorKey,
@@ -149,10 +158,10 @@ function FormSettings() {
       {/* Collapsible groups */}
       <Box>
         <Accordion disableGutters elevation={0} sx={accordionSx}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
             <Typography>{t("builder.formSettings.sections.access")}</Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+          <AccordionDetails sx={detailsSx}>
             <Tooltip title={t("builder.formSettings.postToBulletinTooltip")}>
               <Box sx={propertyRowSx}>
                 <Typography sx={{ fontSize: 14 }}>
@@ -215,23 +224,23 @@ function FormSettings() {
         </Accordion>
 
         <Accordion disableGutters elevation={0} sx={accordionSx}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
             <Typography>
               {t("builder.formSettings.sections.notifications")}
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+          <AccordionDetails sx={detailsSx}>
             <Notifications />
           </AccordionDetails>
         </Accordion>
 
         <Accordion disableGutters elevation={0} sx={accordionSx}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
             <Typography>
               {t("builder.formSettings.sections.customization")}
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+          <AccordionDetails sx={detailsSx}>
             <Typography sx={{ fontSize: 12, display: "block", mb: 1 }}>
               {t("common.labels.colors")}
             </Typography>
@@ -313,10 +322,10 @@ function FormSettings() {
         </Accordion>
 
         <Accordion disableGutters elevation={0} sx={accordionSx}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
             <Typography>{t("builder.formSettings.sections.relays")}</Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+          <AccordionDetails sx={detailsSx}>
             <Button
               variant="outlined"
               fullWidth
@@ -338,12 +347,12 @@ function FormSettings() {
             borderColor: "divider",
           }}
         >
-          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
             <Typography>
               {t("builder.formSettings.sections.automations")}
             </Typography>
           </AccordionSummary>
-          <AccordionDetails sx={{ px: 0, pt: 0 }}>
+          <AccordionDetails sx={detailsSx}>
             <Automations />
           </AccordionDetails>
         </Accordion>
