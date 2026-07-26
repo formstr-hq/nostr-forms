@@ -21,6 +21,7 @@ import {
   markAllRead as persistMarkAllRead,
   getDedupState,
   saveDedupState,
+  compactDedupState,
 } from "../utils/notifications";
 
 interface OwnedForm {
@@ -58,6 +59,13 @@ export const useNotifications = (): NotificationsContextValue => {
 
 const ownedFormKey = (formPubkey: string, formId: string) =>
   `${formPubkey}:${formId}`;
+
+// Only surface notifications for activity in the last 30 days. Bounding the
+// window also caps how many event ids the dedup state accumulates — the thing
+// that was ballooning localStorage — instead of reaching a year+ back.
+const NOTIFICATION_WINDOW_DAYS = 30;
+const notificationSince = () =>
+  Math.floor(Date.now() / 1000) - NOTIFICATION_WINDOW_DAYS * 24 * 60 * 60;
 
 export const NotificationsProvider = ({
   children,
@@ -125,6 +133,12 @@ export const NotificationsProvider = ({
   const findOwnedForm = (formPubkey: string, formId: string) =>
     ownedForms.get(ownedFormKey(formPubkey, formId));
 
+  // Reclaim any localStorage bloat from dedup state written before the tighter
+  // caps / 30-day window existed, once per load.
+  useEffect(() => {
+    compactDedupState();
+  }, []);
+
   // Reload the visible list whenever the active account changes.
   useEffect(() => {
     setNotifications(getNotifications(pubkey));
@@ -157,9 +171,14 @@ export const NotificationsProvider = ({
       (f) => `30168:${f.formPubkey}:${f.formId}`,
     );
 
+    const since = notificationSince();
     responsesSubRef.current = subscribe(
-      [{ kinds: [1069], "#a": aValues }],
+      [{ kinds: [1069], "#a": aValues, since }],
       (event: Event) => {
+          // The DataLayer worker replays its whole IndexedDB cache, which can
+          // include events older than `since`; drop them so neither the visible
+          // list nor the dedup state reaches past the 30-day window.
+          if (event.created_at < since) return;
           if (knownResponseIds.has(event.id)) return;
           knownResponseIds.add(event.id);
 
@@ -235,9 +254,11 @@ export const NotificationsProvider = ({
       });
     };
 
+    const since = notificationSince();
     sharesSubRef.current = subscribe(
-      [{ kinds: [30168], "#p": [pubkey] }],
+      [{ kinds: [30168], "#p": [pubkey], since }],
       (event: Event) => {
+          if (event.created_at < since) return;
           const dTag = event.tags.find((t) => t[0] === "d")?.[1];
           if (!dTag) return;
           const key = ownedFormKey(event.pubkey, dTag);

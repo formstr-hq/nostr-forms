@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Box,
   Link,
   Table,
   TableBody,
@@ -35,11 +36,13 @@ export const Submissions = () => {
 
   if (submissions.length === 0) {
     return (
-      <EmptyScreen
-        message={t("dashboard.submissionsEmpty")}
-        action={() => navigate(ROUTES.PUBLIC_FORMS)}
-        actionLabel={t("dashboard.submissionsEmptyAction")}
-      />
+      <Box sx={{ gridColumn: "1 / -1" }}>
+        <EmptyScreen
+          message={t("dashboard.submissionsEmpty")}
+          action={() => navigate(ROUTES.PUBLIC_FORMS)}
+          actionLabel={t("dashboard.submissionsEmptyAction")}
+        />
+      </Box>
     );
   }
 

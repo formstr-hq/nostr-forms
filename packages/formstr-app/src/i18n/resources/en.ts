@@ -531,6 +531,8 @@ const resources = {
     quickActions: "Quick actions",
     viewResponses: "View Responses",
     openForm: "Open Form",
+    copyLink: "Copy form link",
+    linkCopied: "Link copied",
     details: "Details",
     noPurchases: "No purchases found.",
     url: "URL",
@@ -538,7 +540,10 @@ const resources = {
     never: "Never",
     delete: {
       title: "Are you sure you want to delete this form from your device?",
+      titleRelay: "Are you sure you want to delete this form?",
       irreversible: "This action is irreversible.",
+      irreversibleRelay:
+        "This publishes a deletion request to the relays and is irreversible. Already-submitted responses are not removed.",
       failed: "Failed to delete form.",
     },
   },

@@ -12,20 +12,32 @@ import { useLocalForms } from "../../../provider/LocalFormsProvider";
 import { IDeleteFormsLocal, IDeleteFormsTrigger } from "./types";
 import { useTranslation } from "react-i18next";
 import { useSnackbar } from "../../../providers/SnackbarProvider";
+import { requestFormDeletion } from "../../../nostr/deleteForm";
 
 function DeleteConfirmationLocal({
   formKey,
   onCancel,
   onDeleted,
+  formPubkey,
+  formId,
+  signingKey,
+  relays,
 }: IDeleteFormsLocal) {
   const { t } = useTranslation();
   const { deleteLocalForm } = useLocalForms();
   const { showMessage } = useSnackbar();
   const [loading, setLoading] = useState(false);
 
+  // A real (relay) deletion is only possible when we hold the form's own
+  // signing key. Without it we can still remove the form from the local list.
+  const canDeleteFromRelays = Boolean(signingKey && formPubkey && formId);
+
   const onDeleteForm = async () => {
     setLoading(true);
     try {
+      if (canDeleteFromRelays) {
+        await requestFormDeletion(formPubkey!, formId!, signingKey!, relays);
+      }
       await deleteLocalForm(formKey);
       onDeleted();
     } catch (e) {
@@ -37,8 +49,16 @@ function DeleteConfirmationLocal({
 
   return (
     <Dialog open onClose={onCancel} maxWidth="xs" fullWidth>
-      <DialogTitle>{t("dashboardCards.delete.title")}</DialogTitle>
-      <DialogContent>{t("dashboardCards.delete.irreversible")}</DialogContent>
+      <DialogTitle>
+        {canDeleteFromRelays
+          ? t("dashboardCards.delete.titleRelay")
+          : t("dashboardCards.delete.title")}
+      </DialogTitle>
+      <DialogContent>
+        {canDeleteFromRelays
+          ? t("dashboardCards.delete.irreversibleRelay")
+          : t("dashboardCards.delete.irreversible")}
+      </DialogContent>
       <DialogActions>
         <Button onClick={onCancel}>{t("common.actions.cancel")}</Button>
         <Button
@@ -57,6 +77,10 @@ function DeleteConfirmationLocal({
 function DeleteFormTrigger({
   formKey,
   onDeleted,
+  formPubkey,
+  formId,
+  signingKey,
+  relays,
 }: Optional<IDeleteFormsTrigger, "onDeleted" | "onCancel">) {
   const [deleteConfirmationOpen, updateDeleteConfirmationOpen] =
     useState(false);
@@ -82,6 +106,10 @@ function DeleteFormTrigger({
           formKey={formKey}
           onDeleted={onDelete}
           onCancel={onCancel}
+          formPubkey={formPubkey}
+          formId={formId}
+          signingKey={signingKey}
+          relays={relays}
         />
       )}
     </>

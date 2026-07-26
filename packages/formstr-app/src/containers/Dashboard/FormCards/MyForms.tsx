@@ -76,6 +76,10 @@ export const MyForms = () => {
                     <DeleteFormTrigger
                       formKey={`${formPubkey}:${formId}`}
                       onDeleted={() => handleFormDeleted(formId, formPubkey)}
+                      formPubkey={formPubkey}
+                      formId={formId}
+                      signingKey={formMetadata.secrets.secretKey}
+                      relays={formMetadata.relay ? [formMetadata.relay] : []}
                     />
                   }
                   sx={{ "& .MuiCardHeader-content": { minWidth: 0 } }}

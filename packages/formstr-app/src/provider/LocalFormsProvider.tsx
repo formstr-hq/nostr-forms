@@ -67,14 +67,13 @@ export const LocalFormsProvider: React.FC<LocalFormsProviderProps> = ({
     setEncryptionError(null);
 
     try {
-      let signer = null;
-      if (pubkey) {
-        try {
-          signer = await signerManager.getSigner();
-        } catch {
-          // No signer available — unencrypted forms can still be read
-        }
-      }
+      // Use the signer only if it's already unlocked — do NOT call getSigner(),
+      // which would pop the login modal on every reload for a still-locked
+      // account (e.g. an ncryptsec account whose passphrase is never persisted).
+      // Reading forms is a best-effort decrypt: with no live signer we can still
+      // return unencrypted forms, and encrypted storage surfaces its normal
+      // "unlock to view" error instead of a spurious login prompt.
+      const signer = pubkey ? signerManager.getSignerIfAvailable() : null;
       const { forms, error } = await getLocalForms(signer, pubkey);
       setLocalFormsState(forms);
       if (error) {
@@ -89,6 +88,19 @@ export const LocalFormsProvider: React.FC<LocalFormsProviderProps> = ({
 
   useEffect(() => {
     refreshForms();
+  }, [refreshForms]);
+
+  // Re-read forms when the signer becomes available/changes. A locked→unlocked
+  // transition doesn't change `pubkey` (so the effect above won't re-run), but
+  // it's exactly when previously-undecryptable encrypted forms can finally be
+  // read — without this, they'd stay hidden until a manual refresh.
+  useEffect(() => {
+    const unsubscribe = signerManager.onChange(() => {
+      refreshForms();
+    });
+    return () => {
+      unsubscribe();
+    };
   }, [refreshForms]);
 
   // Save a form

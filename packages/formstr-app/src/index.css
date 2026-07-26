@@ -64,3 +64,23 @@ code {
   max-height: 250px;
   overflow-y: scroll;
 }
+
+/* Equal-height dashboard cards: fill the (stretched) grid cell and lay the
+   card out as a column so the footer (divider + actions) pins to the bottom
+   regardless of how long the title/description is. */
+.form-cards-container .form-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-cards-container .form-card .MuiCardContent-root {
+  flex-grow: 1;
+}
+
+/* Cards without a description area (e.g. LocalFormCard) have no growing content
+   region, so pin their footer to the bottom directly. For cards that DO have a
+   flex-grow CardContent there's no free space left, making this a no-op. */
+.form-cards-container .form-card > .MuiCardActions-root {
+  margin-top: auto;
+}

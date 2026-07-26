@@ -57,14 +57,39 @@ function AnswerSettings() {
       option.answerSettings.renderElement === answerSettings.renderElement,
   );
 
+  // True when the author cleared the "right answer" (nothing selected). For
+  // grids the filler still emits a JSON object once touched — e.g. "{}" or a
+  // row whose selection was unchecked — so an empty value is not just "" / [].
+  const isRightAnswerEmpty = (answer: string | string[]): boolean => {
+    if (Array.isArray(answer)) return answer.filter(Boolean).length === 0;
+    if (typeof answer !== "string") return !answer;
+    if (answer.trim() === "") return true;
+    try {
+      const parsed = JSON.parse(answer);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        // Grid response: rowId -> ";"-joined columnIds. Empty when no row has
+        // any selected column.
+        return Object.values(parsed).every(
+          (cols) => String(cols ?? "").split(";").filter(Boolean).length === 0,
+        );
+      }
+    } catch {
+      // Not JSON — a plain non-empty string answer; keep it.
+    }
+    return false;
+  };
+
   const handleRightAnswer = (rightAnswer: string | string[]) => {
     const field = question;
+    // Drop the match rule entirely when the right answer is cleared, so an
+    // unselected answer never leaves behind a rule that fails every submission.
+    const { match, ...otherRules } = answerSettings.validationRules || {};
+    const newValidationRules = isRightAnswerEmpty(rightAnswer)
+      ? otherRules
+      : { ...otherRules, match: { answer: rightAnswer } };
     let newAnswerSettings = {
       ...answerSettings,
-      validationRules: {
-        ...answerSettings.validationRules,
-        match: { answer: rightAnswer },
-      },
+      validationRules: newValidationRules,
     };
     field[5] = JSON.stringify(newAnswerSettings);
     editQuestion(field, field[1]);

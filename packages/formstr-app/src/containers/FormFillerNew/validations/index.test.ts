@@ -108,6 +108,48 @@ describe("validateFieldValue", () => {
     expect(validateFieldValue(field, ["42", undefined])).toBeNull();
   });
 
+  const gridField = (
+    id: string,
+    config: Record<string, unknown> = {},
+  ): Field =>
+    [
+      "field",
+      id,
+      "option",
+      `${id} label`,
+      JSON.stringify({
+        columns: [["c1", "Col 1"], ["c2", "Col 2"]],
+        rows: [["r1", "Row 1"]],
+      }),
+      JSON.stringify({ renderElement: "checkboxGrid", ...config }),
+    ] as Field;
+
+  // Repro: author selected a right answer for a grid, then unselected it. The
+  // builder leaves behind a match rule whose answer is an "empty" grid response
+  // ("{}"). Filling it must NOT fail — no real correct answer was set.
+  it("does not fail a grid when the match right-answer is empty", () => {
+    const field = gridField("g1", {
+      validationRules: { match: { answer: "{}" } },
+    });
+    expect(
+      validateFieldValue(field, [JSON.stringify({ r1: "c1" }), undefined]),
+    ).toBeNull();
+  });
+
+  it("validates a grid match rule by cells, not string equality", () => {
+    const field = gridField("g1", {
+      validationRules: { match: { answer: JSON.stringify({ r1: "c2" }) } },
+    });
+    // Correct cells (even if serialized differently) pass...
+    expect(
+      validateFieldValue(field, [JSON.stringify({ r1: "c2" }), undefined]),
+    ).toBeNull();
+    // ...a wrong cell fails.
+    expect(
+      validateFieldValue(field, [JSON.stringify({ r1: "c1" }), undefined]),
+    ).toBe("This is not the correct answer for this question");
+  });
+
   it("skips rule checks for empty optional values (like antd rules did)", () => {
     const field = textField("q1", {
       validationRules: { min: { min: 3 } },

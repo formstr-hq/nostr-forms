@@ -114,6 +114,15 @@ function Match(rule: MatchRule, answerType?: AnswerTypes): FieldValidator {
           rule.answer as string,
         );
 
+        // No actual cell selected in the "right answer" (e.g. the author
+        // selected then unselected one in the builder, leaving "{}" or a row
+        // with an empty selection). That's not a real correct-answer
+        // constraint — don't fail every submission against it.
+        const hasCorrectSelection = Object.values(correctResponse).some(
+          (cols) => (cols ?? "").split(";").filter(Boolean).length > 0,
+        );
+        if (!hasCorrectSelection) return null;
+
         // Check if all rows match
         for (const [rowId, correctColumnIds] of Object.entries(
           correctResponse,
@@ -165,11 +174,17 @@ const RuleValidatorMap = {
 function createRule(
   ruleType: ValidationRuleTypes,
   validationRules: AnswerSettings["validationRules"],
+  answerType?: string,
 ): FieldValidator {
   if (!validationRules) return () => null;
-  const ruleCreator = RuleValidatorMap[ruleType];
   const rule = validationRules[ruleType];
   if (!rule) return () => null;
+  // Match needs the answer type so grid right-answers are compared cell-by-cell
+  // rather than by fragile whole-string equality of the serialized response.
+  if (ruleType === ValidationRuleTypes.match) {
+    return Match(rule as MatchRule, answerType as AnswerTypes | undefined);
+  }
+  const ruleCreator = RuleValidatorMap[ruleType];
   return ruleCreator(rule);
 }
 
@@ -216,7 +231,7 @@ export const getValidationRules = (
   let ruleTypes = Object.keys(validationRules) as ValidationRuleTypes[];
   ruleTypes.forEach((ruleType) => {
     if (validationRules && validationRules[ruleType]) {
-      rules.push(createRule(ruleType, validationRules));
+      rules.push(createRule(ruleType, validationRules, answerType));
     }
   });
   return rules;

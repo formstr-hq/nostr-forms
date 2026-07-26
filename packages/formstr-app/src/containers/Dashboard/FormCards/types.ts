@@ -5,6 +5,13 @@ export interface IDeleteFormsLocal {
   onDeleted: () => void;
   onCancel: () => void;
   style?: Record<string, string | number>;
+  // When these are present, deletion also publishes a NIP-09 request to remove
+  // the form event from relays (a real delete), not just from the local list.
+  // `signingKey` must be the form's own author key.
+  formPubkey?: string;
+  formId?: string;
+  signingKey?: string;
+  relays?: string[];
 }
 
 export interface IDeleteFormsNostr {

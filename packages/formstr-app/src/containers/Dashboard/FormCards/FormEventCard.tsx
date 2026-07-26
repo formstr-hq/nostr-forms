@@ -11,13 +11,16 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  Tooltip,
   Typography,
 } from "@mui/material";
+import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Event } from "nostr-tools";
 import { useNavigate } from "react-router-dom";
@@ -67,6 +70,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
   const [showFormDetails, setShowFormDetails] = useState(false);
   const [showBroadcast, setShowBroadcast] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   useEffect(() => {
     const initialize = async () => {
       if (event.content === "") {
@@ -132,6 +136,28 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
       constructDraftUrl(duplicatedForm, window.location.origin),
       "_blank",
     );
+  };
+
+  // The live form link — shared by the "Open Form" button (navigates) and the
+  // "Copy form link" button (copies the absolute URL to the clipboard).
+  const formLinkPath =
+    shortLink ||
+    naddrUrl(
+      pubKey,
+      formId,
+      relays.length ? relays : ["wss://relay.damus.io"],
+      viewKey,
+    );
+  const fullFormUrl = `${window.location.origin}${formLinkPath}`;
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(fullFormUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 1200);
+    } catch (e) {
+      console.error("Failed to copy form link", e);
+    }
   };
 
   const handleDuplicate = () => {
@@ -265,7 +291,14 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
               ))}
             </Menu>
             {onDeleted ? (
-              <DeleteFormTrigger formKey={formKey} onDeleted={onDeleted} />
+              <DeleteFormTrigger
+                formKey={formKey}
+                onDeleted={onDeleted}
+                formPubkey={pubKey}
+                formId={formId}
+                signingKey={secretKey}
+                relays={relays}
+              />
             ) : null}
           </Box>
         }
@@ -289,8 +322,22 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
         </Box>
       </CardContent>
       <Divider />
-      <CardActions sx={{ justifyContent: "space-between", px: 2 }}>
-        <Box>
+      <CardActions
+        sx={{
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          rowGap: 0.5,
+          px: 2,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            rowGap: 0.5,
+          }}
+        >
           <Button
             size="small"
             onClick={() => {
@@ -307,28 +354,47 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
           >
             {t("dashboardCards.viewResponses")}
           </Button>
-          <Button
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (shortLink) {
-                navigate(shortLink);
-              } else {
-                navigate(
-                  naddrUrl(
-                    pubKey,
-                    formId,
-                    relays.length ? relays : ["wss://relay.damus.io"],
-                    viewKey,
-                  ),
-                );
+          {/* Keep Open Form + copy glued together so the icon never orphans
+              onto its own line when the row wraps on narrow screens. */}
+          <Box sx={{ display: "inline-flex", alignItems: "center" }}>
+            <Button
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(formLinkPath);
+              }}
+            >
+              {t("dashboardCards.openForm")}
+            </Button>
+            <Tooltip
+              title={
+                linkCopied
+                  ? t("dashboardCards.linkCopied")
+                  : t("dashboardCards.copyLink")
               }
-            }}
-          >
-            {t("dashboardCards.openForm")}
-          </Button>
+            >
+              <IconButton
+                aria-label={t("dashboardCards.copyLink")}
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopyLink();
+                }}
+              >
+                {linkCopied ? (
+                  <CheckOutlinedIcon fontSize="small" color="success" />
+                ) : (
+                  <LinkOutlinedIcon fontSize="small" />
+                )}
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
-        <Typography variant="body2" color="text.disabled">
+        <Typography
+          variant="body2"
+          color="text.disabled"
+          sx={{ whiteSpace: "nowrap" }}
+        >
           {new Date(event.created_at * 1000).toDateString()}
         </Typography>
       </CardActions>

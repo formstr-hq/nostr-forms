@@ -67,6 +67,19 @@ export const NotificationsBell = () => {
     navigate(destinationFor(notification));
   };
 
+  // The name stored on the notification is frozen at record time, when the
+  // form's real name may not have loaded yet — so it can be the form's id
+  // (d-tag). Prefer the currently-resolved owned-form name, and only fall back
+  // to the stored value (e.g. for shared forms we don't own) when that name is
+  // actually a name and not just the id echoed back.
+  const displayName = (notification: INotification): string => {
+    const owned = findOwnedForm(notification.formPubkey, notification.formId);
+    if (owned?.formName && owned.formName !== notification.formId) {
+      return owned.formName;
+    }
+    return notification.formName;
+  };
+
   return (
     <>
       <IconButton
@@ -144,10 +157,10 @@ export const NotificationsBell = () => {
                       <Typography variant="body2">
                         {notification.type === "response"
                           ? t("notifications.responseText", {
-                              formName: notification.formName,
+                              formName: displayName(notification),
                             })
                           : t("notifications.shareText", {
-                              formName: notification.formName,
+                              formName: displayName(notification),
                             })}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">

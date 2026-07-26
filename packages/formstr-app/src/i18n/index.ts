@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import { getItem, LOCAL_STORAGE_KEYS, setItem } from "../utils/localStorage";
+import enResources from "./resources/en";
 
 type TranslationResources = typeof import("./resources/en").default;
 
@@ -52,7 +53,13 @@ const LOCALE_LOADERS: Record<
   string,
   () => Promise<{ default: TranslationResources }>
 > = {
-  en: () => import("./resources/en"),
+  // `en` is the default AND fallback locale, so it is always loaded at init —
+  // code-splitting it saves nothing and, critically, breaks the downloadable
+  // single-file form (the standalone HTML inlines the main bundle but not lazy
+  // chunks, so a dynamic import 404s as `src_i18n_resources_en_ts.chunk.js`).
+  // Bundle it statically. Any future non-default locale can still be a dynamic
+  // `() => import(...)` for lazy loading.
+  en: () => Promise.resolve({ default: enResources }),
 };
 
 const loadLocaleResources = async (locale: string) => {

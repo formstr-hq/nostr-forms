@@ -9,8 +9,11 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  Tooltip,
 } from "@mui/material";
+import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { useState } from "react";
 import { ILocalForm } from "../../CreateFormNew/providers/FormBuilder/typeDefs";
@@ -33,6 +36,7 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   let responseUrl = form.formId
     ? responsePath(
         form.privateKey,
@@ -48,6 +52,16 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
     form.publicKey && form.formId
       ? naddrUrl(form.publicKey, form.formId, [form.relay], form.viewKey, true)
       : `/fill/${form.publicKey}`;
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}${formUrl}`);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 1200);
+    } catch (e) {
+      console.error("Failed to copy form link", e);
+    }
+  };
 
   return (
     <Card variant="outlined" className="form-card">
@@ -91,24 +105,63 @@ export const LocalFormCard: React.FC<LocalFormCardProps> = ({
                 <ListItemText>{t("common.actions.edit")}</ListItemText>
               </MenuItem>
             </Menu>
-            <DeleteFormTrigger formKey={form.key} onDeleted={onDeleted} />
+            <DeleteFormTrigger
+              formKey={form.key}
+              onDeleted={onDeleted}
+              formPubkey={form.publicKey}
+              formId={form.formId}
+              signingKey={form.privateKey}
+              relays={
+                form.relays && form.relays.length !== 0
+                  ? form.relays
+                  : form.relay
+                    ? [form.relay]
+                    : []
+              }
+            />
           </Box>
         }
         sx={{ "& .MuiCardHeader-content": { minWidth: 0 } }}
       />
-      <CardActions>
+      <CardActions sx={{ flexWrap: "wrap", rowGap: 0.5 }}>
         <Button size="small" onClick={() => navigate(responseUrl)}>
           {t("dashboardCards.viewResponses")}
         </Button>
-        <Button
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(formUrl);
-          }}
-        >
-          {t("dashboardCards.openForm")}
-        </Button>
+        {/* Keep Open Form + copy glued together so the icon never orphans
+            onto its own line when the row wraps on narrow screens. */}
+        <Box sx={{ display: "inline-flex", alignItems: "center" }}>
+          <Button
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(formUrl);
+            }}
+          >
+            {t("dashboardCards.openForm")}
+          </Button>
+          <Tooltip
+            title={
+              linkCopied
+                ? t("dashboardCards.linkCopied")
+                : t("dashboardCards.copyLink")
+            }
+          >
+            <IconButton
+              aria-label={t("dashboardCards.copyLink")}
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopyLink();
+              }}
+            >
+              {linkCopied ? (
+                <CheckOutlinedIcon fontSize="small" color="success" />
+              ) : (
+                <LinkOutlinedIcon fontSize="small" />
+              )}
+            </IconButton>
+          </Tooltip>
+        </Box>
       </CardActions>
     </Card>
   );

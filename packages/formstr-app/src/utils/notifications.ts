@@ -93,14 +93,26 @@ export function getDedupState(scopeKey: string): NotificationsDedupState {
  * Cap on how many seen-event ids we retain per scope. The DataLayer worker
  * caches matching events in IndexedDB and replays the whole set on every
  * subscription mount, so these dedup arrays would otherwise grow without bound
- * and blow the localStorage quota. Keeping the most-recent ids (Set insertion
- * order ≈ first-seen order, newest at the tail) bounds the payload; an evicted
- * old id can at worst re-notify once if the same ancient event is redelivered.
+ * and blow the localStorage quota (each id is a 64-char hex string, and the
+ * map holds one entry PER scope — device + every signed-in pubkey). Keeping the
+ * most-recent ids (Set insertion order ≈ first-seen order, newest at the tail)
+ * bounds the payload; an evicted old id can at worst re-notify once if the same
+ * ancient event is redelivered. With the 30-day notification window this is far
+ * more than enough headroom.
  */
-const MAX_DEDUP_IDS = 4000;
+const MAX_DEDUP_IDS = 1000;
 
-const capTail = (ids: string[]): string[] =>
-  ids.length > MAX_DEDUP_IDS ? ids.slice(-MAX_DEDUP_IDS) : ids;
+const capTail = (ids: string[], max: number = MAX_DEDUP_IDS): string[] =>
+  ids.length > max ? ids.slice(-max) : ids;
+
+const cappedScope = (
+  state: NotificationsDedupState,
+  max: number = MAX_DEDUP_IDS,
+): NotificationsDedupState => ({
+  ...state,
+  knownShareKeys: capTail(state.knownShareKeys, max),
+  knownResponseIds: capTail(state.knownResponseIds, max),
+});
 
 export function saveDedupState(
   scopeKey: string,
@@ -110,12 +122,39 @@ export function saveDedupState(
     getItem<Record<string, NotificationsDedupState>>(
       LOCAL_STORAGE_KEYS.NOTIFICATIONS_STATE,
     ) ?? {};
+
+  // Self-healing write: if the quota is already full, shrink this scope's id
+  // arrays progressively and retry so the dedup state can never wedge the whole
+  // app's localStorage (which would silently break auth/profile persistence).
+  for (const cap of [MAX_DEDUP_IDS, 500, 200, 50]) {
+    const ok = setItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_STATE, {
+      ...all,
+      [scopeKey]: cappedScope(state, cap),
+    });
+    if (ok) return;
+  }
+
+  // Last resort: drop every other scope and keep only a minimal record for the
+  // current one. Better to occasionally re-notify than to leave storage wedged.
   setItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_STATE, {
-    ...all,
-    [scopeKey]: {
-      ...state,
-      knownShareKeys: capTail(state.knownShareKeys),
-      knownResponseIds: capTail(state.knownResponseIds),
-    },
+    [scopeKey]: cappedScope(state, 50),
   });
+}
+
+/**
+ * Re-caps every stored scope to the current limits and rewrites the map. Run
+ * once on load so users whose state predates the tighter cap (or ballooned
+ * before the 30-day window existed) reclaim localStorage immediately, without
+ * having to clear storage by hand.
+ */
+export function compactDedupState(): void {
+  const all = getItem<Record<string, NotificationsDedupState>>(
+    LOCAL_STORAGE_KEYS.NOTIFICATIONS_STATE,
+  );
+  if (!all) return;
+  const compacted: Record<string, NotificationsDedupState> = {};
+  for (const [scope, state] of Object.entries(all)) {
+    compacted[scope] = cappedScope(state);
+  }
+  setItem(LOCAL_STORAGE_KEYS.NOTIFICATIONS_STATE, compacted);
 }

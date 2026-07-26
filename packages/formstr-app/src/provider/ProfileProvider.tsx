@@ -96,12 +96,18 @@ export const ProfileProvider: FC<ProfileProviderProps> = ({ children }) => {
         try {
           const pk = await signer.getPublicKey();
           setPubkey(pk);
+          return;
         } catch {
-          setPubkey(undefined);
+          // fall through to the active-account identity below
         }
-      } else {
-        setPubkey(undefined);
       }
+      // No usable signer yet — e.g. a locked ncryptsec account after reload, or
+      // an unlock still in flight. Keep the user signed in under their active
+      // account's identity rather than dropping them to a logged-out state;
+      // signing will prompt for unlock on demand. Only a genuine absence of any
+      // account (real logout) clears the pubkey.
+      const activeAccount = signerManager.getActiveAccount();
+      setPubkey(activeAccount?.pubkey);
     };
     const unsubscribe = signerManager.onChange(syncFromSigner);
     // The signer may have already restored a session (e.g. a silently

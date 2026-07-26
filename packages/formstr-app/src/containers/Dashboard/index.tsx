@@ -8,6 +8,7 @@ import { FormDetails } from "../CreateFormNew/components/FormDetails";
 import { Event } from "nostr-tools";
 import { useProfileContext } from "../../hooks/useProfileContext";
 import { FormEventCard } from "./FormCards/FormEventCard";
+import { SharedFormEventCard } from "./FormCards/SharedFormEventCard";
 import EmptyScreen from "../../components/EmptyScreen";
 import { subscribe, type Subscription } from "../../dataLayer";
 import { ILocalForm } from "../CreateFormNew/providers/FormBuilder/typeDefs";
@@ -183,7 +184,15 @@ export const Dashboard = () => {
         let d_tag = formEvent.tags.find((t) => t[0] === "d")?.[1];
         if (!d_tag) return null;
         let key = `${formEvent.kind}:${formEvent.pubkey}:${d_tag}`;
-        return <FormEventCard key={key} event={formEvent} />;
+        return pubkey ? (
+          <SharedFormEventCard
+            key={key}
+            event={formEvent}
+            userPubkey={pubkey}
+          />
+        ) : (
+          <FormEventCard key={key} event={formEvent} />
+        );
       });
     } else if (filter === "myForms") {
       return <MyForms />;
@@ -279,7 +288,7 @@ export const Dashboard = () => {
             md: "repeat(3, 1fr)",
           },
           gap: 2,
-          alignItems: "start",
+          alignItems: "stretch",
         }}
       >
         {renderForms()}
