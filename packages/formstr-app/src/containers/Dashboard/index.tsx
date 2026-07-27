@@ -144,7 +144,13 @@ export const Dashboard = () => {
 
   const renderForms = () => {
     if (filter === "local") {
-      if (isLoadingLocalForms) {
+      // Only show the full-screen spinner on the INITIAL load, when there's
+      // nothing to display yet. A background refresh (e.g. the one FormDetails
+      // fires when it saves-to-device on open) briefly flips isLoading; if we
+      // swapped the whole list out for a spinner then, we'd unmount the card —
+      // and any dialog it just opened — remounting a fresh card with its state
+      // reset, so the modal never actually appears. Keep the list mounted.
+      if (isLoadingLocalForms && localForms.length === 0) {
         return (
           <Box sx={{ textAlign: "center", py: 5, gridColumn: "1 / -1" }}>
             <CircularProgress />

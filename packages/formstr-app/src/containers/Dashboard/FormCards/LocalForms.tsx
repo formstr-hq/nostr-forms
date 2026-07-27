@@ -59,6 +59,7 @@ export const LocalForms: React.FC<LocaLFormsProps> = ({
           if (formEvent)
             return (
               <FormEventCard
+                key={localForm.key}
                 event={formEvent}
                 relay={localForm.relay}
                 secretKey={localForm.privateKey}
