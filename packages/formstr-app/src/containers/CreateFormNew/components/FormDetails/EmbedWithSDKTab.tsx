@@ -76,33 +76,55 @@ export const EmbedWithSDKTab = ({
     >
       {/* Explanation / docs */}
       <Box sx={{ mb: 1.5 }}>
-        <Typography sx={{ fontSize: 16, display: "block", mb: 0.75 }}>
-          {t("builder.formDetails.sdk.stylingTitle")}
-        </Typography>
         <Typography>{t("builder.formDetails.sdk.intro")}</Typography>
       </Box>
 
-      {/* Copy button */}
-      <Box sx={{ mb: 1.25 }}>
-        <CopyButton getText={() => sdkSnippet} />
-      </Box>
-
-      {/* Code block */}
+      {/* Code block — copy lives in the block's own header bar so it reads as
+          part of the snippet instead of floating above it. */}
       <Box
-        component="pre"
         sx={{
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          maxHeight: 420,
-          overflow: "auto",
-          bgcolor: "#0f172a",
-          color: "#e5e7eb",
-          p: "1rem",
-          borderRadius: 2,
           width: "100%",
+          border: 1,
+          borderColor: "divider",
+          borderRadius: 2,
+          overflow: "hidden",
+          mb: 1.5,
         }}
       >
-        {sdkSnippet}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 1.5,
+            py: 0.25,
+            bgcolor: "background.default",
+            borderBottom: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="caption" color="text.secondary">
+            HTML
+          </Typography>
+          <CopyButton getText={() => sdkSnippet} />
+        </Box>
+        <Box
+          component="pre"
+          sx={{
+            m: 0,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            maxHeight: 360,
+            overflow: "auto",
+            bgcolor: "#0f172a",
+            color: "#e5e7eb",
+            p: "1rem",
+            fontSize: 12,
+            width: "100%",
+          }}
+        >
+          {sdkSnippet}
+        </Box>
       </Box>
       <Box
         component="ul"

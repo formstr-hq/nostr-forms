@@ -1,5 +1,5 @@
 // EmbedTab.tsx
-import { Box, Checkbox, FormControlLabel } from "@mui/material";
+import { Box, Checkbox, FormControlLabel, Typography } from "@mui/material";
 import { useState } from "react";
 import { CopyButton } from "../../../../components/CopyButton";
 import { constructEmbeddedUrl } from "../../../../utils/formUtils";
@@ -34,17 +34,17 @@ export const EmbedTab = ({
   return (
     <Box
       className="embedded-share"
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-      }}
+      sx={{ display: "flex", flexDirection: "column", width: "100%" }}
     >
       <Box
         className="settings-container"
-        sx={{ display: "flex", justifyContent: "center", width: "100%" }}
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          width: "100%",
+          mb: 1,
+        }}
       >
         <FormControlLabel
           control={
@@ -71,31 +71,47 @@ export const EmbedTab = ({
       <Box
         className="embed-container"
         sx={{
-          p: "10px",
-          background:
-            "radial-gradient(rgba(199, 199, 199, 1) 0%, rgba(255, 255, 255, 1) 100%)",
-          mb: "10px",
-          width: "60%",
-          maxWidth: "100%",
+          border: 1,
+          borderColor: "divider",
+          borderRadius: 2,
+          overflow: "hidden",
+          width: "100%",
         }}
       >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 1.5,
+            py: 0.25,
+            bgcolor: "background.default",
+            borderBottom: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="caption" color="text.secondary">
+            HTML
+          </Typography>
+          <CopyButton getText={() => iframeHtml} />
+        </Box>
         <Box
           component="pre"
           className="embedded-code"
           sx={{
+            m: 0,
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
-            overflowX: "auto",
-            display: "block",
-            width: "100%",
-            maxWidth: "100%",
             overflowWrap: "anywhere",
+            fontSize: 12,
+            bgcolor: "#0f172a",
+            color: "#e5e7eb",
+            p: "1rem",
+            textAlign: "left",
           }}
         >
           {iframeHtml}
         </Box>
-
-        <CopyButton getText={() => iframeHtml} textBefore="" textAfter="" />
       </Box>
     </Box>
   );

@@ -113,7 +113,10 @@ export const FormDetails = ({
               onChange={(_e, value: "share" | "embed" | "sdk") =>
                 setActiveTab(value)
               }
-              sx={{ px: 2 }}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{ px: 2, borderBottom: 1, borderColor: "divider" }}
             >
               <Tab value="share" label={t("builder.formDetails.share")} />
               <Tab value="sdk" label={t("builder.formDetails.embedWithSdk")} />

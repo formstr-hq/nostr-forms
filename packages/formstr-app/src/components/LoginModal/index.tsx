@@ -14,6 +14,8 @@ import {
   TextField,
   Tooltip,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import LinkIcon from "@mui/icons-material/Link";
@@ -42,7 +44,14 @@ const LoginOptionButton: React.FC<{
     size="large"
     onClick={onClick}
     disabled={loading}
-    sx={{ mb: 1 }}
+    sx={{
+      mb: 1,
+      // Let long labels wrap instead of forcing an intrinsic min-width wider
+      // than a phone screen (which pushed the dialog paper past the viewport).
+      whiteSpace: "normal",
+      textAlign: "center",
+      lineHeight: 1.2,
+    }}
   >
     {text}
   </Button>
@@ -478,6 +487,8 @@ interface LoginModalProps {
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
   const { t } = useTranslation();
   const { showMessage } = useSnackbar();
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [activeTab, setActiveTab] = useState("signin");
   const [showNip46, setShowNip46] = useState(false);
   const [showNcryptsec, setShowNcryptsec] = useState(() => !!signerManager.getSavedNcryptsec());
@@ -509,6 +520,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
       onClose={onClose}
       maxWidth="xs"
       fullWidth
+      fullScreen={fullScreen}
       sx={{ zIndex: 1100 }}
       slotProps={{
         transition: {

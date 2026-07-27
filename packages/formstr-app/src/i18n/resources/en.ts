@@ -534,6 +534,8 @@ const resources = {
     copyLink: "Copy form link",
     linkCopied: "Link copied",
     details: "Details",
+    storedLocally: "Encrypted — stored on this device",
+    onDevice: "On device",
     noPurchases: "No purchases found.",
     url: "URL",
     urlExpiresOn: "URL expires on",
@@ -729,7 +731,6 @@ const resources = {
       savingToProfile: "Saving to nostr profile...",
       loginToSave: "Login to save to your profile",
       sdk: {
-        stylingTitle: "Styling & customization",
         intro: "Start by copying the below snippet into your html!",
         neutralHtml:
           "The SDK renders neutral HTML — you control layout and appearance via CSS.",

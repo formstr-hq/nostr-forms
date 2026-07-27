@@ -1,4 +1,12 @@
-import { Box, Button, CircularProgress, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Typography,
+} from "@mui/material";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
 import { useTranslation } from "react-i18next";
 
 export const SaveStatus = ({
@@ -14,31 +22,47 @@ export const SaveStatus = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <Box className="save-status" sx={{ py: 1 }}>
-      <Box>
-        {t("builder.formDetails.savedLocally")} {savedLocally ? "✅" : "❌"}
-      </Box>
+    <Box
+      className="save-status"
+      sx={{
+        py: 1.5,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 1,
+      }}
+    >
+      <Chip
+        size="small"
+        variant="outlined"
+        color={savedLocally ? "success" : "default"}
+        icon={
+          savedLocally ? (
+            <CheckCircleRoundedIcon />
+          ) : (
+            <RadioButtonUncheckedRoundedIcon />
+          )
+        }
+        label={t("builder.formDetails.savedLocally")}
+      />
+
       {userPub ? (
         <Box className="nostr-save-status">
           {!savedOnNostr ? (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 0.5,
-              }}
-            >
-              <Typography>
-                {t("builder.formDetails.savingToProfile")}
-              </Typography>
-              <CircularProgress size={16} />
-            </Box>
+            <Chip
+              size="small"
+              variant="outlined"
+              icon={<CircularProgress size={12} thickness={5} />}
+              label={t("builder.formDetails.savingToProfile")}
+            />
           ) : (
-            <Box>
-              {t("builder.formDetails.savedToProfile")}{" "}
-              {savedOnNostr ? "✅" : "❌"}
-            </Box>
+            <Chip
+              size="small"
+              variant="outlined"
+              color="success"
+              icon={<CheckCircleRoundedIcon />}
+              label={t("builder.formDetails.savedToProfile")}
+            />
           )}
         </Box>
       ) : (
@@ -48,11 +72,14 @@ export const SaveStatus = ({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            flexWrap: "wrap",
             gap: 1,
-            mt: 1,
+            mt: 0.5,
           }}
         >
-          <Typography>{t("builder.formDetails.loginToSave")}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("builder.formDetails.loginToSave")}
+          </Typography>
           <Button variant="outlined" size="small" onClick={requestPubkey}>
             {t("common.actions.login")}
           </Button>

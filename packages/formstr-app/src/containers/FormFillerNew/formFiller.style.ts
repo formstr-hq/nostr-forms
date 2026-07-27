@@ -67,12 +67,23 @@ export default styled.div<{
     }
   `}
 
+  /* Root: the filler never drives page-level scrolling in either axis.
+     Clip any rogue wide descendant instead of letting it widen the page
+     (which was pushing the flex-end submit footer off the right edge). */
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  box-sizing: border-box;
+
   .form-filler {
     position: relative;
     background-color: transparent;
     padding-left: 32px;
     padding-right: 32px;
     width: 60%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     margin: 0 auto 0 auto;
     ${MEDIA_QUERY_MOBILE} {
       width: 100%;
@@ -82,6 +93,8 @@ export default styled.div<{
 
   .filler-container {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     ${({ $bgImage }) =>
     $bgImage
       ? `
