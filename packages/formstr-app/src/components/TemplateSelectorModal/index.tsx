@@ -29,28 +29,31 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
       onClose={onClose}
       maxWidth="sm"
       fullWidth
-      scroll="paper"
       slotProps={{
         paper: {
+          // Mobile only: tighten margins and bound to the dynamic viewport
+          // so content scrolls inside DialogContent, not the whole page.
+          // Desktop (sm+) falls back to MUI defaults, unchanged.
           sx: {
-            // Bound the dialog to the viewport so overflow scrolls inside
-            // DialogContent, not the whole dialog/page. dvh keeps it honest
-            // against mobile browser chrome.
-            m: { xs: 2, sm: 4 },
-            maxHeight: "calc(100dvh - 32px)",
+            m: { xs: 2 },
+            maxHeight: { xs: "calc(100dvh - 32px)" },
           },
         },
       }}
     >
-      <DialogTitle sx={{ textAlign: "center", flexShrink: 0 }}>
+      <DialogTitle sx={{ textAlign: "center" }}>
         {t("templates.chooseTemplate")}
       </DialogTitle>
-      <DialogContent sx={{ overflowY: "auto" }}>
+      <DialogContent>
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" },
-            gap: 1.5,
+            // Desktop keeps the original centered flex-wrap of fixed cards.
+            // Mobile switches to a compact 2-column grid so all templates fit.
+            display: { xs: "grid", sm: "flex" },
+            gridTemplateColumns: { xs: "repeat(2, 1fr)" },
+            gap: { xs: 1.5 },
+            flexWrap: { sm: "wrap" },
+            justifyContent: { sm: "center" },
             py: { xs: 1, sm: 2.5 },
           }}
         >

@@ -13,11 +13,13 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template, onClick }) => {
       variant="outlined"
       onClick={() => onClick(template)}
       sx={{
-        width: "100%",
-        // Auto-height on mobile so a wrapped title + 2-line description never
-        // clips; a shared minHeight keeps the grid rows visually even.
+        // Desktop (sm+) keeps the original fixed 180x120 card with its own
+        // margin. Mobile fills the 2-col grid cell and auto-heights so a
+        // wrapped title + 2-line description never clips.
+        width: { xs: "100%", sm: 180 },
         height: { xs: "auto", sm: 120 },
         minHeight: { xs: 100, sm: 120 },
+        m: { xs: 0, sm: 1 },
         cursor: "pointer",
         transition: "border-color 0.2s ease-in-out",
         "&:hover": { borderColor: "primary.main" },
@@ -31,13 +33,9 @@ const TemplateCard: React.FC<TemplateCardProps> = ({ template, onClick }) => {
           justifyContent: "center",
           alignItems: "center",
           textAlign: "center",
-          p: { xs: 1.5, sm: 2 },
-          "&:last-child": { pb: { xs: 1.5, sm: 2 } },
         }}
       >
-        <Typography sx={{ fontWeight: 600, fontSize: { xs: "1rem", sm: "1.125rem" } }}>
-          {template.name}
-        </Typography>
+        <Typography sx={{ fontWeight: 600 }}>{template.name}</Typography>
         {template.description && (
           <Typography
             variant="body2"
