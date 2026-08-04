@@ -114,6 +114,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     formTemplate.find((tag) => tag[0] === "settings")?.[1] || "{}",
   ) as IFormSettings;
   const fields = formTemplate.filter((tag) => tag[0] === "field") as Field[];
+  // Whether the description block renders above the questions. When it doesn't,
+  // the questions wrapper needs its own top margin so the banner and the first
+  // question don't butt right up against each other (the description's own
+  // padding usually provides that gap).
+  const showDescription = !hideDescription && !!settings?.description;
 
   // Values/errors: controlled when the parent passes them (the filler
   // container does), self-managed otherwise (previews, read-only views).
@@ -442,7 +447,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
               titleColor={settings.colors?.title}
             />
           )}
-          {!hideDescription && settings?.description && (
+          {showDescription && (
             <div className="form-description">
               <Typography
                 component="div"
@@ -458,7 +463,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
             </div>
           )}
 
-          <div className="with-description">
+          <div className={showDescription ? "with-description" : "hidden-description"}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               {readOnly ? renderReadOnlyForm() : renderSteppedForm()}
             </LocalizationProvider>

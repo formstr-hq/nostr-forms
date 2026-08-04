@@ -189,7 +189,7 @@ export default styled.div<{
   }
 
   .hidden-description {
-    margin-top: 10px;
+    margin-top: 16px;
   }
 
   .embed-submitted {
