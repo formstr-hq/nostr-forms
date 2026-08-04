@@ -8,7 +8,10 @@ import useFormBuilderContext from "./hooks/useFormBuilderContext";
 
 const BUILDER_HEIGHT = {
   height: "calc(100vh - 64px)",
-  "@supports (height: 100dvh)": { height: "calc(100dvh - 64px)" },
+  // svh (small viewport height) is the viewport with the mobile browser
+  // chrome expanded — using it guarantees header (64px) + canvas never
+  // exceeds the visible area, so the page never scrolls to reach the FAB.
+  "@supports (height: 100svh)": { height: "calc(100svh - 64px)" },
 } as const;
 
 /**

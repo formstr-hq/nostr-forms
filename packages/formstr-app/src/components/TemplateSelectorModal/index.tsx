@@ -24,17 +24,34 @@ const TemplateSelectorModal: React.FC<TemplateSelectorModalProps> = ({
   };
 
   return (
-    <Dialog open={visible} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ textAlign: "center" }}>
+    <Dialog
+      open={visible}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      scroll="paper"
+      slotProps={{
+        paper: {
+          sx: {
+            // Bound the dialog to the viewport so overflow scrolls inside
+            // DialogContent, not the whole dialog/page. dvh keeps it honest
+            // against mobile browser chrome.
+            m: { xs: 2, sm: 4 },
+            maxHeight: "calc(100dvh - 32px)",
+          },
+        },
+      }}
+    >
+      <DialogTitle sx={{ textAlign: "center", flexShrink: 0 }}>
         {t("templates.chooseTemplate")}
       </DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ overflowY: "auto" }}>
         <Box
           sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            justifyContent: "center",
-            py: 2.5,
+            display: "grid",
+            gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" },
+            gap: 1.5,
+            py: { xs: 1, sm: 2.5 },
           }}
         >
           {availableTemplates.map((template) => (
