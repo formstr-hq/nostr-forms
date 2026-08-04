@@ -22,6 +22,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
 import { Event } from "nostr-tools";
 import { useNavigate } from "react-router-dom";
 import DeleteFormTrigger from "./DeleteForm";
@@ -53,7 +54,14 @@ interface FormEventCardProps {
   relay?: string;
   secretKey?: string;
   viewKey?: string | null;
+  /**
+   * Custom short path (`/i/<slug>`) for the form. When set (Purchases tab), it
+   * overrides the naddr link for navigation AND signals a purchase card, which
+   * shows a footer with the short URL and its expiry — keeping that info inside
+   * the card border instead of as floating badges beneath it.
+   */
   shortLink?: string;
+  expirationDate?: string | null;
 }
 export const FormEventCard: React.FC<FormEventCardProps> = ({
   event,
@@ -62,6 +70,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
   secretKey,
   viewKey,
   shortLink,
+  expirationDate,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -149,6 +158,18 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
       viewKey,
     );
   const fullFormUrl = `${window.location.origin}${formLinkPath}`;
+
+  // Purchase footer (shown when a shortLink is present): strip the scheme so the
+  // short URL reads as a clean domain path, and classify the expiry so an
+  // already-lapsed link stands out.
+  const displayShortUrl = fullFormUrl.replace(/^https?:\/\//, "");
+  const expiry = expirationDate ? new Date(expirationDate) : null;
+  const isExpired = expiry ? expiry.getTime() < Date.now() : false;
+  const expiryLabel = !expiry
+    ? t("dashboardCards.neverExpires")
+    : t(isExpired ? "dashboardCards.expiredOn" : "dashboardCards.expiresOn", {
+        date: expiry.toLocaleDateString(),
+      });
 
   const handleCopyLink = async () => {
     try {
@@ -321,6 +342,96 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
           </SafeMarkdown>
         </Box>
       </CardContent>
+      {shortLink && (
+        <Box sx={{ px: 2, pb: 1.5 }}>
+          <Box
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 1.5,
+              bgcolor: "action.hover",
+              px: 1.25,
+              py: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 0.75,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.75,
+                minWidth: 0,
+              }}
+            >
+              <LinkOutlinedIcon
+                sx={{ fontSize: 16, color: "text.secondary", flexShrink: 0 }}
+              />
+              <Typography
+                component="a"
+                href={fullFormUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                title={displayShortUrl}
+                sx={{
+                  flexGrow: 1,
+                  minWidth: 0,
+                  fontFamily: "monospace",
+                  fontSize: 12,
+                  color: "primary.main",
+                  textDecoration: "none",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  "&:hover": { textDecoration: "underline" },
+                }}
+              >
+                {displayShortUrl}
+              </Typography>
+              <Tooltip
+                title={
+                  linkCopied
+                    ? t("dashboardCards.linkCopied")
+                    : t("dashboardCards.copyLink")
+                }
+              >
+                <IconButton
+                  aria-label={t("dashboardCards.copyLink")}
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyLink();
+                  }}
+                  sx={{ p: 0.25, flexShrink: 0 }}
+                >
+                  {linkCopied ? (
+                    <CheckOutlinedIcon sx={{ fontSize: 15 }} color="success" />
+                  ) : (
+                    <ContentCopyOutlinedIcon sx={{ fontSize: 15 }} />
+                  )}
+                </IconButton>
+              </Tooltip>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+              <ScheduleOutlinedIcon
+                sx={{
+                  fontSize: 15,
+                  color: isExpired ? "error.main" : "text.disabled",
+                  flexShrink: 0,
+                }}
+              />
+              <Typography
+                variant="caption"
+                sx={{ color: isExpired ? "error.main" : "text.secondary" }}
+              >
+                {expiryLabel}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
       <Divider />
       <CardActions
         sx={{

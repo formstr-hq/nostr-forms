@@ -537,9 +537,9 @@ const resources = {
     storedLocally: "Encrypted — stored on this device",
     onDevice: "On device",
     noPurchases: "No purchases found.",
-    url: "URL",
-    urlExpiresOn: "URL expires on",
-    never: "Never",
+    expiresOn: "Expires {{date}}",
+    expiredOn: "Expired {{date}}",
+    neverExpires: "Never expires",
     delete: {
       title: "Are you sure you want to delete this form from your device?",
       titleRelay: "Are you sure you want to delete this form?",
