@@ -10,13 +10,24 @@ export function validateResponse(
     // Grid validation
     if (field.type === "grid" && field.config.required) {
       const gridOptions = field.options as unknown as GridOptions;
-      const responses = values[id]
-        ? (typeof values[id] === "string" ? JSON.parse(values[id] as string) : values[id])
+      const storedValue = values[id];
+      const responses: Record<string, string | string[]> = storedValue
+        ? typeof storedValue === "string"
+          ? (JSON.parse(storedValue) as Record<string, string | string[]>)
+          : Array.isArray(storedValue)
+          ? {}
+          : storedValue
         : {};
 
       for (const [rowId] of gridOptions.rows) {
-        if (!responses[rowId] || responses[rowId] === "") {
-          throw new Error(`Required grid row missing: ${field.labelHtml} - ${rowId}`);
+        if (
+          !responses[rowId] ||
+          responses[rowId] === "" ||
+          responses[rowId].length === 0
+        ) {
+          throw new Error(
+            `Required grid row missing: ${field.labelHtml} - ${rowId}`,
+          );
         }
       }
     }

@@ -44,7 +44,7 @@ export interface NormalizedField {
   id: string;
   type: string;
   labelHtml: string;
-  options?: NormalizedOption[];
+  options?: NormalizedOption[] | GridOptions;
   config: FieldConfig;
   primitive?: "string" | "number" | "boolean";
 }
@@ -64,6 +64,13 @@ export interface FieldConfig {
   pattern?: string;
   allowMultiplePerRow?: boolean;
   requiredRows?: string[];
+  min?: number;
+  max?: number;
+  step?: number;
+  maxStars?: number;
+  accept?: string;
+  allowedTypes?: string[];
+  multipleFiles?: boolean;
 }
 
 export interface GridOptions {
@@ -91,7 +98,7 @@ export interface SectionData {
 }
 
 export interface ResponseSubmission {
-  [fieldId: string]: string | string[];
+  [fieldId: string]: string | string[] | Record<string, string | string[]>;
 }
 
 export type Tag = string[];
@@ -115,7 +122,27 @@ export type RenderElement =
   | "datetime"
   | "signature"
   | "fileUpload"
-  | "label";
+  | "label"
+  | "multipleChoiceGrid"
+  | "checkboxGrid"
+  | "rating";
+
+export interface SubmitListenerOptions {
+  onSuccess?: (result: {
+    event: import("nostr-tools").Event;
+    relays: string[];
+  }) => void;
+  onError?: (error: unknown) => void;
+  /**
+   * Uploads a selected file and returns the response value to publish (usually
+   * encrypted Blossom metadata). File inputs fail clearly when this is absent.
+   */
+  transformFile?: (
+    file: File,
+    field: NormalizedField,
+    form: NormalizedForm,
+  ) => Promise<string>;
+}
 
 export interface FormField {
   label: string;

@@ -20,13 +20,16 @@ import {
   NormalizedField,
   NormalizedForm,
   RelayPublishResult,
+  ResponseSubmission,
   SectionBlock,
+  SubmitListenerOptions,
   Tag,
 } from "./types.js";
 import { fetchFormTemplate, getDefaultRelays } from "./utils/fetchFormTemplate.js";
 import { stripHtml } from "./utils/helper.js";
 import { encodeNKeys } from "./utils/nkeys.js";
 import { pool } from "./pool.js";
+import { validateResponse } from "./validateResponse.js";
 
 const KIND_FORM = 30168;
 const KIND_MY_FORMS_LIST = 14083;
@@ -50,10 +53,7 @@ export class FormstrSDK {
   attachSubmitListener(
     form: NormalizedForm,
     signer?: FormsSigner,
-    callbacks?: {
-      onSuccess?: (result: { event: Event; relays: string[] }) => void;
-      onError?: (error: unknown) => void;
-    },
+    callbacks?: SubmitListenerOptions,
   ) {
     const formEl = document.getElementById(
       `form-${form.id}`,
@@ -61,25 +61,105 @@ export class FormstrSDK {
     if (!formEl)
       return;
 
-    formEl.addEventListener("submit", async (e) => {
+    formEl.addEventListener("submit", (e) => {
       e.preventDefault(); // prevent page reload
+      void (async () => {
+        try {
+          const values = await this.collectFormValues(
+            form,
+            new FormData(formEl),
+            callbacks?.transformFile,
+          );
+          validateResponse(form, values);
+          const result = await this.submit(form, values, signer);
 
-      // Collect form values
-      const formData = new FormData(formEl);
-      const values: Record<string, any> = {};
-      formData.forEach((v, k) => (values[k] = v));
-
-      try {
-        const result = await this.submit(form, values, signer);
-
-        callbacks?.onSuccess?.({
-          event: result,
-          relays: form.relays,
-        });
-      } catch (err) {
-        callbacks?.onError?.(err);
-      }
+          callbacks?.onSuccess?.({
+            event: result,
+            relays: form.relays,
+          });
+        } catch (err) {
+          callbacks?.onError?.(err);
+        }
+      })();
     });
+  }
+
+  private async collectFormValues(
+    form: NormalizedForm,
+    formData: FormData,
+    transformFile?: SubmitListenerOptions["transformFile"],
+  ): Promise<ResponseSubmission> {
+    const values: ResponseSubmission = {};
+
+    for (const fieldId of form.fieldOrder) {
+      const field = form.fields[fieldId];
+      if (!field || field.type === "label") continue;
+
+      if (field.type === "grid") {
+        const gridOptions = field.options as GridOptions | undefined;
+        const gridValue: Record<string, string> = {};
+        for (const [rowId] of gridOptions?.rows ?? []) {
+          const selected = formData.getAll(`${fieldId}_${rowId}`).map(String);
+          if (selected.length > 0) {
+            gridValue[rowId] = field.config.allowMultiplePerRow
+              ? selected.join(";")
+              : selected[0];
+          }
+        }
+        if (Object.keys(gridValue).length > 0) values[fieldId] = gridValue;
+        continue;
+      }
+
+      const entries = formData.getAll(fieldId);
+      if (entries.length === 0) continue;
+
+      if (field.config.renderElement === "fileUpload") {
+        const files = entries.filter(
+          (entry): entry is File => entry instanceof File && entry.size > 0,
+        );
+        if (files.length === 0) continue;
+        if (!transformFile) {
+          throw new Error(
+            `File upload field "${fieldId}" requires a transformFile callback`,
+          );
+        }
+        const uploaded = await Promise.all(
+          files.map((file) => transformFile(file, field, form)),
+        );
+        values[fieldId] = field.config.multipleFiles ? uploaded : uploaded[0];
+        continue;
+      }
+
+      let value: string | string[] =
+        field.config.renderElement === "checkboxes"
+          ? entries.map(String)
+          : String(entries[0]);
+      if (
+        field.config.renderElement === "datetime" &&
+        typeof value === "string"
+      ) {
+        const timestamp = new Date(value).getTime();
+        if (Number.isFinite(timestamp))
+          value = String(Math.floor(timestamp / 1000));
+      }
+      if (field.config.renderElement === "time" && typeof value === "string") {
+        const [hours = "0", minutes = "00"] = value.split(":");
+        const hour = Number(hours);
+        value = `${hour % 12 || 12}:${minutes} ${hour >= 12 ? "PM" : "AM"}`;
+      }
+      if (
+        field.config.renderElement === "rating" &&
+        typeof value === "string"
+      ) {
+        values[fieldId] = JSON.stringify({
+          normalizedValue: Number(value) / (field.config.maxStars ?? 5),
+        });
+        continue;
+      }
+      values[fieldId] = value;
+    }
+
+    return values;
   }
 
   async fetchForm(naddr: string, nkeys?: string): Promise<NormalizedForm> {
@@ -108,17 +188,18 @@ export class FormstrSDK {
       .forEach((t) => {
         const [_, fieldId, type, label, optionsStr, configStr] = t;
 
+        const parsedOptions = optionsStr ? JSON.parse(optionsStr) : undefined;
         fields[fieldId] = {
           id: fieldId,
           type,
           labelHtml: label,
-          options: optionsStr
-            ? JSON.parse(optionsStr).map((o: any[]) => ({
+          options: Array.isArray(parsedOptions)
+            ? parsedOptions.map((o: any[]) => ({
                 id: o[0],
                 labelHtml: stripHtml(o[1]),
                 config: o[2] ? JSON.parse(o[2]) : undefined,
               }))
-            : undefined,
+            : parsedOptions,
           config: configStr ? JSON.parse(configStr) : {},
         };
 
@@ -178,34 +259,145 @@ export class FormstrSDK {
 
   /** Render HTML form with submit wired using FormData */
   renderHtml(form: NormalizedForm): NormalizedForm {
-    const renderField = (field: NormalizedField) => {
-      if (field.type === "text") {
-        return `
-        <label>${field.labelHtml}</label>
-        <input type="text" name="${field.id}" />
-      `;
-      }
-
-      if (field.type === "option" && field.options) {
-        return `
-        <div class="option-group">
-          <div class="option-label">${field.labelHtml}</div>
-          ${field.options
+    const attr = (value: unknown) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    const inputAttributes = (field: NormalizedField) => {
+      const config = field.config ?? {};
+      return [
+        config.required ? "required" : "",
+        config.min !== undefined ? `min="${attr(config.min)}"` : "",
+        config.max !== undefined ? `max="${attr(config.max)}"` : "",
+        config.step !== undefined ? `step="${attr(config.step)}"` : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+    };
+    const renderOptions = (
+      field: NormalizedField,
+      inputType: "radio" | "checkbox",
+    ) => {
+      const options = Array.isArray(field.options) ? field.options : [];
+      return `
+        <fieldset class="option-group">
+          <legend class="option-label">${field.labelHtml}</legend>
+          ${options
             .map(
-              (opt) => `
+              (option) => `
               <label>
-                <input type="radio" name="${field.id}" value="${opt.id}" />
-                ${opt.labelHtml}
-              </label>
-            `,
+                <input type="${inputType}" name="${attr(
+                  field.id,
+                )}" value="${attr(option.id)}" ${
+                  field.config.required && inputType === "radio"
+                    ? "required"
+                    : ""
+                } />
+                ${option.labelHtml}
+              </label>`,
             )
             .join("")}
-        </div>
-      `;
+        </fieldset>`;
+    };
+    const renderField = (field: NormalizedField) => {
+      if (!field) return "";
+      const renderElement = field.config?.renderElement;
+      const attributes = inputAttributes(field);
+
+      if (field.type === "label" || renderElement === "label") {
+        return `<p class="form-label">${field.labelHtml}</p>`;
       }
 
-      if (field.type === "label") {
-        return `<p>${field.labelHtml}</p>`;
+      if (renderElement === "paragraph") {
+        return `
+        <label for="field-${attr(field.id)}">${field.labelHtml}</label>
+        <textarea id="field-${attr(field.id)}" name="${attr(
+          field.id,
+        )}" ${attributes}></textarea>`;
+      }
+
+      if (renderElement === "number") {
+        return `
+        <label for="field-${attr(field.id)}">${field.labelHtml}</label>
+        <input id="field-${attr(field.id)}" type="number" name="${attr(
+          field.id,
+        )}" ${attributes} />`;
+      }
+
+      if (renderElement === "checkboxes") {
+        return renderOptions(field, "checkbox");
+      }
+
+      if (
+        renderElement === "radioButton" ||
+        (field.type === "option" && !renderElement)
+      ) {
+        return renderOptions(field, "radio");
+      }
+
+      if (renderElement === "dropdown") {
+        const options = Array.isArray(field.options) ? field.options : [];
+        return `
+        <label for="field-${attr(field.id)}">${field.labelHtml}</label>
+        <select id="field-${attr(field.id)}" name="${attr(
+          field.id,
+        )}" ${attributes}>
+          <option value="">Select an option</option>
+          ${options
+            .map(
+              (option) =>
+                `<option value="${attr(option.id)}">${
+                  option.labelHtml
+                }</option>`,
+            )
+            .join("")}
+        </select>`;
+      }
+
+      if (["date", "time", "datetime"].includes(renderElement ?? "")) {
+        const htmlType =
+          renderElement === "datetime"
+            ? "datetime-local"
+            : renderElement ?? "text";
+        return `
+        <label for="field-${attr(field.id)}">${field.labelHtml}</label>
+        <input id="field-${attr(field.id)}" type="${htmlType}" name="${attr(
+          field.id,
+        )}" ${attributes} />`;
+      }
+
+      if (renderElement === "signature") {
+        return `
+        <label for="field-${attr(field.id)}">${field.labelHtml}</label>
+        <textarea id="field-${attr(field.id)}" name="${attr(
+          field.id,
+        )}" class="signature-input" ${attributes}></textarea>`;
+      }
+
+      if (renderElement === "fileUpload") {
+        const accepted =
+          field.config.allowedTypes ??
+          (field.config.accept ? [field.config.accept] : []);
+        return `
+        <label for="field-${attr(field.id)}">${field.labelHtml}</label>
+        <input id="field-${attr(field.id)}" type="file" name="${attr(
+          field.id,
+        )}" ${accepted.length ? `accept="${attr(accepted.join(","))}"` : ""} ${
+          field.config.multipleFiles ? "multiple" : ""
+        } ${attributes} />`;
+      }
+
+      if (renderElement === "rating") {
+        const maxStars = field.config.maxStars ?? 5;
+        return `
+        <label for="field-${attr(field.id)}">${field.labelHtml}</label>
+        <input id="field-${attr(field.id)}" type="range" name="${attr(
+          field.id,
+        )}" min="0.5" max="${attr(maxStars)}" step="0.5" ${
+          field.config.required ? "required" : ""
+        } />`;
       }
 
       if (field.type === "grid" && field.options) {
@@ -235,9 +427,15 @@ export class FormstrSDK {
                     <td>
                       <input
                         type="${inputType}"
-                        name="${field.id}_${row[0]}"
-                        value="${col[0]}"
-                        ${inputType === "radio" ? "" : ""}
+                        name="${attr(field.id)}_${attr(row[0])}"
+                        value="${attr(col[0])}"
+                        ${
+                          (field.config.required ||
+                            field.config.requiredRows?.includes(row[0])) &&
+                          inputType === "radio"
+                            ? "required"
+                            : ""
+                        }
                       />
                     </td>
                   `,
@@ -253,10 +451,22 @@ export class FormstrSDK {
       `;
       }
 
+      if (
+        field.type === "text" ||
+        renderElement === "shortText" ||
+        !renderElement
+      ) {
+        return `
+        <label for="field-${attr(field.id)}">${field.labelHtml}</label>
+        <input id="field-${attr(field.id)}" type="text" name="${attr(
+          field.id,
+        )}" ${attributes} />`;
+      }
+
       return "";
     };
 
-    const renderBlock = (block: any) => {
+    const renderBlock = (block: FormBlock) => {
       if (block.type === "intro") {
         return `
         <section class="form-section form-intro">
@@ -289,7 +499,7 @@ export class FormstrSDK {
       return "";
     };
 
-    const bodyHtml = form.blocks?.map(renderBlock).join("\n");
+    const bodyHtml = form.blocks?.map(renderBlock).join("\n") ?? "";
 
     // Neutral wrapper
     form.html = {
@@ -315,13 +525,13 @@ export class FormstrSDK {
     signer?: FormsSigner,
   ) {
     const responseTags: Tag[] = Object.entries(values).map(([fieldId, value]) => {
-      const field = form.fields[fieldId];
-      if (field?.type === "grid") {
+        const field = form.fields[fieldId];
+        if (field?.type === "grid") {
         const jsonValue = typeof value === "string" ? value : JSON.stringify(value);
-        return ["response", fieldId, jsonValue, "{}"];
-      }
-      if (Array.isArray(value)) value = value.join(";");
-      return ["response", fieldId, value, "{}"];
+          return ["response", fieldId, jsonValue, "{}"];
+        }
+        if (Array.isArray(value)) value = value.join(";");
+        return ["response", fieldId, value, "{}"];
     });
 
     let content: string;

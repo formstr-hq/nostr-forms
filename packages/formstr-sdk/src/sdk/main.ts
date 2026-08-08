@@ -11,5 +11,7 @@ export type {
     MyFormSummary,
     NormalizedForm,
     NormalizedField,
-    SectionBlock
+    SectionBlock,
+    SubmitListenerOptions,
+    GridOptions,
 } from "./types.js";
