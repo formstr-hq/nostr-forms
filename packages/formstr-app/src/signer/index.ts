@@ -2,6 +2,7 @@ import {
   createSigner,
   LocalSigner as PkgLocalSigner,
   type ActiveSigner,
+  type Nip55WebSupport,
   type StoredAccount,
 } from "@formstr/signer";
 import { SimplePool } from "nostr-tools/pool";
@@ -170,6 +171,14 @@ class Signer {
   /** Whether the browser NIP-55 flow can run here (Android browser). */
   supportsNip55Web(): boolean {
     return this.pkg.supportsNip55Web();
+  }
+
+  /**
+   * Whether to offer the browser NIP-55 option, plus the warning Firefox for
+   * Android needs (it cannot read the clipboard).
+   */
+  nip55WebSupport(): Nip55WebSupport {
+    return this.pkg.nip55WebSupport();
   }
 
   /**

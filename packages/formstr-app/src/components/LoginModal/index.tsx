@@ -497,8 +497,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
   const [loadingNip07, setLoadingNip07] = useState(false);
   const [loadingNip55Web, setLoadingNip55Web] = useState(false);
   // Browser NIP-55 is a synchronous capability check (Android browser with
-  // clipboard access); false on desktop, so the option is simply hidden.
-  const canUseNip55Web = signerManager.supportsNip55Web();
+  // clipboard access); hidden on desktop. `warning` flags Firefox for
+  // Android, which cannot read the clipboard, without disabling the option.
+  const nip55Web = signerManager.nip55WebSupport();
 
   const handleNip55Web = async () => {
     setLoadingNip55Web(true);
@@ -572,13 +573,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
                 onClick={handleNip07}
                 loading={loadingNip07}
               />
-              {canUseNip55Web && (
-                <LoginOptionButton
-                  icon={<PhonelinkLockIcon />}
-                  text={t("auth.options.nip55Web")}
-                  onClick={() => void handleNip55Web()}
-                  loading={loadingNip55Web}
-                />
+              {nip55Web.visible && (
+                <>
+                  <LoginOptionButton
+                    icon={<PhonelinkLockIcon />}
+                    text={t("auth.options.nip55Web")}
+                    onClick={() => void handleNip55Web()}
+                    loading={loadingNip55Web}
+                  />
+                  {nip55Web.warning && (
+                    <Alert severity="warning" sx={{ mb: 1 }}>
+                      {nip55Web.warning}
+                    </Alert>
+                  )}
+                </>
               )}
               <LoginOptionButton
                 icon={<LockIcon />}

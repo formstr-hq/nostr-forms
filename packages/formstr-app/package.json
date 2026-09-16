@@ -7,7 +7,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@formstr/local-relay": "^0.5.0",
-    "@formstr/signer": "^0.3.0",
+    "@formstr/signer": "^0.3.1",
     "@formstr/support-us-button": "*",
     "@mui/icons-material": "^9.2.0",
     "@mui/material": "^9.2.0",
