@@ -159,6 +159,20 @@ class Signer {
   }
 
   /**
+   * Browser NIP-55: pair with an Android signer app from the browser, with
+   * no Capacitor bridge. Only works where {@link supportsNip55Web} is true.
+   */
+  async loginWithNip55Web(): Promise<void> {
+    await this.pkg.loginWithNip55Web();
+    this.activateCurrent();
+  }
+
+  /** Whether the browser NIP-55 flow can run here (Android browser). */
+  supportsNip55Web(): boolean {
+    return this.pkg.supportsNip55Web();
+  }
+
+  /**
    * NostrConnect (QR) pairing. Relays are caller-supplied — the package has
    * no hardcoded fallback — so the UI can let a user point this at their own
    * relay instead of a fixed default.
