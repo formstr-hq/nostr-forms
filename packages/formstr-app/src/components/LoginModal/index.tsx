@@ -20,6 +20,7 @@ import {
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import LinkIcon from "@mui/icons-material/Link";
 import LockIcon from "@mui/icons-material/Lock";
+import PhonelinkLockIcon from "@mui/icons-material/PhonelinkLock";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import QRCode from "qrcode.react";
 import { useTranslation } from "react-i18next";
@@ -494,6 +495,23 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
   const [showNcryptsec, setShowNcryptsec] = useState(() => !!signerManager.getSavedNcryptsec());
 
   const [loadingNip07, setLoadingNip07] = useState(false);
+  const [loadingNip55Web, setLoadingNip55Web] = useState(false);
+  // Browser NIP-55 is a synchronous capability check (Android browser with
+  // clipboard access); hidden on desktop. `warning` flags Firefox for
+  // Android, which cannot read the clipboard, without disabling the option.
+  const nip55Web = signerManager.nip55WebSupport();
+
+  const handleNip55Web = async () => {
+    setLoadingNip55Web(true);
+    try {
+      await signerManager.loginWithNip55Web();
+      onLogin();
+    } catch {
+      showMessage(t("auth.messages.nip07Failed"), "error");
+    } finally {
+      setLoadingNip55Web(false);
+    }
+  };
 
   const handleNip07 = async () => {
     console.log("handle nip07 called");
@@ -555,6 +573,21 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose, onLogin }) => {
                 onClick={handleNip07}
                 loading={loadingNip07}
               />
+              {nip55Web.visible && (
+                <>
+                  <LoginOptionButton
+                    icon={<PhonelinkLockIcon />}
+                    text={t("auth.options.nip55Web")}
+                    onClick={() => void handleNip55Web()}
+                    loading={loadingNip55Web}
+                  />
+                  {nip55Web.warning && (
+                    <Alert severity="warning" sx={{ mb: 1 }}>
+                      {nip55Web.warning}
+                    </Alert>
+                  )}
+                </>
+              )}
               <LoginOptionButton
                 icon={<LockIcon />}
                 text={t("auth.options.ncryptsec")}

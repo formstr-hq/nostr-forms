@@ -26,6 +26,7 @@ const METHOD_LABEL_KEYS: Record<StoredAccount["method"], string> = {
   nip46: "accounts.methods.nip46",
   ncryptsec: "accounts.methods.ncryptsec",
   android: "accounts.methods.android",
+  "nip55-web": "accounts.methods.nip55-web",
 };
 
 interface AccountsMenuListProps {

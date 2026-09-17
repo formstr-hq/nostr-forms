@@ -2,6 +2,7 @@ import {
   createSigner,
   LocalSigner as PkgLocalSigner,
   type ActiveSigner,
+  type Nip55WebSupport,
   type StoredAccount,
 } from "@formstr/signer";
 import { SimplePool } from "nostr-tools/pool";
@@ -156,6 +157,28 @@ class Signer {
   async loginWithNip46(bunkerUri: string): Promise<void> {
     await this.pkg.loginWithBunkerUri(bunkerUri, { pool: this.pool });
     this.activateCurrent();
+  }
+
+  /**
+   * Browser NIP-55: pair with an Android signer app from the browser, with
+   * no Capacitor bridge. Only works where {@link supportsNip55Web} is true.
+   */
+  async loginWithNip55Web(): Promise<void> {
+    await this.pkg.loginWithNip55Web();
+    this.activateCurrent();
+  }
+
+  /** Whether the browser NIP-55 flow can run here (Android browser). */
+  supportsNip55Web(): boolean {
+    return this.pkg.supportsNip55Web();
+  }
+
+  /**
+   * Whether to offer the browser NIP-55 option, plus the warning Firefox for
+   * Android needs (it cannot read the clipboard).
+   */
+  nip55WebSupport(): Nip55WebSupport {
+    return this.pkg.nip55WebSupport();
   }
 
   /**

@@ -1548,10 +1548,10 @@
   dependencies:
     nostr-tools "^2.23.5"
 
-"@formstr/signer@^0.2.2":
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/@formstr/signer/-/signer-0.2.2.tgz#b9b73c51a82e9205d4097de1de243592b11fae83"
-  integrity sha512-25BCGIKZSKRrtVQwnxfWeiLH7KctEbxQrB26dxcjbkcnIIcfiV39s/Xt9yG//eZ+1zTHUpkIQkplfOhjTENtNw==
+"@formstr/signer@^0.3.1":
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/@formstr/signer/-/signer-0.3.1.tgz#3c315bfc854b00e20285bb2765a58a65da434e30"
+  integrity sha512-eXfZNNcUpRPgcXxgVlkmCe0rjQCZs02/LrW3kEoVCZPGQfD3N7mOaMTg+oH/+5XNYd4rIiZwZxzhHIZf9ZGKDg==
   dependencies:
     nostr-tools "^2.7.0"
     qrcode "^1.5.4"

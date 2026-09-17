@@ -66,6 +66,7 @@ const resources = {
       nip46: "Remote signer",
       ncryptsec: "Key",
       android: "Android signer",
+      "nip55-web": "Signer app",
     },
     removeTitle: "Remove this account?",
     removeBody:
@@ -173,6 +174,7 @@ const resources = {
     },
     options: {
       nip07: "Sign in with Nostr Extension (NIP-07)",
+      nip55Web: "Sign in with a signer app (NIP-55)",
       ncryptsec: "Sign in with Encrypted Key",
       remoteSigner: "Connect with Remote Signer (NIP-46)",
       createAccount: "Create a new account",
