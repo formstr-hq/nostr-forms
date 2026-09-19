@@ -33,6 +33,7 @@ declare global {
 }
 
 const defaultRelays = [
+  "wss://relay.formstr.app",
   "wss://relay.damus.io/",
   "wss://relay.primal.net/",
   "wss://nos.lol",
