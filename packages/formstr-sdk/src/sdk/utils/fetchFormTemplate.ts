@@ -6,6 +6,7 @@ import { hexToBytes } from "@noble/hashes/utils.js";
 import { pool } from "../pool.js";
 
 const defaultRelays = [
+  "wss://relay.formstr.app",
   "wss://relay.damus.io/",
   "wss://relay.primal.net/",
   "wss://nos.lol",
