@@ -24,7 +24,7 @@ import {
   Tag,
 } from "./types.js";
 import { fetchFormTemplate, getDefaultRelays } from "./utils/fetchFormTemplate.js";
-import { stripHtml } from "./utils/helper.js";
+import { escapeHtml, stripHtml } from "./utils/helper.js";
 import { encodeNKeys } from "./utils/nkeys.js";
 import { pool } from "./pool.js";
 
@@ -178,24 +178,41 @@ export class FormstrSDK {
 
   /** Render HTML form with submit wired using FormData */
   renderHtml(form: NormalizedForm): NormalizedForm {
+    // Everything interpolated below comes from the form event, so it is
+    // escaped: `text` for visible text (tags stripped, as before), `attr` for
+    // attribute values.
+    const text = (v: unknown) => escapeHtml(stripHtml(v == null ? "" : String(v)));
+    const attr = escapeHtml;
+    // Unique per form, so two embedded forms can't collide.
+    const domId = (field: NormalizedField) => `formstr-${form.id}-${field.id}`;
+
     const renderField = (field: NormalizedField) => {
+      const required = !!field.config?.required;
+      const req = required ? " required" : "";
+
       if (field.type === "text") {
+        const id = domId(field);
+        const control =
+          field.config?.renderElement === "paragraph"
+            ? `<textarea id="${attr(id)}" name="${attr(field.id)}" rows="3"${req}></textarea>`
+            : `<input type="text" id="${attr(id)}" name="${attr(field.id)}"${req} />`;
         return `
-        <label>${field.labelHtml}</label>
-        <input type="text" name="${field.id}" />
+        <label for="${attr(id)}">${text(field.labelHtml)}</label>
+        ${control}
       `;
       }
 
       if (field.type === "option" && field.options) {
+        const labelId = `${domId(field)}-label`;
         return `
-        <div class="option-group">
-          <div class="option-label">${field.labelHtml}</div>
+        <div class="option-group" role="radiogroup" aria-labelledby="${attr(labelId)}"${required ? ' aria-required="true"' : ""}>
+          <div class="option-label" id="${attr(labelId)}">${text(field.labelHtml)}</div>
           ${field.options
             .map(
-              (opt) => `
+              (opt, i) => `
               <label>
-                <input type="radio" name="${field.id}" value="${opt.id}" />
-                ${opt.labelHtml}
+                <input type="radio" name="${attr(field.id)}" value="${attr(opt.id)}"${i === 0 ? req : ""} />
+                ${text(opt.labelHtml)}
               </label>
             `,
             )
@@ -205,7 +222,7 @@ export class FormstrSDK {
       }
 
       if (field.type === "label") {
-        return `<p>${field.labelHtml}</p>`;
+        return `<p>${text(field.labelHtml)}</p>`;
       }
 
       if (field.type === "grid" && field.options) {
@@ -215,12 +232,12 @@ export class FormstrSDK {
 
         return `
         <div class="grid-question">
-          <div class="grid-label">${field.labelHtml}</div>
+          <div class="grid-label">${text(field.labelHtml)}</div>
           <table class="grid-table">
             <thead>
               <tr>
                 <th></th>
-                ${gridOptions.columns?.map((col) => `<th>${col[1]}</th>`).join("")}
+                ${gridOptions.columns?.map((col) => `<th>${text(col[1])}</th>`).join("")}
               </tr>
             </thead>
             <tbody>
@@ -228,15 +245,15 @@ export class FormstrSDK {
                 ?.map(
                   (row) => `
                 <tr>
-                  <td>${row[1]}</td>
+                  <td>${text(row[1])}</td>
                   ${gridOptions.columns
                     ?.map(
                       (col) => `
                     <td>
                       <input
                         type="${inputType}"
-                        name="${field.id}_${row[0]}"
-                        value="${col[0]}"
+                        name="${attr(`${field.id}_${row[0]}`)}"
+                        value="${attr(col[0])}"
                         ${inputType === "radio" ? "" : ""}
                       />
                     </td>
@@ -260,10 +277,10 @@ export class FormstrSDK {
       if (block.type === "intro") {
         return `
         <section class="form-section form-intro">
-          ${block.title ? `<div class="form-name">${block.title}</div>` : ""}
+          ${block.title ? `<div class="form-name">${text(block.title)}</div>` : ""}
           ${
             block.description
-              ? `<div class="form-description">${block.description}</div>`
+              ? `<div class="form-description">${text(block.description)}</div>`
               : ""
           }
         </section>
@@ -273,10 +290,10 @@ export class FormstrSDK {
       if (block.type === "section") {
         return `
         <section class="form-section">
-          ${block.title ? `<h2 class="section-title">${block.title}</h2>` : ""}
+          ${block.title ? `<h2 class="section-title">${text(block.title)}</h2>` : ""}
           ${
             block.description
-              ? `<div class="section-description">${block.description}</div>`
+              ? `<div class="section-description">${text(block.description)}</div>`
               : ""
           }
           ${block.questionIds
@@ -294,12 +311,12 @@ export class FormstrSDK {
     // Neutral wrapper
     form.html = {
       form: `
-    <form id="form-${form.id}">
+    <form id="form-${attr(form.id)}">
       <div class="form-body">
         ${bodyHtml}
       </div>
       <div id="submit-container">
-        <button type="submit" id="form-submit-${form.id}">Submit</button>
+        <button type="submit" id="form-submit-${attr(form.id)}">Submit</button>
       </div>
     </form>
   `,
@@ -335,7 +352,7 @@ export class FormstrSDK {
       // Anonymous submission: ephemeral key used for both signing and encryption
       // so the form owner can derive the conversation key from the event pubkey
       const ephSk = generateSecretKey();
-      const conversationKey = nip44.v2.utils.getConversationKey(ephSk as unknown as string, form.pubkey);
+      const conversationKey = nip44.v2.utils.getConversationKey(ephSk, form.pubkey);
       content = nip44.v2.encrypt(JSON.stringify(responseTags), conversationKey);
       signerFn = (event) => Promise.resolve(finalizeEvent(event, ephSk));
     }
@@ -392,7 +409,7 @@ export class FormstrSDK {
     if (options.encrypt !== false) {
       const viewKey = generateSecretKey();
       viewKeyHex = bytesToHex(viewKey);
-      const conversationKey = nip44.v2.utils.getConversationKey(signingKey as unknown as string, getPublicKey(viewKey));
+      const conversationKey = nip44.v2.utils.getConversationKey(signingKey, getPublicKey(viewKey));
       content = nip44.v2.encrypt(JSON.stringify([["name", name], ...rawFields]), conversationKey);
       tags = [
         ["d", formId],
