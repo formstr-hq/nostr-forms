@@ -261,28 +261,27 @@ export const FormRendererContainer: React.FC<FormRendererContainerProps> = ({
     initialize();
   }, []);
 
-  const handleInput = (
-    questionId: string,
-    answer: string,
-    message?: string,
-  ) => {
-    updateValues((prev) => ({
-      ...prev,
-      [questionId]:
-        !answer || answer === ""
-          ? null
-          : ([answer, message] as [string, string | undefined]),
-    }));
-    // Clear the field's error on edit, like antd did on change
-    setErrors((prev) => {
-      if (!(questionId in prev)) return prev;
-      const next = { ...prev };
-      delete next[questionId];
-      return next;
-    });
-    // Save draft after each input change
-    saveDraft();
-  };
+  const handleInput = useCallback(
+    (questionId: string, answer: string, message?: string) => {
+      updateValues((prev) => ({
+        ...prev,
+        [questionId]:
+          !answer || answer === ""
+            ? null
+            : ([answer, message] as [string, string | undefined]),
+      }));
+      // Clear the field's error on edit, like antd did on change
+      setErrors((prev) => {
+        if (!(questionId in prev)) return prev;
+        const next = { ...prev };
+        delete next[questionId];
+        return next;
+      });
+      // Save draft after each input change
+      saveDraft();
+    },
+    [updateValues, saveDraft],
+  );
 
   // Tracks fields as the renderer mounts them (antd registered-fields semantics)
   const handleFieldsRendered = useCallback((renderedFields: Field[]) => {
