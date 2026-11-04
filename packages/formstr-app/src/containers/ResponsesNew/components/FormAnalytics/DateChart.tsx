@@ -9,7 +9,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { DateBucket } from "./dataUtils";
-import { ChartCard } from "./ChartCard";
+import { SelectableChartCard } from "./SelectableChartCard";
 
 interface Props {
   label: string;
@@ -47,7 +47,12 @@ export const DateChart: React.FC<Props> = ({
   totalAnswered,
 }) => {
   return (
-    <ChartCard label={label} meta={`${fieldType} • ${totalAnswered} answered`}>
+    <SelectableChartCard
+      data={data.map((item) => ({ name: item.date, count: item.count }))}
+      defaultType="area"
+      label={label}
+      meta={`${fieldType} • ${totalAnswered} answered`}
+    >
       <ResponsiveContainer width="100%" height={200}>
         <AreaChart
           data={data}
@@ -84,6 +89,6 @@ export const DateChart: React.FC<Props> = ({
           />
         </AreaChart>
       </ResponsiveContainer>
-    </ChartCard>
+    </SelectableChartCard>
   );
 };

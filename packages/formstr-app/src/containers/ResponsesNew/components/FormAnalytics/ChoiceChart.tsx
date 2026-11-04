@@ -10,7 +10,7 @@ import {
   LabelList,
 } from "recharts";
 import { ChoiceData } from "./dataUtils";
-import { ChartCard } from "./ChartCard";
+import { SelectableChartCard } from "./SelectableChartCard";
 
 const COLORS = [
   "#6366f1",
@@ -69,7 +69,13 @@ export const ChoiceChart: React.FC<Props> = ({
   const chartHeight = Math.max(180, data.length * 44);
 
   return (
-    <ChartCard label={label} meta={`${typeLabel} • ${totalAnswered} answered`}>
+    <SelectableChartCard
+      data={data.map((item) => ({ name: item.option, count: item.count }))}
+      defaultType="bar"
+      multipleSelections={fieldType === "checkboxes"}
+      label={label}
+      meta={`${typeLabel} • ${totalAnswered} answered`}
+    >
       <ResponsiveContainer width="100%" height={chartHeight}>
         <BarChart
           data={data}
@@ -101,6 +107,6 @@ export const ChoiceChart: React.FC<Props> = ({
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </ChartCard>
+    </SelectableChartCard>
   );
 };
