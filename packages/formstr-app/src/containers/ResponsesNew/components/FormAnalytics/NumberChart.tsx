@@ -9,7 +9,7 @@ import {
   Cell,
 } from "recharts";
 import { NumberBucket } from "./dataUtils";
-import { ChartCard } from "./ChartCard";
+import { SelectableChartCard } from "./SelectableChartCard";
 
 const COLOR = "#6366f1";
 
@@ -48,7 +48,12 @@ export const NumberChart: React.FC<Props> = ({
   totalAnswered,
 }) => {
   return (
-    <ChartCard label={label} meta={`number • ${totalAnswered} answered`}>
+    <SelectableChartCard
+      data={data.map((item) => ({ name: item.range, count: item.count }))}
+      defaultType="bar"
+      label={label}
+      meta={`number • ${totalAnswered} answered`}
+    >
       <ResponsiveContainer width="100%" height={200}>
         <BarChart
           data={data}
@@ -78,6 +83,6 @@ export const NumberChart: React.FC<Props> = ({
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </ChartCard>
+    </SelectableChartCard>
   );
 };

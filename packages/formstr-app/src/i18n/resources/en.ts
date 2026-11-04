@@ -515,6 +515,17 @@ const resources = {
       waiting: "Waiting for form details or response data...",
     },
     analytics: {
+      chartType: "Chart type",
+      chartTypes: {
+        bar: "Bar",
+        pie: "Pie",
+        doughnut: "Doughnut",
+        line: "Line",
+        area: "Area",
+      },
+      shareOfSelections:
+        "Slices show the share of selections. Each respondent can select multiple options.",
+      noChartData: "No data to display.",
       noResponses: "No responses yet to analyze.",
       totalSubmissions: "Total Submissions",
       uniqueResponders: "Unique Responders",
