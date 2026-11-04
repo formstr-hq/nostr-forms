@@ -13,7 +13,7 @@ import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FormFields } from "./FormFields";
 import { Field, Tag } from "../../nostr/types";
 import FillerStyle from "./formFiller.style";
@@ -109,11 +109,23 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   onClearForm,
 }) => {
   const { t } = useTranslation();
-  const name = formTemplate.find((tag) => tag[0] === "name")?.[1] || "";
-  const settings = JSON.parse(
-    formTemplate.find((tag) => tag[0] === "settings")?.[1] || "{}",
-  ) as IFormSettings;
-  const fields = formTemplate.filter((tag) => tag[0] === "field") as Field[];
+  // These derivations feed memoized question rows, so keep their identities
+  // stable across keystrokes (values state changes on every input event).
+  const name = useMemo(
+    () => formTemplate.find((tag) => tag[0] === "name")?.[1] || "",
+    [formTemplate],
+  );
+  const settings = useMemo(
+    () =>
+      JSON.parse(
+        formTemplate.find((tag) => tag[0] === "settings")?.[1] || "{}",
+      ) as IFormSettings,
+    [formTemplate],
+  );
+  const fields = useMemo(
+    () => formTemplate.filter((tag) => tag[0] === "field") as Field[],
+    [formTemplate],
+  );
   // Whether the description block renders above the questions. When it doesn't,
   // the questions wrapper needs its own top margin so the banner and the first
   // question don't butt right up against each other (the description's own
@@ -134,10 +146,13 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
 
-  const sections = settings.sections || [];
+  const sections = useMemo(() => settings.sections || [], [settings]);
   const enableSections = !!sections.length;
 
-  const contentItems = createContentFlow(fields, sections, t);
+  const contentItems = useMemo(
+    () => createContentFlow(fields, sections, t),
+    [fields, sections, t],
+  );
   const currentItem = contentItems[currentStep];
   const isLastStep = currentStep >= contentItems.length - 1;
   const showStepper = enableSections && contentItems.length > 1;
@@ -163,28 +178,34 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, readOnly, formTemplate]);
 
-  const handleFieldInput = (
-    questionId: string,
-    answer: string,
-    message?: string,
-  ) => {
-    if (!isControlled) {
-      setInternalValues((prev) => ({
-        ...prev,
-        [questionId]:
-          !answer || answer === ""
-            ? null
-            : ([answer, message] as [string, string | undefined]),
-      }));
-      setInternalErrors((prev) => {
-        if (!(questionId in prev)) return prev;
-        const next = { ...prev };
-        delete next[questionId];
-        return next;
-      });
-    }
-    onInput(questionId, answer, message);
-  };
+  // Keep the input callback stable so memoized rows don't all re-render on
+  // every keystroke. The refs carry the latest props into that stable closure.
+  const onInputRef = useRef(onInput);
+  onInputRef.current = onInput;
+  const isControlledRef = useRef(isControlled);
+  isControlledRef.current = isControlled;
+
+  const handleFieldInput = useCallback(
+    (questionId: string, answer: string, message?: string) => {
+      if (!isControlledRef.current) {
+        setInternalValues((prev) => ({
+          ...prev,
+          [questionId]:
+            !answer || answer === ""
+              ? null
+              : ([answer, message] as [string, string | undefined]),
+        }));
+        setInternalErrors((prev) => {
+          if (!(questionId in prev)) return prev;
+          const next = { ...prev };
+          delete next[questionId];
+          return next;
+        });
+      }
+      onInputRef.current(questionId, answer, message);
+    },
+    [],
+  );
 
   // Validate current step
   const validateCurrentStep = (): boolean => {

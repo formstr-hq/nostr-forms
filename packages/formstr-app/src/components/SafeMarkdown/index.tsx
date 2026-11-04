@@ -29,10 +29,7 @@ const rehypeForceColor: Plugin<[{ color: string }], Root> = ({ color }) => {
   };
 };
 
-export default function SafeMarkdown({
-  forceColor,
-  ...props
-}: SafeMarkdownProps) {
+function SafeMarkdown({ forceColor, ...props }: SafeMarkdownProps) {
   // Extend default schema safely (no TS errors)
   const schema = {
     ...defaultSchema,
@@ -78,3 +75,5 @@ export default function SafeMarkdown({
 
   return <ReactMarkdown {...props} rehypePlugins={finalPlugins} />;
 }
+
+export default React.memo(SafeMarkdown);
