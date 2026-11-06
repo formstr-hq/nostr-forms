@@ -668,6 +668,13 @@ const resources = {
       colorsFallback:
         "Title, Description, and Question fall back to Global if not set.",
       titleImage: "Title image",
+      chooseTitleImage: "Choose a title image",
+      chooseThankYouImage: "Choose a thank-you image",
+      uploadImage: "Upload image to Blossom",
+      uploadingImage: "Uploading image…",
+      imageFileRequired: "Please select an image file.",
+      imageSizeLimit: "Please select a non-empty image up to 10 MB.",
+      imageUploadFailed: "Image upload failed. Please try again or enter an image URL.",
       backgroundImage: "Background Image",
       thankYouImage: "Thank You Screen Image",
       customImageUrl: "Enter custom image URL",
