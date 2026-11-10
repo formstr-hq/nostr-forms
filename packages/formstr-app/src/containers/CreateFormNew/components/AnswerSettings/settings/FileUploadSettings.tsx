@@ -12,14 +12,9 @@ import {
 import React, { useState, useEffect } from "react";
 import { IAnswerSettings } from "../types";
 import { fetchMany } from "../../../../../dataLayer";
+import { PUBLIC_READ_RELAYS } from "../../../../../constants/relays";
 import { useTranslation } from "react-i18next";
 import { useSnackbar } from "../../../../../providers/SnackbarProvider";
-
-const PUBLIC_RELAYS = [
-  "wss://relay.damus.io",
-  "wss://relay.nostr.band",
-  "wss://nos.lol",
-];
 
 export const DEFAULT_SERVERS = [
   "https://nostr.download",
@@ -59,9 +54,9 @@ export const FileUploadSettings: React.FC<FileUploadSettingsProps> = ({
     const queryServers = async () => {
       try {
         const events = await fetchMany(
-            [{ kinds: [36363], limit: 50 }],
-            PUBLIC_RELAYS,
-          );
+          [{ kinds: [36363], limit: 50 }],
+          PUBLIC_READ_RELAYS,
+        );
 
         const relayServers: ServerInfo[] = [];
         const seenUrls = new Set(DEFAULT_SERVERS);

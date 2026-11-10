@@ -16,14 +16,9 @@ import {
   DEFAULT_SERVERS,
   ServerInfo,
 } from "../../AnswerSettings/settings/FileUploadSettings";
+import { PUBLIC_READ_RELAYS } from "../../../../../constants/relays";
 import { fetchMany } from "../../../../../dataLayer";
 import { useTranslation } from "react-i18next";
-
-const PUBLIC_RELAYS = [
-  "wss://relay.damus.io",
-  "wss://relay.nostr.band",
-  "wss://nos.lol",
-];
 
 interface FileUploadBuilderProps {
   answerSettings: IAnswerSettings;
@@ -51,9 +46,9 @@ const FileUploadBuilder: React.FC<FileUploadBuilderProps> = ({
     const queryServers = async () => {
       try {
         const events = await fetchMany(
-            [{ kinds: [36363], limit: 50 }],
-            PUBLIC_RELAYS,
-          );
+          [{ kinds: [36363], limit: 50 }],
+          PUBLIC_READ_RELAYS,
+        );
 
         const relayServers: ServerInfo[] = [];
         const seenUrls = new Set(DEFAULT_SERVERS);
