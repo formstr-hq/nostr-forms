@@ -27,10 +27,11 @@ function PublicForms() {
     }, 10000);
 
     setIsLoading(true);
-    getPublicForms(getDefaultRelays(), handleFormEvent);
+    const subscription = getPublicForms(getDefaultRelays(), handleFormEvent);
 
     return () => {
       clearTimeout(loadingTimeout);
+      subscription.close();
     };
   }, []);
 

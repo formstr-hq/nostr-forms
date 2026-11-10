@@ -1,14 +1,14 @@
 import { Event } from "nostr-tools";
-import { subscribe } from "../dataLayer";
+import { subscribe, type Subscription } from "../dataLayer";
 
 export const getPublicForms = (
   relays: string[],
-  callback: (event: Event) => void
-) => {
-  let filter = {
+  callback: (event: Event) => void,
+): Subscription => {
+  const filter = {
     kinds: [30168],
     limit: 50,
     "#t": ["public"],
   };
-  subscribe([filter], callback, relays);
+  return subscribe([filter], callback, relays);
 };
