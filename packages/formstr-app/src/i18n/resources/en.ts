@@ -670,7 +670,7 @@ const resources = {
       titleImage: "Title image",
       chooseTitleImage: "Choose a title image",
       chooseThankYouImage: "Choose a thank-you image",
-      uploadImage: "Upload image to Blossom",
+      uploadImage: "Upload image",
       uploadingImage: "Uploading image…",
       imageFileRequired: "Please select an image file.",
       imageSizeLimit: "Please select a non-empty image up to 10 MB.",

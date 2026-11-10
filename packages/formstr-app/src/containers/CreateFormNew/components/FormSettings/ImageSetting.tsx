@@ -4,9 +4,11 @@ import {
   Button,
   CircularProgress,
   Drawer,
+  IconButton,
   TextField,
   Typography,
 } from "@mui/material";
+import UploadIcon from "@mui/icons-material/Upload";
 import { useTranslation } from "react-i18next";
 import { ImagePicker } from "../BackgroundImagePicker";
 import { ChangeEvent, useRef, useState } from "react";
@@ -116,6 +118,19 @@ export default function ImageSetting({
         >
           ...
         </Button>
+        <IconButton
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          aria-label={t(
+            uploading
+              ? "builder.formSettings.uploadingImage"
+              : "builder.formSettings.uploadImage",
+          )}
+          color="primary"
+          sx={{ flexShrink: 0 }}
+        >
+          {uploading ? <CircularProgress size={24} /> : <UploadIcon />}
+        </IconButton>
       </Box>
       <input
         ref={fileInputRef}
@@ -124,18 +139,6 @@ export default function ImageSetting({
         hidden
         onChange={handleUpload}
       />
-      <Button
-        onClick={() => fileInputRef.current?.click()}
-        disabled={uploading}
-        startIcon={uploading ? <CircularProgress size={16} /> : undefined}
-        sx={{ mt: 1 }}
-      >
-        {t(
-          uploading
-            ? "builder.formSettings.uploadingImage"
-            : "builder.formSettings.uploadImage",
-        )}
-      </Button>
       {uploadError && (
         <Alert severity="error" sx={{ mt: 1 }}>
           {uploadError}
