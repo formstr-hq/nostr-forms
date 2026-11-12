@@ -26,7 +26,7 @@ const decryptFormEvent = (event: Event, nkeys?: string) => {
   const { viewKey } = decodeNKeys(nkeys);
   if (!viewKey) return null;
   const conversationKey = nip44.v2.utils.getConversationKey(
-    hexToBytes(viewKey) as unknown as string,
+    hexToBytes(viewKey),
     event.pubkey,
   );
   return nip44.v2.decrypt(event.content, conversationKey);
