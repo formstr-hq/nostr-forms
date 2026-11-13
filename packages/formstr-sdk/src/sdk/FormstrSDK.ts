@@ -23,7 +23,8 @@ import {
   SectionBlock,
   Tag,
 } from "./types.js";
-import { fetchFormTemplate, getDefaultRelays } from "./utils/fetchFormTemplate.js";
+import { fetchFormTemplate } from "./utils/fetchFormTemplate.js";
+import { getDefaultRelays } from "./constants.js";
 import { stripHtml } from "./utils/helper.js";
 import { encodeNKeys } from "./utils/nkeys.js";
 import { pool } from "./pool.js";
