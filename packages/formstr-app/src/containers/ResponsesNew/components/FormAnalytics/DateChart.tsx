@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import {
   AreaChart,
   Area,
@@ -10,6 +10,14 @@ import {
 } from "recharts";
 import { DateBucket } from "./dataUtils";
 import { SelectableChartCard } from "./SelectableChartCard";
+
+import {
+  AXIS_STYLE,
+  CHART_COLORS,
+  GRID_STYLE,
+  SEQUENTIAL_CHART_HEIGHT,
+  SEQUENTIAL_CHART_MARGIN,
+} from "./chartStyles";
 
 interface Props {
   label: string;
@@ -46,45 +54,33 @@ export const DateChart: React.FC<Props> = ({
   data,
   totalAnswered,
 }) => {
+  const gradientId = useId();
   return (
     <SelectableChartCard
       data={data.map((item) => ({ name: item.date, count: item.count }))}
-      defaultType="area"
+      nature="date"
       label={label}
       meta={`${fieldType} • ${totalAnswered} answered`}
     >
-      <ResponsiveContainer width="100%" height={200}>
-        <AreaChart
-          data={data}
-          margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
-        >
+      <ResponsiveContainer width="100%" height={SEQUENTIAL_CHART_HEIGHT}>
+        <AreaChart data={data} margin={SEQUENTIAL_CHART_MARGIN}>
           <defs>
-            <linearGradient id="dateGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={CHART_COLORS[0]} stopOpacity={0.3} />
+              <stop offset="95%" stopColor={CHART_COLORS[0]} stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-          <XAxis
-            dataKey="date"
-            tick={{ fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            allowDecimals={false}
-          />
+          <CartesianGrid {...GRID_STYLE} />
+          <XAxis dataKey="date" {...AXIS_STYLE} />
+          <YAxis {...AXIS_STYLE} allowDecimals={false} />
           <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
             dataKey="count"
-            stroke="#6366f1"
+            stroke={CHART_COLORS[0]}
             strokeWidth={2}
-            fill="url(#dateGradient)"
-            dot={{ fill: "#6366f1", r: 4 }}
+            fill={`url(#${gradientId})`}
+            dot={{ fill: CHART_COLORS[0], r: 4 }}
             activeDot={{ r: 6 }}
           />
         </AreaChart>

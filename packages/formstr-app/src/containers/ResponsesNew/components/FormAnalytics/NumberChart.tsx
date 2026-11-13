@@ -1,6 +1,7 @@
 import React from "react";
 import {
   BarChart,
+  CartesianGrid,
   Bar,
   XAxis,
   YAxis,
@@ -11,7 +12,13 @@ import {
 import { NumberBucket } from "./dataUtils";
 import { SelectableChartCard } from "./SelectableChartCard";
 
-const COLOR = "#6366f1";
+import {
+  AXIS_STYLE,
+  CHART_COLORS,
+  GRID_STYLE,
+  SEQUENTIAL_CHART_HEIGHT,
+  SEQUENTIAL_CHART_MARGIN,
+} from "./chartStyles";
 
 interface Props {
   label: string;
@@ -50,33 +57,21 @@ export const NumberChart: React.FC<Props> = ({
   return (
     <SelectableChartCard
       data={data.map((item) => ({ name: item.range, count: item.count }))}
-      defaultType="bar"
+      nature="numeric"
       label={label}
       meta={`number • ${totalAnswered} answered`}
     >
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart
-          data={data}
-          margin={{ top: 8, right: 16, left: 0, bottom: 8 }}
-        >
-          <XAxis
-            dataKey="range"
-            tick={{ fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            tick={{ fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            allowDecimals={false}
-          />
+      <ResponsiveContainer width="100%" height={SEQUENTIAL_CHART_HEIGHT}>
+        <BarChart data={data} margin={SEQUENTIAL_CHART_MARGIN}>
+          <CartesianGrid {...GRID_STYLE} />
+          <XAxis dataKey="range" {...AXIS_STYLE} />
+          <YAxis {...AXIS_STYLE} allowDecimals={false} />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f3f4f6" }} />
           <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={48}>
             {data.map((_, i) => (
               <Cell
                 key={i}
-                fill={COLOR}
+                fill={CHART_COLORS[0]}
                 fillOpacity={0.6 + (0.4 * i) / Math.max(data.length - 1, 1)}
               />
             ))}
