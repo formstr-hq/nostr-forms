@@ -5,6 +5,7 @@ interface ChartCardProps {
   label: string;
   meta: string;
   children: React.ReactNode;
+  action?: React.ReactNode;
 }
 
 /** Shared card chrome for the analytics charts (MUI, Phase 4). */
@@ -12,10 +13,12 @@ export const ChartCard: React.FC<ChartCardProps> = ({
   label,
   meta,
   children,
+  action,
 }) => (
   <Card variant="outlined" sx={{ mb: 2 }}>
     <CardHeader
       sx={{ pb: 0 }}
+      action={action}
       title={
         <Typography component="span" sx={{ fontWeight: 600, fontSize: 14 }}>
           {label}
