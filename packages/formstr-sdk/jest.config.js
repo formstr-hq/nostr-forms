@@ -4,5 +4,9 @@ module.exports = {
   transform: {
     "^.+\\.(t|j)s?$": "ts-jest",
   },
+  moduleNameMapper: {
+    "^@formstr/core/relay$":
+      "<rootDir>/../../node_modules/@formstr/core/dist/relay/module-defaults.js",
+  },
   transformIgnorePatterns: ["<rootDir>/node_modules/"],
 };

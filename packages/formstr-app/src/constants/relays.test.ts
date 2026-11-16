@@ -1,3 +1,4 @@
+import { MODULE_DEFAULT_RELAYS } from "@formstr/core/relay";
 import {
   DEFAULT_RELAYS,
   DEFAULT_RELAY,
@@ -16,6 +17,10 @@ describe("relay constants", () => {
   it("returns the default list when no override is set", () => {
     delete process.env.REACT_APP_DEFAULT_RELAYS;
     expect(getDefaultRelays()).toEqual(DEFAULT_RELAYS);
+  });
+
+  it("uses the shared forms relay defaults", () => {
+    expect(DEFAULT_RELAYS).toEqual(MODULE_DEFAULT_RELAYS.forms);
   });
 
   it("parses a comma-separated override", () => {

@@ -1,5 +1,4 @@
 import { Event, nip19, nip44 } from "nostr-tools";
-import { AddressPointer } from "nostr-tools/lib/types/nip19";
 import { decodeNKeys } from "./nkeys.js";
 import { Tag } from "../types.js";
 import { hexToBytes } from "@noble/hashes/utils.js";
@@ -40,7 +39,7 @@ const _doFetch = async (
   nkeys?: string,
 ): Promise<Tag[] | null> => {
   const { pubkey, kind, identifier, relays } = nip19.decode(naddr)
-    .data as AddressPointer;
+    .data as nip19.AddressPointer;
 
   let formIdPubkey = pubkey;
   let relayList = relays?.length ? relays : getDefaultRelays();

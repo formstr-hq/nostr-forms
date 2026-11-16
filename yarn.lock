@@ -1546,6 +1546,14 @@
   resolved "https://registry.yarnpkg.com/@formstr/common-ui/-/common-ui-0.1.2.tgz#891b5add52f4568bc53ac2598a8b29d7fc1371a5"
   integrity sha512-K+wO34KsegxD9j+gKLMZihxb3gJrHKeELGz4aS/VsVOMqD2ZruuvvYtd0Q/pyde9Ij/Klau/n+uUfljYrvHTPw==
 
+"@formstr/core@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@formstr/core/-/core-0.1.1.tgz#951f881f4a17e4deffa0fd8e9dd0bfccdd3e9135"
+  integrity sha512-Rt7+rRMW2XhC4MdBqaOT0TAEOq61OaN+ycVMpi2wHLBlBr1PlNj8G5jbLu3kYf0ezI3/4UubiEafpMsJnDLthA==
+  dependencies:
+    "@noble/hashes" "^2.0.1"
+    nostr-tools "^2.16.0"
+
 "@formstr/local-relay@^0.5.0":
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@formstr/local-relay/-/local-relay-0.5.0.tgz#6c942ef8d00cba4da99f671fa90e28476f95afe4"
@@ -2205,6 +2213,11 @@
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.8.0.tgz#cee43d801fcef9644b11b8194857695acd5f815a"
   integrity sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==
+
+"@noble/hashes@^2.0.1":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-2.4.0.tgz#e6a3e98edbed3c8659b28bb8f9b18ca02ec8ea4b"
+  integrity sha512-X5XaVWZIBCT7HHZGm5I7ZQXDwLG+bGXuSrMQAW+7Zvl87h1kmc1ZB1VSRJcpUfoUrGQp4Fkoxm5kZ+Ms+aW+eA==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -9195,7 +9208,7 @@ normalize-url@^6.0.1:
   resolved "https://registry.npmjs.org/normalize-url/-/normalize-url-6.1.0.tgz"
   integrity sha512-DlL+XwOy3NxAQ8xuC0okPgK46iuVNAK01YN7RueYBqqFeGsBjV9XmCAzAdgt+667bCl5kPh9EqKKDwnaPG1I7A==
 
-nostr-tools@2.24.0, nostr-tools@^2.16.2, nostr-tools@^2.23.12, nostr-tools@^2.23.5, nostr-tools@^2.3.2, nostr-tools@^2.7.0:
+nostr-tools@2.24.0, nostr-tools@^2.16.0, nostr-tools@^2.16.2, nostr-tools@^2.23.12, nostr-tools@^2.23.5, nostr-tools@^2.3.2, nostr-tools@^2.7.0:
   version "2.24.0"
   resolved "https://registry.yarnpkg.com/nostr-tools/-/nostr-tools-2.24.0.tgz#c9218f59ce7c9dc2589d6b937e6cda718a60a23b"
   integrity sha512-ymaJwdrhFK4sEGm3eUN6O1pRVmbYycEt1O/ELKPpjKyylS8mrdsvT67G95H70NAOKzgOUKMBmn5Ld43ufbJk8Q==
