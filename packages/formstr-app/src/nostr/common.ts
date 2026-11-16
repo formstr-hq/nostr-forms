@@ -20,6 +20,7 @@ import { IFormSettings } from "../containers/CreateFormNew/components/FormSettin
 import { signerManager } from "../signer";
 import { AbstractRelay } from "nostr-tools/abstract-relay";
 import { subscribe, fetchOne, fetchMany } from "../dataLayer";
+import { DEFAULT_RELAYS, getDefaultRelays } from "../constants/relays";
 
 declare global {
   interface Window {
@@ -32,31 +33,8 @@ declare global {
   }
 }
 
-const defaultRelays = [
-  "wss://relay.formstr.app",
-  "wss://relay.damus.io/",
-  "wss://relay.primal.net/",
-  "wss://nos.lol",
-  "wss://relay.nostr.wirednet.jp/",
-  "wss://nostr-01.yakihonne.com",
-  "wss://relay.snort.social",
-  "wss://relay.nostr.band",
-  "wss://nostr21.com",
-];
-
-export const getDefaultRelays = () => {
-  // Allow overriding the relay set at build time (e.g. point e2e tests at a
-  // local relay). Unset in production, so the hardcoded list is used.
-  const override = process.env.REACT_APP_DEFAULT_RELAYS;
-  if (override) {
-    const relays = override
-      .split(",")
-      .map((url) => url.trim())
-      .filter(Boolean);
-    if (relays.length) return relays;
-  }
-  return defaultRelays;
-};
+export { getDefaultRelays };
+const defaultRelays = DEFAULT_RELAYS;
 
 export function toHexNpub(npubOrHex: string): string {
   try {

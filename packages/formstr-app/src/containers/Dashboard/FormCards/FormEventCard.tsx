@@ -44,6 +44,7 @@ import { FormDetails } from "../../CreateFormNew/components/FormDetails";
 import SafeMarkdown from "../../../components/SafeMarkdown";
 import { IFormSettings } from "../../CreateFormNew/components/FormSettings/types";
 import { Tag } from "../../../nostr/types";
+import { DEFAULT_RELAY } from "../../../constants/relays";
 import { useTranslation } from "react-i18next";
 import { useRelayCoverage } from "../../../hooks/useRelayCoverage";
 import { BroadcastModal } from "../../../components/BroadcastModal";
@@ -121,7 +122,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
     const naddr = makeFormNAddr(
       pubKey,
       formId,
-      relays.length ? relays : ["wss://relay.damus.io"],
+      relays.length ? relays : [DEFAULT_RELAY],
     );
     const formData = JSON.stringify(await getFormData(naddr));
     const formFillerUI = (await (await fetch("/api/form-filler-ui")).text())
@@ -151,12 +152,7 @@ export const FormEventCard: React.FC<FormEventCardProps> = ({
   // "Copy form link" button (copies the absolute URL to the clipboard).
   const formLinkPath =
     shortLink ||
-    naddrUrl(
-      pubKey,
-      formId,
-      relays.length ? relays : ["wss://relay.damus.io"],
-      viewKey,
-    );
+    naddrUrl(pubKey, formId, relays.length ? relays : [DEFAULT_RELAY], viewKey);
   const fullFormUrl = `${window.location.origin}${formLinkPath}`;
 
   // Purchase footer (shown when a shortLink is present): strip the scheme so the

@@ -16,6 +16,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import { Event } from "nostr-tools";
 import { useTranslation } from "react-i18next";
 import { parseFormUrl, ParsedFormUrl } from "../../utils/formUrlParser";
+import { DEFAULT_RELAY } from "../../constants/relays";
 import { fetchFormTemplate } from "../../nostr/fetchFormTemplate";
 import { ILocalForm } from "../../containers/CreateFormNew/providers/FormBuilder/typeDefs";
 import { useLocalForms } from "../../provider/LocalFormsProvider";
@@ -140,8 +141,7 @@ const ImportFormModal: React.FC<ImportFormModalProps> = ({
     if (!preview) return;
 
     const { parsed, formName } = preview;
-    const relays =
-      parsed.relays.length > 0 ? parsed.relays : ["wss://relay.damus.io"];
+    const relays = parsed.relays.length > 0 ? parsed.relays : [DEFAULT_RELAY];
 
     const formToSave: ILocalForm = {
       key: `${parsed.pubkey}:${parsed.formId}`,

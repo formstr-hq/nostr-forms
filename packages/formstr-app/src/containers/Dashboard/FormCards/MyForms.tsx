@@ -17,6 +17,7 @@ import { useMyForms } from "../../../provider/MyFormsProvider";
 import DeleteFormTrigger from "./DeleteForm";
 import { makeFormNAddr, naddrUrl } from "../../../utils/utility";
 import { responsePath } from "../../../utils/formUtils";
+import { DEFAULT_RELAY } from "../../../constants/relays";
 
 export const MyForms = () => {
   const { formEvents, refreshing, deleteForm, retryForm, refreshForms } =
@@ -118,7 +119,7 @@ export const MyForms = () => {
                       onClick={() => {
                         const relays = formMetadata.relay
                           ? [formMetadata.relay]
-                          : ["wss://relay.damus.io"];
+                          : [DEFAULT_RELAY];
                         navigate(
                           naddrUrl(
                             formPubkey,

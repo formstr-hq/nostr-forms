@@ -1,4 +1,5 @@
 import { DEVICE_TYPE, DEVICE_WIDTH } from "../constants/index";
+import { DEFAULT_RELAY } from "../constants/relays";
 import { getItem, LOCAL_STORAGE_KEYS, setItem } from "./localStorage";
 import { nip19 } from "nostr-tools";
 import { encodeNKeys } from "./nkeys";
@@ -39,7 +40,7 @@ export const makeFormNAddr = (
   return nip19.naddrEncode({
     pubkey: publicKey,
     identifier: formId,
-    relays: relaysEncode || ["wss://relay.damus.io"],
+    relays: relaysEncode || [DEFAULT_RELAY],
     kind: 30168,
   });
 };
@@ -63,7 +64,7 @@ export const naddrUrl = (
   const base = `/f/${makeFormNAddr(
     publicKey,
     formId,
-    relaysEncode || ["wss://relay.damus.io"],
+    relaysEncode || [DEFAULT_RELAY],
   )}`;
 
   // OLD behavior
