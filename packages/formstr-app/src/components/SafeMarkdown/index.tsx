@@ -1,6 +1,7 @@
 // SafeMarkdown.tsx
 import React from "react";
 import ReactMarkdown, { Options } from "react-markdown";
+import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import { visit } from "unist-util-visit";
@@ -58,6 +59,7 @@ function SafeMarkdown({ forceColor, ...props }: SafeMarkdownProps) {
     ],
   };
 
+  const baseRemarkPlugins: Options["remarkPlugins"] = [remarkGfm];
   const basePlugins: Options["rehypePlugins"] = [
     rehypeRaw,
     [rehypeSanitize, schema],
@@ -73,7 +75,17 @@ function SafeMarkdown({ forceColor, ...props }: SafeMarkdownProps) {
     ? [...basePlugins, ...props.rehypePlugins]
     : basePlugins;
 
-  return <ReactMarkdown {...props} rehypePlugins={finalPlugins} />;
+  const finalRemarkPlugins = props.remarkPlugins
+    ? [...baseRemarkPlugins, ...props.remarkPlugins]
+    : baseRemarkPlugins;
+
+  return (
+    <ReactMarkdown
+      {...props}
+      remarkPlugins={finalRemarkPlugins}
+      rehypePlugins={finalPlugins}
+    />
+  );
 }
 
 export default React.memo(SafeMarkdown);
