@@ -4,8 +4,8 @@
     "wsBaseUrl": "ws://localhost:5000"
   },
   "staging": {
-    "apiBaseUrl": "https://staging.formstr.app",
-    "wsBaseUrl": "wss://staging.formstr.app"
+    "apiBaseUrl": "https://api.stg.formstr.app",
+    "wsBaseUrl": "wss://api.stg.formstr.app"
   },
   "preview": {
     "apiBaseUrl": "https://api.formstr.app",
