@@ -1,4 +1,5 @@
 import { OllamaModel } from "../../services/ollamaService";
+import { LLMProvider } from "../../services/webLLM/types";
 
 export interface ModelSelectorProps {
     model: string | undefined;
@@ -8,4 +9,7 @@ export interface ModelSelectorProps {
     disabled: boolean;
     style?: React.CSSProperties;
     placeholder?: string;
+    provider?: LLMProvider;
+    onFileSelected?: (file: File) => Promise<void>;
+    loading?: boolean;
 }
