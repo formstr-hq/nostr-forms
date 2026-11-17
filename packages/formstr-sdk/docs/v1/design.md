@@ -1,5 +1,8 @@
 Formstr sdk is the tooling designed on top of the nostr protocol to help create forms that can be embedded into any website, software or usecase. This document outlines the basic api and functionality of the sdk.
 
+For the complete list of supported fields, their configuration, and response
+formats, see [Field types](./field-types.md).
+
 ## API
 
 ### Create a form
