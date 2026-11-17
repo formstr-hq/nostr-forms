@@ -15,14 +15,18 @@ export class BlossomClient {
     this.baseUrl = baseUrl;
   }
 
-  async upload(blob: Uint8Array, authHeader: string): Promise<string> {
+  async upload(
+    blob: Uint8Array,
+    authHeader: string,
+    contentType = "application/octet-stream",
+  ): Promise<string> {
     let res: Response;
     try {
       res = await fetch(`${this.baseUrl}/upload`, {
         method: "PUT",
         headers: {
           Authorization: authHeader,
-          "Content-Type": "application/octet-stream",
+          "Content-Type": contentType,
         },
         body: blob as BodyInit, // cast fixes TS
       });
@@ -30,7 +34,7 @@ export class BlossomClient {
       if (e instanceof TypeError) {
         throw new BlossomError(
           `Network error: Unable to reach ${this.baseUrl}. This may be a CORS issue.`,
-          { isCorsError: true }
+          { isCorsError: true },
         );
       }
       throw e;
@@ -52,7 +56,7 @@ export class BlossomClient {
       if (e instanceof TypeError) {
         throw new BlossomError(
           `Network error: Unable to reach ${this.baseUrl}. This may be a CORS issue.`,
-          { isCorsError: true }
+          { isCorsError: true },
         );
       }
       throw e;
@@ -78,7 +82,7 @@ export class BlossomClient {
       if (e instanceof TypeError) {
         throw new BlossomError(
           `Network error: Unable to reach ${this.baseUrl}. This may be a CORS issue.`,
-          { isCorsError: true }
+          { isCorsError: true },
         );
       }
       throw e;
