@@ -10,18 +10,9 @@ import {
   LabelList,
 } from "recharts";
 import { ChoiceData } from "./dataUtils";
-import { ChartCard } from "./ChartCard";
+import { SelectableChartCard } from "./SelectableChartCard";
 
-const COLORS = [
-  "#6366f1",
-  "#8b5cf6",
-  "#ec4899",
-  "#f59e0b",
-  "#10b981",
-  "#3b82f6",
-  "#ef4444",
-  "#14b8a6",
-];
+import { CHART_COLORS } from "./chartStyles";
 
 interface Props {
   label: string;
@@ -69,7 +60,13 @@ export const ChoiceChart: React.FC<Props> = ({
   const chartHeight = Math.max(180, data.length * 44);
 
   return (
-    <ChartCard label={label} meta={`${typeLabel} • ${totalAnswered} answered`}>
+    <SelectableChartCard
+      data={data.map((item) => ({ name: item.option, count: item.count }))}
+      nature="categorical"
+      multipleSelections={fieldType === "checkboxes"}
+      label={label}
+      meta={`${typeLabel} • ${totalAnswered} answered`}
+    >
       <ResponsiveContainer width="100%" height={chartHeight}>
         <BarChart
           data={data}
@@ -88,7 +85,7 @@ export const ChoiceChart: React.FC<Props> = ({
           <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f3f4f6" }} />
           <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={32}>
             {data.map((_, i) => (
-              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
             ))}
             <LabelList
               dataKey="percentage"
@@ -101,6 +98,6 @@ export const ChoiceChart: React.FC<Props> = ({
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-    </ChartCard>
+    </SelectableChartCard>
   );
 };
