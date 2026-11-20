@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SubmitButton } from "./submit";
 import { Event } from "nostr-tools";
 import { Tag } from "../../../nostr/types";
+import en from "../../../i18n/resources/en";
 
 const mockSendResponses = jest.fn();
 const mockSendNRPCWebhook = jest.fn();
@@ -33,7 +34,7 @@ jest.mock("react-i18next", () => ({
         "common.actions.tryAgain": "Try Again",
         "filler.submit.tryAgain": "Try Again",
         "filler.submit.noRelaysAccepted":
-          "No relays accepted your response. It has not been submitted. Please try again.",
+          "No relays accepted your response. It has not been submitted. Please contact the form owner.",
         "filler.submit.submissionFailed": "Submission could not be completed.",
         "filler.submit.postPublishFailed":
           "Your response was accepted, but confirmation could not be shown.",
@@ -176,14 +177,15 @@ describe("SubmitButton", () => {
     // Error message must be visible
     const errorEl = await screen.findByTestId("submit-error");
     expect(errorEl).toHaveTextContent(
-      "No relays accepted your response. It has not been submitted. Please try again.",
+      "No relays accepted your response. It has not been submitted. Please contact the form owner.",
     );
     expect(screen.getByText("Submitting Response")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "No relays accepted your response. It has not been submitted. Please try again.",
+        "No relays accepted your response. It has not been submitted. Please contact the form owner.",
       ),
     ).toBeInTheDocument();
+    expect(errorEl).toHaveTextContent(en.filler.submit.noRelaysAccepted);
 
     // Button should now show "Try Again"
     const tryAgainBtn = await screen.findByRole("button", { name: "Try Again" });
